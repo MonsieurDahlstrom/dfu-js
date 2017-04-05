@@ -1,0 +1,49 @@
+{
+  "name": "web-bluetooth-dfu",
+  "version": "0.1.0",
+  "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SoCs.",
+  "main": "dist/web-bluetooth-dfu.js",
+  "devDependencies": {
+    "babel-core": "^6.24.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-env": "^1.3.2",
+    "babel-watch": "^2.0.6",
+    "jasmine": "^2.5.3"
+  },
+  "scripts": {
+    "build": "babel src --out-dir dist",
+    "test": "babel-node spec/run.js",
+    "test-watch": "babel-watch spec/run.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MonsieurDahlstrom/web-bluetooth-dfu.git"
+  },
+  "keywords": [
+    "web",
+    "bluetooth",
+    "DFU",
+    "nRF5",
+    "Nordic",
+    "Semiconductor",
+    "nrf51",
+    "nrf52"
+  ],
+  "author": "Mathias Dahlstrom",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MonsieurDahlstrom/web-bluetooth-dfu/issues"
+  },
+  "homepage": "https://github.com/MonsieurDahlstrom/web-bluetooth-dfu#readme",
+  "dependencies": {
+    "async": "^2.3.0",
+    "crc": "^3.4.4",
+    "jszip": "^3.1.3"
+  },
+  "babel": {
+    "presets": [
+      "env"
+    ],
+    "sourceMaps": "inline"
+  }
+}
