@@ -1,4 +1,13 @@
 import {States,StateMachine} from '../../src/state-machine'
+import {Firmware,FirmwareType} from '../../src/firmware'
+import fs from 'fs'
+import JSZip from 'jszip'
+
+function testAsync(runAsync) {
+  return (done) => {
+    runAsync().then(done, e => { fail(e); done(); });
+  };
+}
 
 describe('StateMachine', function() {
   let stateMachine;
@@ -6,6 +15,7 @@ describe('StateMachine', function() {
   afterEach(function() {
     stateMachine = null;
   })
+
   it("should be without characteristics", function() {
     stateMachine = new StateMachine();
     expect(stateMachine).toBeTruthy();
@@ -20,6 +30,47 @@ describe('StateMachine', function() {
     expect(stateMachine.state).toBe(States.IDLE);
   })
 
+  describe('#sendFirmware', function() {
+
+    let firmware;
+    beforeAll(testAsync(async function() {
+      let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
+      let zip = await JSZip.loadAsync(content)
+      firmware = new Firmware(zip);
+    }))
+
+    it('should fail when not configured', function() {
+      stateMachine = new StateMachine();
+      expect( function() {
+        stateMachine.sendFirmware(firmware);
+      }).toThrowError("StateMachine is not configured with bluetooth characteristics");
+    })
+
+    it('should fail when not idle', function() {
+      stateMachine = new StateMachine();
+      stateMachine.state = States.TRANSFERING
+      expect( function() {
+        stateMachine.sendFirmware(firmware);
+      }).toThrowError("Can only initate transfer when idle")
+    })
+
+    it('should fail when firmware is null', function() {
+      stateMachine = new StateMachine();
+      stateMachine.state = States.IDLE
+      expect( function() {
+        stateMachine.sendFirmware(null);
+      }).toThrowError("Firmware needs to be of class Firmware");
+    })
+
+    it('should succeed when idle and firmware is valid', function() {
+      stateMachine = new StateMachine();
+      stateMachine.state = States.IDLE
+      expect( function() {
+        stateMachine.sendFirmware(firmware);
+      }).toBeTruthy();
+    })
+
+  })
 })
 /*
 describe("Player", function() {

@@ -28,13 +28,13 @@ describe('Firmware', function() {
     expect(firmware.type).toBe(FirmwareType.Invalid);
   }));
 
-
-
   it('should be valid application firmware with valid zip', testAsync(async function() {
     let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
     let zip = await JSZip.loadAsync(content)
     firmware = new Firmware(zip);
     await firmware.parseManifest();
     expect(firmware.type).toBe(FirmwareType.Application);
+    expect(firmware.sections.length).toBe(1);
   }));
+  
 })

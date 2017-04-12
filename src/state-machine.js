@@ -42,11 +42,14 @@ class StateMachine {
   }
 
   sendFirmware (firmware) {
+    if(this.state === StateMachineStates.NOT_CONFIGURED) {
+      throw new Error("StateMachine is not configured with bluetooth characteristics")
+    }
     if(this.state !== StateMachineStates.IDLE) {
-      throw Error("Can only initate transfer of firmare when idle");
+      throw new Error("Can only initate transfer when idle");
     }
     if(firmware instanceof Firmware === false) {
-      throw Error("Expect firmware parameter to be of class Firmware");
+      throw new Error("Firmware needs to be of class Firmware");
     }
     this.addTransfer(new DFUTransfer(firmware.sections[0].dat, this, this.packetCharacteristic, this.controlpointCharacteristic, WWSecureDFUObject.COMMAND))
     this.addTransfer(new DFUTransfer(firmware.sections[0].bin, this, this.packetCharacteristic, this.controlpointCharacteristic, WWSecureDFUObject.DATA))
