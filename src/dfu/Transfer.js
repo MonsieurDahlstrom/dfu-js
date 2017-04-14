@@ -11,45 +11,59 @@ const TransferState = {
   Failed: 0x03
 }
 
+const TransferObjectType = {
+  Command: 0x01,
+  Data: 0x02
+}
+
 class Transfer {
 
-  static Worker (task, callback) {
+  static Worker (task, onCompleition) {
+    if(task instanceof Task === false) {
+      throw new Error("task is not of type Task")
+    }
+    if(!onCompleition) {
+      throw new Error("onCompleition is not set")
+    }
     task.begin()
     const intervalTimer = setInterval(() => {
       if (task.state === DFUTransferState.Failed) {
         clearInterval(intervalTimer)
         task.end()
-        callback('Failed Transfer')
+        onCompleition('Failed Transfer')
       } else if (task.state === DFUTransferState.Completed) {
         clearInterval(intervalTimer)
         task.end()
-        callback()
+        onCompleition()
       }
     }, 1000)
   }
 
   constructor (fileData, manager, packetPoint, controlPoint, objectType) {
-    this.state = DFUTransferState.Prepare
+    this.state = TransferState.Prepare
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
     this.stateMachine = manager
     this.file = fileData
     this.objectType = objectType
-    this.bleTasks = queue(DFUTask.Worker, 1)
+    this.bleTasks = queue(Task.Worker, 1)
   }
 
   addTask (dfuTask) {
+    if(dfuTask instanceof Task === false) {
+      throw new Error("task is not of type Task")
+    }
     this.bleTasks.push(dfuTask, (error) => {
       if (error) {
         this.bleTasks.kill()
-        this.state = DFUTransferState.Failed
+        this.state = TransferState.Failed
       }
     })
   }
 
   begin () {
     this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this))
-    let operation = DFUTask.verify(this.objectType, this.controlPoint)
+    let operation = Task.verify(this.objectType, this.controlPoint)
     this.addTask(operation)
   }
 
@@ -117,3 +131,4 @@ class Transfer {
 
 module.exports.Transfer = Transfer
 module.exports.TransferState = TransferState
+module.exports.TransferObjectType = TransferObjectType

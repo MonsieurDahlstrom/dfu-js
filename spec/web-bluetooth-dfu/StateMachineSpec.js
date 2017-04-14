@@ -16,60 +16,81 @@ describe('StateMachine', function() {
     stateMachine = null;
   })
 
-  it("should be without characteristics", function() {
-    stateMachine = new StateMachine();
-    expect(stateMachine).toBeTruthy();
-    expect(stateMachine.state).toBe(States.NOT_CONFIGURED);
-  })
+  describe("#constructor", function() {
 
-  it("should be created with characteristics", function() {
-    let controlPoint = {};
-    let packetPoint = {};
-    stateMachine = new StateMachine(controlPoint,packetPoint);
-    expect(stateMachine).toBeTruthy();
-    expect(stateMachine.state).toBe(States.IDLE);
+    it("without characteristics", function() {
+      stateMachine = new StateMachine();
+      expect(stateMachine).toBeTruthy();
+      expect(stateMachine.state).toBe(States.NOT_CONFIGURED);
+    })
+
+    it("with characteristics", function() {
+      let controlPoint = {};
+      let packetPoint = {};
+      stateMachine = new StateMachine(controlPoint,packetPoint);
+      expect(stateMachine).toBeTruthy();
+      expect(stateMachine.state).toBe(States.IDLE);
+    })
+
   })
 
   describe('#sendFirmware', function() {
 
     let firmware;
+    let stateMachine;
     beforeAll(testAsync(async function() {
       let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
       let zip = await JSZip.loadAsync(content)
       firmware = new Firmware(zip);
+      await firmware.parseManifest()
     }))
 
-    it('should fail when not configured', function() {
+    beforeEach(function() {
       stateMachine = new StateMachine();
+    })
+
+    afterEach(function() {
+      stateMachine = undefined;
+    })
+
+
+    it('fails when not configured', function() {
       expect( function() {
         stateMachine.sendFirmware(firmware);
       }).toThrowError("StateMachine is not configured with bluetooth characteristics");
     })
 
-    it('should fail when not idle', function() {
-      stateMachine = new StateMachine();
+    it('fails when not idle', function() {
       stateMachine.state = States.TRANSFERING
       expect( function() {
         stateMachine.sendFirmware(firmware);
       }).toThrowError("Can only initate transfer when idle")
     })
 
-    it('should fail when firmware is null', function() {
-      stateMachine = new StateMachine();
+    it('fails without firmware', function() {
       stateMachine.state = States.IDLE
       expect( function() {
         stateMachine.sendFirmware(null);
       }).toThrowError("Firmware needs to be of class Firmware");
     })
 
-    it('should succeed when idle and firmware is valid', function() {
-      stateMachine = new StateMachine();
+    it('succeed when idle and firmware is valid', function() {
       stateMachine.state = States.IDLE
+      stateMachine.fileTransfers.pause()
       expect( function() {
         stateMachine.sendFirmware(firmware);
-      }).toBeTruthy();
+      }).not.toThrow();
     })
 
+    it("addTransfers called", function() {
+      stateMachine.state = States.IDLE
+      stateMachine.fileTransfers.pause()
+      let spyObject = spyOn(stateMachine, 'addTransfer');
+      expect( function() {
+        stateMachine.sendFirmware(firmware);
+      }).not.toThrow();
+      expect(spyObject.calls.count()).toBe(2);
+    })
   })
 })
 /*
@@ -121,16 +142,4 @@ describe("Player", function() {
 
     expect(song.persistFavoriteStatus).toHaveBeenCalledWith(true);
   });
-
-  //demonstrates use of expected exceptions
-  describe("#resume", function() {
-    it("should throw an exception if song is already playing", function() {
-      player.play(song);
-
-      expect(function() {
-        player.resume();
-      }).toThrowError("song is already playing");
-    });
-  });
-});
 */

@@ -13,7 +13,7 @@
   "scripts": {
     "build": "babel src --out-dir dist",
     "test": "babel-node spec/run.js",
-    "test-watch": "babel-watch spec/run.js"
+    "test-watch": "babel-watch -L spec/run.js --debug 5858"
   },
   "repository": {
     "type": "git",

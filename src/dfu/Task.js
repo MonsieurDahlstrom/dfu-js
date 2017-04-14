@@ -28,15 +28,21 @@ class Task {
     this.characteristic = characteristicToWriteTo
   }
 
-  static async Worker (task, callback) {
+  static async Worker (task,onCompleition) {
+    if(task instanceof Task === false) {
+      throw new Error("task not of type Task")
+    }
+    if(!onCompleition) {
+      throw new Error("onCompleition is not set")
+    }
     try {
       await task.characteristic.writeValue(task.buffer)
       setTimeout(function () {
-        callback()
+        onCompleition()
       }, 100)
     } catch (exception) {
       console.log(exception)
-      callback('BLE Transfer Failed')
+      onCompleition('BLE Transfer Failed')
     }
   }
 

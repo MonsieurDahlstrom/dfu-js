@@ -1,7 +1,7 @@
 // import {WWSecureDFUObject} from './types'
 import queue from 'async/queue'
 import {Firmware, FirmwareType} from './firmware'
-import {Transfer,TransferState} from './dfu'
+import {Transfer,TransferState, TransferObjectType} from './dfu'
 
 const StateMachineStates = {
   NOT_CONFIGURED: 0x00,
@@ -51,9 +51,10 @@ class StateMachine {
     if(firmware instanceof Firmware === false) {
       throw new Error("Firmware needs to be of class Firmware");
     }
-    this.addTransfer(new DFUTransfer(firmware.sections[0].dat, this, this.packetCharacteristic, this.controlpointCharacteristic, WWSecureDFUObject.COMMAND))
-    this.addTransfer(new DFUTransfer(firmware.sections[0].bin, this, this.packetCharacteristic, this.controlpointCharacteristic, WWSecureDFUObject.DATA))
+    this.addTransfer(new Transfer(firmware.sections[0].dat, this, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Command))
+    this.addTransfer(new Transfer(firmware.sections[0].bin, this, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Data))
   }
+  
 }
 
 module.exports.States = StateMachineStates
