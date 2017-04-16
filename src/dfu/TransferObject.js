@@ -14,10 +14,10 @@ const TransferObjectState = {
 
 class TransferObject {
 
-  constructor (dataslice, offset, type, dfuTransfer, onCompletition) {
+  constructor (dataslice, offset, type, transfer, onCompletition) {
     this.completitionCB = onCompletition
-    this.parentTransfer = dfuTransfer
-    this.state = DFUObjectState.NotStarted
+    this.parentTransfer = transfer
+    this.state = TransferObjectState.NotStarted
     this.dataslice = dataslice
     this.offset = offset
     this.objectType = type
@@ -31,8 +31,8 @@ class TransferObject {
   }
 
   begin () {
-    this.state = DFUObjectState.Creating
-    this.parentTransfer.addTask(DFUTask.verify(this.objectType, this.parentTransfer.controlPoint))
+    this.state = TransferObjectState.Creating
+    this.parentTransfer.addTask(Task.verify(this.objectType, this.parentTransfer.controlPoint))
   }
 
   verify (dataView) {
@@ -45,15 +45,15 @@ class TransferObject {
   validate (offset, checksum) {
     if (offset !== this.offset + this.dataslice.length && checksum !== this.crc) {
       if (offset === 0 || offset > this.offset + this.dataslice.length || checksum !== this.crc) {
-        this.state = DFUObjectState.Creating
-        let operation = DFUTask.create(this.objectType, this.dataslice.length, this.parentTransfer.controlPoint)
+        this.state = TransferObjectState.Creating
+        let operation = Task.create(this.objectType, this.dataslice.length, this.parentTransfer.controlPoint)
         this.parentTransfer.addTask(operation)
       } else {
         this.transfer(offset)
       }
     } else {
-      this.state = DFUObjectState.Storing
-      let operation = DFUTask.execute(this.parentTransfer.controlPoint)
+      this.state = TransferObjectState.Storing
+      let operation = Task.execute(this.parentTransfer.controlPoint)
       this.parentTransfer.addTask(operation)
     }
   }
@@ -61,13 +61,13 @@ class TransferObject {
   transfer (offset) {
     for (let index = 0; index < this.chunks.length; index++) {
       let buffer = this.chunks[index].buffer
-      this.parentTransfer.addTask(DFUTask.writePackage(buffer, this.parentTransfer.packetPoint))
+      this.parentTransfer.addTask(Task.writePackage(buffer, this.parentTransfer.packetPoint))
     }
-    // this.parentTransfer.addTask(DFUTask.checksum(this.parentTransfer.controlPoint))
+    // this.parentTransfer.addTask(Task.checksum(this.parentTransfer.controlPoint))
   }
 
   setPacketReturnNotification () {
-    return DFUTask.setPacketReturnNotification(this.chunks.length, this.parentTransfer.controlPoint)
+    return Task.setPacketReturnNotification(this.chunks.length, this.parentTransfer.controlPoint)
   }
 
   eventHandler (dataView) {
@@ -75,32 +75,32 @@ class TransferObject {
     let opCode = dataView.getInt8(1)
     let responseCode = dataView.getInt8(2)
     switch (this.state) {
-      case DFUObjectState.Creating: {
-        if (opCode === WWSecureDFUOperations.SELECT && responseCode === DFUOperationResults.SUCCESS) {
+      case TransferObjectState.Creating: {
+        if (opCode === TaskType.SELECT && responseCode === TaskResult.SUCCESS) {
           this.onSelect(dataView)
-        } else if (opCode === WWSecureDFUOperations.CREATE && responseCode === DFUOperationResults.SUCCESS) {
+        } else if (opCode === TaskType.CREATE && responseCode === TaskResult.SUCCESS) {
           this.onCreate(dataView)
-        } else if (opCode === WWSecureDFUOperations.SET_PRN && responseCode === DFUOperationResults.SUCCESS) {
+        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
-      case DFUObjectState.Transfering: {
-        if (opCode === WWSecureDFUOperations.CALCULATE_CHECKSUM && responseCode === DFUOperationResults.SUCCESS) {
+      case TransferObjectState.Transfering: {
+        if (opCode === TaskType.CALCULATE_CHECKSUM && responseCode === TaskResult.SUCCESS) {
           this.onChecksum(dataView)
-        } else if (opCode === WWSecureDFUOperations.SET_PRN && responseCode === DFUOperationResults.SUCCESS) {
+        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
-      case DFUObjectState.Storing: {
-        if (opCode === WWSecureDFUOperations.EXECUTE && responseCode === DFUOperationResults.SUCCESS) {
+      case TransferObjectState.Storing: {
+        if (opCode === TaskType.EXECUTE && responseCode === TaskResult.SUCCESS) {
           this.onExecute()
-        } else if (opCode === WWSecureDFUOperations.SET_PRN && responseCode === WWSecureDFUOperations.SUCCESS) {
+        } else if (opCode === TaskType.SET_PRN && responseCode === TaskType.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
@@ -116,7 +116,7 @@ class TransferObject {
   }
 
   onCreate (dataView) {
-    this.state = DFUObjectState.Transfering
+    this.state = TransferObjectState.Transfering
     /** start the transfer of the object  */
     this.transfer(0)
   }
@@ -131,7 +131,7 @@ class TransferObject {
   }
 
   onExecute (dataView) {
-    this.state = DFUObjectState.Completed
+    this.state = TransferObjectState.Completed
     this.completitionCB()
   }
 }

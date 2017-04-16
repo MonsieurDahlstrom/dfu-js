@@ -1,6 +1,7 @@
 import {Transfer,TransferState, TransferObjectType} from '../../src/dfu'
-import {Task,TaskType} from '../../src/dfu/Task'
+import {Task,TaskType, TaskResult} from '../../src/dfu/Task'
 import WebBluetoothCharacteristic from '../factories/WebBluetoothCharacteristicFactory';
+import TransferFactory from '../factories/TransferFactory';
 import factory from 'factory-girl';
 
 describe('Transfer', function() {
@@ -105,10 +106,207 @@ describe('Transfer', function() {
 
   })
 
-  describe("Pending #prepareTransferObjects", function() {})
+  describe("#prepareTransferObjects", function() {
 
-  describe("Pending #onEvent", function() {})
+    let transfer;
+    let contentArray;
+    beforeEach(function() {
+      transfer = new Transfer();
+    })
 
-  describe("Pending #nextObject", function() {})
+    describe("content smaller then object size", function() {
+
+
+      beforeEach(function() {
+        contentArray = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
+        transfer.file = contentArray;
+      })
+
+      it('does not throw error', function() {
+        expect( () => {
+          transfer.prepareTransferObjects(255,0,0);
+        }).not.toThrowError();
+      })
+
+      it('has one object to transfer', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        expect(transfer.objects.length).toBe(1);
+      })
+
+      it('transfer object data matches content', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        expect(transfer.objects[0].dataslice).toEqual(contentArray);
+      })
+
+    })
+
+    describe("content length equal to object size", function() {
+
+      beforeEach(function() {
+        contentArray = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
+        transfer.file = contentArray;
+      })
+
+      it('does not throw error', function() {
+        expect( () => {
+          transfer.prepareTransferObjects(255,0,0);
+        }).not.toThrowError();
+      })
+
+      it('has one object to transfer', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        expect(transfer.objects.length).toBe(1);
+      })
+
+      it('transfer object data matches content', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        expect(transfer.objects[0].dataslice).toEqual(contentArray);
+      })
+
+    })
+
+    describe("content length larger then object size", function() {
+
+      beforeEach(function() {
+        contentArray = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
+        transfer.file = contentArray;
+      })
+
+      it('does not throw error', function() {
+        expect( () => {
+          transfer.prepareTransferObjects(255,0,0);
+        }).not.toThrowError();
+      })
+
+      it('has one object to transfer', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        // 512 fits in 3 objects if max size is 255.
+        expect(transfer.objects.length).toBe(3);
+      })
+
+      it('first and last transfer object data matches content', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        expect(transfer.objects[0].dataslice).toEqual(contentArray.slice(0,255));
+        expect(transfer.objects[2].dataslice).toEqual(contentArray.slice(510,512));
+      })
+
+      it('skips to the right offset content', function() {
+        transfer.prepareTransferObjects(255,255,0);
+        expect(transfer.currentObjectIndex).toBe(1);
+        expect(transfer.objects[1].dataslice).toEqual(contentArray.slice(255,510));
+      })
+
+    })
+  })
+
+  describe("#onEvent", function() {
+
+    let selectSuccessResponse
+    let nonResponseResult
+    let transfer
+    beforeAll(function() {
+      nonResponseResult = new DataView(new ArrayBuffer(2));
+      nonResponseResult.setUint8(0, TaskType.SET_PRN);
+      nonResponseResult.setUint8(1, TaskResult.INVALID_OBJECT);
+      //
+      selectSuccessResponse = new DataView(new ArrayBuffer(15));
+      selectSuccessResponse.setUint8(0, TaskType.RESPONSE_CODE);
+      selectSuccessResponse.setUint8(1, TaskType.SELECT);
+      selectSuccessResponse.setUint8(2, TaskResult.SUCCESS);
+      selectSuccessResponse.setInt32(3, 0, true);
+      selectSuccessResponse.setInt32(7, 0, true);
+      selectSuccessResponse.setInt32(11, 0, true);
+
+    })
+
+    beforeEach(function() {
+      transfer = new Transfer()
+    })
+
+    describe('when state is Prepare', function() {
+      it('logs and handles none response codes', function() {
+        let event = {target: {value: nonResponseResult}}
+        let logSpy = spyOn(console,'log');
+        transfer.onEvent(event);
+        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+      })
+
+      it('prepares transfer when success verify', function() {
+        let event = {target: {value: selectSuccessResponse}}
+        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        transfer.onEvent(event);
+        expect(transferSpy).toHaveBeenCalled();
+      })
+    })
+
+    describe('when state is Transfer', function() {
+      it('logs and handles none response codes', function() {
+        let event = {target: {value: nonResponseResult}}
+        let logSpy = spyOn(console,'log');
+        transfer.state = TransferState.Transfer
+        transfer.onEvent(event);
+        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+      })
+
+      it('prepares transfer when success verify', function() {
+        let event = {target: {value: selectSuccessResponse}}
+        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
+        transfer.objects = [eventHandlerSpy]
+        transfer.currentObjectIndex = 0
+        transfer.state = TransferState.Transfer
+        transfer.onEvent(event);
+        expect(transferSpy).not.toHaveBeenCalled();
+        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+      })
+    })
+
+    describe('when state is Completed', function() {
+      it('logs and handles none response codes', function() {
+        let event = {target: {value: nonResponseResult}}
+        let logSpy = spyOn(console,'log');
+        transfer.state = TransferState.Completed
+        transfer.onEvent(event);
+        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+      })
+
+      it('prepares transfer when success verify', function() {
+        let event = {target: {value: selectSuccessResponse}}
+        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
+        transfer.objects = [eventHandlerSpy]
+        transfer.currentObjectIndex = 0
+        transfer.state = TransferState.Completed
+        transfer.onEvent(event);
+        expect(transferSpy).not.toHaveBeenCalled();
+        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+      })
+    })
+
+    describe('when state is Failed', function() {
+      it('logs and handles none response codes', function() {
+        let event = {target: {value: nonResponseResult}}
+        let logSpy = spyOn(console,'log');
+        transfer.state = TransferState.Failed
+        transfer.onEvent(event);
+        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+      })
+
+      it('prepares transfer when success verify', function() {
+        let event = {target: {value: selectSuccessResponse}}
+        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
+        transfer.objects = [eventHandlerSpy]
+        transfer.currentObjectIndex = 0
+        transfer.state = TransferState.Failed
+        transfer.onEvent(event);
+        expect(transferSpy).not.toHaveBeenCalled();
+        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+      })
+    })
+
+  })
+
+  describe("#nextObject", function() {})
 
 })

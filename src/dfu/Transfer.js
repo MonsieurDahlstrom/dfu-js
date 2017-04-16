@@ -27,11 +27,11 @@ class Transfer {
     }
     task.begin()
     const intervalTimer = setInterval(() => {
-      if (task.state === DFUTransferState.Failed) {
+      if (task.state === TransferState.Failed) {
         clearInterval(intervalTimer)
         task.end()
         onCompleition('Failed Transfer')
-      } else if (task.state === DFUTransferState.Completed) {
+      } else if (task.state === TransferState.Completed) {
         clearInterval(intervalTimer)
         task.end()
         onCompleition()
@@ -39,11 +39,10 @@ class Transfer {
     }, 1000)
   }
 
-  constructor (fileData, manager, packetPoint, controlPoint, objectType) {
+  constructor (fileData,  packetPoint, controlPoint, objectType) {
     this.state = TransferState.Prepare
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
-    this.stateMachine = manager
     this.file = fileData
     this.objectType = objectType
     this.bleTasks = queue(Task.Worker, 1)
@@ -79,7 +78,7 @@ class Transfer {
     while (this.file.length > counter * this.objectLength) {
       let offset = counter * this.objectLength
       let dataslice = this.file.slice(offset, offset + this.objectLength)
-      this.objects[counter] = new DFUObject(dataslice, offset, this.objectType, this, this.nextObject.bind(this))
+      this.objects[counter] = new TransferObject(dataslice, offset, this.objectType, this, this.nextObject.bind(this))
       counter++
     }
     /** Skip to object for the offset **/
@@ -87,23 +86,22 @@ class Transfer {
     if (object) {
       this.currentObjectIndex = this.objects.indexOf(object)
     }
-    this.state = DFUTransferState.Transfer
+    this.state = TransferState.Transfer
     this.objects[this.currentObjectIndex].begin()
   }
 
   onEvent (event) {
     /** guard to filter events that are not response codes  */
     let dataView = event.target.value
-    if (dataView && dataView.getInt8(0) !== WWSecureDFUOperations.RESPONSE_CODE) {
-      console.log('DFUTransfer.onEvent() opcode was not a response code')
+    if (dataView && dataView.getInt8(0) !== TaskType.RESPONSE_CODE) {
+      console.log('Transfer.onEvent() opcode was not a response code')
       return
     }
-    /** */
     switch (this.state) {
-      case DFUTransferState.Prepare: {
+      case TransferState.Prepare: {
         let opCode = dataView.getInt8(1)
         let responseCode = dataView.getInt8(2)
-        if (opCode === WWSecureDFUOperations.SELECT && responseCode === WWSecureDFUResults.SUCCESS) {
+        if (opCode === TaskType.SELECT && responseCode === TaskResult.SUCCESS) {
           let maxiumSize = dataView.getUint32(3, true)
           let currentOffset = dataView.getUint32(7, true)
           let currentCRC = dataView.getUint32(11, true)
@@ -112,6 +110,7 @@ class Transfer {
         break
       }
       default: {
+
         this.objects[this.currentObjectIndex].eventHandler(dataView)
         break
       }
@@ -124,7 +123,7 @@ class Transfer {
       this.currentObjectIndex++
       this.objects[this.currentObjectIndex].begin()
     } else {
-      this.state = DFUTransferState.Completed
+      this.state = TransferState.Completed
     }
   }
 }

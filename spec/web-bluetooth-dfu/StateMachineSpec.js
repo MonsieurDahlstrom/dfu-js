@@ -3,12 +3,6 @@ import {Firmware,FirmwareType} from '../../src/firmware'
 import fs from 'fs'
 import JSZip from 'jszip'
 
-function testAsync(runAsync) {
-  return (done) => {
-    runAsync().then(done, e => { fail(e); done(); });
-  };
-}
-
 describe('StateMachine', function() {
   let stateMachine;
 
@@ -38,12 +32,18 @@ describe('StateMachine', function() {
 
     let firmware;
     let stateMachine;
-    beforeAll(testAsync(async function() {
+
+    beforeAll(function(done) {
       let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
-      let zip = await JSZip.loadAsync(content)
-      firmware = new Firmware(zip);
-      await firmware.parseManifest()
-    }))
+      return JSZip.loadAsync(content)
+      .then(zip => {
+        firmware = new Firmware(zip)
+        return firmware.parseManifest()
+      })
+      .then(() => {
+        done();
+      })
+    })
 
     beforeEach(function() {
       stateMachine = new StateMachine();
