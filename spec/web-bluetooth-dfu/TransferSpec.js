@@ -307,6 +307,30 @@ describe('Transfer', function() {
 
   })
 
-  describe("#nextObject", function() {})
+  describe("#nextObject", function() {
+    let transfer
+    beforeEach(function() {
+      transfer = new Transfer()
+    })
+    it('startsx next transfer object', function() {
+      let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
+      transfer.objects = [transferObjectSpy,transferObjectSpy]
+      transfer.currentObjectIndex = 0
+      expect( () => {
+        transfer.nextObject()
+      }).not.toThrow()
+      expect(transferObjectSpy.begin).toHaveBeenCalled();
+      expect(transfer.currentObjectIndex).toBe(1);
+    })
+    it('marks transfer complete if no more objects', function() {
+      let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
+      transfer.objects = [transferObjectSpy]
+      transfer.currentObjectIndex = 0
+      expect( () => {
+        transfer.nextObject()
+      }).not.toThrow()
+      expect(transfer.state).toBe(TransferState.Completed);
+    })
+  })
 
 })
