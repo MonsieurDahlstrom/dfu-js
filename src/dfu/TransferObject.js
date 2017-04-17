@@ -43,12 +43,13 @@ class TransferObject {
   }
 
   validate (offset, checksum) {
-    if (offset !== this.offset + this.dataslice.length && checksum !== this.crc) {
+    if (offset !== this.offset + this.dataslice.length || checksum !== this.crc) {
       if (offset === 0 || offset > this.offset + this.dataslice.length || checksum !== this.crc) {
         this.state = TransferObjectState.Creating
         let operation = Task.create(this.objectType, this.dataslice.length, this.parentTransfer.controlPoint)
         this.parentTransfer.addTask(operation)
       } else {
+        this.state = TransferObjectState.Transfering
         this.transfer(offset)
       }
     } else {
