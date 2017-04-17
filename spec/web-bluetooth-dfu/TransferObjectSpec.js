@@ -1,6 +1,21 @@
 import {TransferObject,TransferObjectState} from '../../src/dfu/TransferObject'
+import {Task, TaskType, TaskResult} from '../../src/dfu/Task'
 
 describe("TransferObject", function() {
+
+  let dataset;
+  let transferObject;
+  let transfer;
+  beforeEach(function() {
+    dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
+    transfer = jasmine.createSpyObj('Transfer',['addTask'])
+    transferObject = new TransferObject(dataset,10,0,transfer)
+  })
+  afterEach(function() {
+    dataset = null
+    transfer = null
+    transferObject = null
+  })
 
   describe("#constructor", function() {
     it('throws error without data', function() {
@@ -18,14 +33,6 @@ describe("TransferObject", function() {
   })
 
   describe("#begin", function() {
-    let dataset;
-    let transferObject;
-    let transfer;
-    beforeEach(function() {
-      dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-      transfer = jasmine.createSpyObj('Transfer',['addTask'])
-      transferObject = new TransferObject(dataset,0,0,transfer)
-    })
     it('sets state', function() {
       expect( () => transferObject.begin()).not.toThrow()
       expect(transferObject.state).toEqual(TransferObjectState.Creating)
@@ -37,14 +44,8 @@ describe("TransferObject", function() {
   })
 
   describe("#verify", function() {
-    let dataset;
-    let transferObject;
-    let transfer;
     let dataView;
     beforeEach(function() {
-      dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-      transfer = jasmine.createSpyObj('Transfer',['addTask'])
-      transferObject = new TransferObject(dataset,0,0,transfer)
       dataView = new DataView(new ArrayBuffer(15))
     })
     it('parses offset', function() {
@@ -72,15 +73,8 @@ describe("TransferObject", function() {
   })
 
   describe("#validate", function() {
-    let dataset;
-    let transfer;
-    let transferObject;
     let transferMock;
     beforeEach(function() {
-      dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-      transfer = jasmine.createSpyObj('Transfer',['addTask'])
-      transferObject = new TransferObject(dataset,10,0,transfer)
-      //dataView = new DataView(new ArrayBuffer(15))
       transferMock = spyOn(transferObject,'transfer')
     })
     it('with correct crc and content size', function() {
@@ -88,6 +82,7 @@ describe("TransferObject", function() {
       expect( () => transferObject.validate(35,transferObject.crc)).not.toThrow()
       expect(transferObject.state).toEqual(TransferObjectState.Storing)
       expect(transfer.addTask).toHaveBeenCalled()
+      expect(transferMock).not.toHaveBeenCalled()
     })
     it('with correct crc and smaller offset then content size', function() {
       //the object has previously been partially transferred
@@ -117,15 +112,98 @@ describe("TransferObject", function() {
   })
 
   describe("#transfer", function() {
-
+    it('slots a task for each data chunck in the transfer', function() {
+      expect( () => transferObject.transfer(0)).not.toThrow()
+      //maximum ble transmission size is 20. 25 fits in two chunks.
+      expect(transfer.addTask.calls.count()).toBe(2)
+    })
   })
 
   describe("#setPacketReturnNotification", function() {
-
+    it('slots a task for each data chunck in the transfer', function() {
+      expect( () => transferObject.setPacketReturnNotification()).not.toThrow()
+    })
+    it('slots a task for each data chunck in the transfer', function() {
+      expect( transferObject.setPacketReturnNotification()).toEqual(jasmine.any(Task))
+    })
   })
 
   describe("#eventHandler", function() {
-
+    let dataView;
+    beforeEach(function() {
+      dataView = new DataView(new ArrayBuffer(15))
+    })
+    describe('when in Creating state', function() {
+      beforeEach(function(){
+        transferObject.state = TransferObjectState.Creating
+      })
+      it('handles TaskType.SELECT repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onSelect')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.SELECT)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+      it('handles TaskType.CREATE repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onCreate')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.CREATE)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+      it('handles TaskType.SET_PRN repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onPacketNotification')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.SET_PRN)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+    })
+    describe('when in Transfering state', function() {
+      beforeEach(function(){
+        transferObject.state = TransferObjectState.Transfering
+      })
+      it('handles TaskType.CALCULATE_CHECKSUM repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onChecksum')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.CALCULATE_CHECKSUM)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+      it('handles TaskType.SET_PRN repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onPacketNotification')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.SET_PRN)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+    })
+    describe('when in Storing state', function() {
+      beforeEach(function(){
+        transferObject.state = TransferObjectState.Storing
+      })
+      it('handles TaskType.EXECUTE repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onExecute')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.EXECUTE)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+      it('handles TaskType.SET_PRN repsonse', function() {
+        let onSelectSpy = spyOn(transferObject,'onPacketNotification')
+        dataView.setUint8(0,TaskType.RESPONSE_CODE)
+        dataView.setUint8(1,TaskType.SET_PRN)
+        dataView.setUint8(2,TaskResult.SUCCESS)
+        expect( () => transferObject.eventHandler(dataView)).not.toThrow()
+        expect(onSelectSpy).toHaveBeenCalled()
+      })
+    })
   })
 
 })

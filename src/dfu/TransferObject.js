@@ -101,7 +101,7 @@ class TransferObject {
       case TransferObjectState.Storing: {
         if (opCode === TaskType.EXECUTE && responseCode === TaskResult.SUCCESS) {
           this.onExecute()
-        } else if (opCode === TaskType.SET_PRN && responseCode === TaskType.SUCCESS) {
+        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
