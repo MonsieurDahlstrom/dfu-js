@@ -1,8 +1,8 @@
 {
-  "name": "web-bluetooth-dfu",
-  "version": "0.1.0",
+  "name": "@monsieurdahlstrom/web-bluetooth-dfu",
+  "version": "0.1.1",
   "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SoCs.",
-  "main": "dist/web-bluetooth-dfu.js",
+  "main": "dist/index.js",
   "devDependencies": {
     "babel-core": "^6.24.0",
     "babel-plugin-transform-runtime": "^6.23.0",
