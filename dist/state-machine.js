@@ -73,8 +73,8 @@ var StateMachine = function () {
       if (firmware instanceof _firmware.Firmware === false) {
         throw new Error("Firmware needs to be of class Firmware");
       }
-      this.addTransfer(new _dfu.Transfer(firmware.sections[0].dat, this, this.packetCharacteristic, this.controlpointCharacteristic, _dfu.TransferObjectType.Command));
-      this.addTransfer(new _dfu.Transfer(firmware.sections[0].bin, this, this.packetCharacteristic, this.controlpointCharacteristic, _dfu.TransferObjectType.Data));
+      this.addTransfer(new _dfu.Transfer(firmware.sections[0].dat, this.packetCharacteristic, this.controlpointCharacteristic, _dfu.TransferObjectType.Command));
+      this.addTransfer(new _dfu.Transfer(firmware.sections[0].bin, this.packetCharacteristic, this.controlpointCharacteristic, _dfu.TransferObjectType.Data));
     }
   }]);
   return StateMachine;

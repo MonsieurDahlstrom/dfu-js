@@ -36,7 +36,7 @@ var Transfer = function () {
   (0, _createClass3.default)(Transfer, null, [{
     key: 'Worker',
     value: function Worker(task, onCompleition) {
-      if (task instanceof _Task.Task === false) {
+      if (task instanceof Transfer === false) {
         throw new Error("task is not of type Task");
       }
       if (!onCompleition) {
@@ -57,7 +57,7 @@ var Transfer = function () {
     }
   }]);
 
-  function Transfer(fileData, packetPoint, controlPoint, objectType) {
+  function Transfer(fileData, controlPoint, packetPoint, objectType) {
     (0, _classCallCheck3.default)(this, Transfer);
 
     this.state = TransferState.Prepare;
@@ -102,12 +102,12 @@ var Transfer = function () {
       this.objects = [];
       this.currentObjectIndex = 0;
       var counter = 0;
-      while (this.file.length > counter * this.objectLength) {
-        var offset = counter * this.objectLength;
-        var dataslice = this.file.slice(offset, offset + this.objectLength);
-        this.objects[counter] = new _TransferObject.TransferObject(dataslice, offset, this.objectType, this, this.nextObject.bind(this));
-        counter++;
-      }
+      do {
+        var dataslice = this.file.slice(counter, counter + this.objectLength);
+        var obj = new _TransferObject.TransferObject(dataslice, counter, this.objectType, this, this.nextObject.bind(this));
+        if (obj) this.objects.push(obj);
+        counter += this.objectLength;
+      } while (this.file.length > counter);
       /** Skip to object for the offset **/
       var object = this.objects.find(function (item) {
         return item.offset === currentoffset;

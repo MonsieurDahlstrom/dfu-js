@@ -40,10 +40,10 @@ var TransferObject = function () {
     this.crc = _crc2.default.crc32(dataslice);
     this.chunks = [];
     var counter = 0;
-    while (this.dataslice.length > counter * DATA_CHUNK_SIZE) {
-      this.chunks.push(this.dataslice.slice(counter * DATA_CHUNK_SIZE, counter * DATA_CHUNK_SIZE + DATA_CHUNK_SIZE));
-      counter++;
-    }
+    do {
+      this.chunks.push(this.dataslice.slice(counter, counter + DATA_CHUNK_SIZE));
+      counter += DATA_CHUNK_SIZE;
+    } while (this.dataslice.length > counter);
   }
 
   (0, _createClass3.default)(TransferObject, [{
