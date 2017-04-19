@@ -51,10 +51,10 @@ class StateMachine {
     if(firmware instanceof Firmware === false) {
       throw new Error("Firmware needs to be of class Firmware");
     }
-    this.addTransfer(new Transfer(firmware.sections[0].dat, this, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Command))
-    this.addTransfer(new Transfer(firmware.sections[0].bin, this, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Data))
+    this.addTransfer(new Transfer(firmware.sections[0].dat, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Command))
+    this.addTransfer(new Transfer(firmware.sections[0].bin, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Data))
   }
-  
+
 }
 
 module.exports.States = StateMachineStates

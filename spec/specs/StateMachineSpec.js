@@ -11,21 +11,47 @@ describe('StateMachine', function() {
   })
 
   describe("#constructor", function() {
-
-    it("without characteristics", function() {
-      stateMachine = new StateMachine();
-      expect(stateMachine).toBeTruthy();
-      expect(stateMachine.state).toBe(States.NOT_CONFIGURED);
+    describe("without characteristics", function() {
+      it("throws no error", function() {
+        expect(()=> stateMachine = new StateMachine()).not.toThrow()
+      })
+      it("is an instance of StateMachien", function() {
+        let stateMachine = new StateMachine()
+        expect(stateMachine instanceof StateMachine).toBeTruthy();
+      })
+      it("is not configured", function() {
+        let stateMachine = new StateMachine()
+        expect(stateMachine.state).toBe(States.NOT_CONFIGURED)
+      })
     })
 
-    it("with characteristics", function() {
-      let controlPoint = {};
-      let packetPoint = {};
-      stateMachine = new StateMachine(controlPoint,packetPoint);
-      expect(stateMachine).toBeTruthy();
-      expect(stateMachine.state).toBe(States.IDLE);
+    describe("with characteristics", function() {
+      let controlPoint
+      let packetPoint
+      beforeAll(function() {
+        controlPoint = {}
+        packetPoint = {}
+      })
+      it("throws no error", function() {
+        expect(()=> stateMachine = new StateMachine(controlPoint,packetPoint)).not.toThrow()
+      })
+      it("is an instance of StateMachien", function() {
+        let stateMachine = new StateMachine(controlPoint,packetPoint)
+        expect(stateMachine instanceof StateMachine).toBeTruthy();
+      })
+      it("is not configured", function() {
+        let stateMachine = new StateMachine(controlPoint,packetPoint)
+        expect(stateMachine.state).toBe(States.IDLE)
+      })
+      it("has control point characteristic", function() {
+        let stateMachine = new StateMachine(controlPoint,packetPoint)
+        expect(stateMachine.controlpointCharacteristic).toBe(controlPoint)
+      })
+      it("has packet point characteristic", function() {
+        let stateMachine = new StateMachine(controlPoint,packetPoint)
+        expect(stateMachine.packetCharacteristic).toBe(packetPoint)
+      })
     })
-
   })
 
   describe('#sendFirmware', function() {
