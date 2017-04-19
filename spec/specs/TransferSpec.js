@@ -40,10 +40,45 @@ describe('Transfer', function() {
 
   describe("#constructor", function() {
 
-    it("empty paramter list", function() {
-      expect(new Transfer()).toBeTruthy()
-    })
 
+    describe('without parameters', function() {
+      it("no exceptions", function() {
+        expect( ()=> new Transfer()).not.toThrow()
+      })
+    })
+    describe('with parameters', function() {
+      let dataset
+      let packetPoint
+      let controlPoint
+      let transferObjectType
+      let transfer
+      beforeEach(function(done) {
+        dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
+        transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
+        factory.buildMany("WebBluetoothCharacteristic",2)
+        .then(result => {
+          packetPoint = result[0]
+          controlPoint = result[1]
+          done()
+        })
+        transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
+      })
+      it("no exceptions", function() {
+        expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).not.toThrow()
+      })
+      it('should have data', function() {
+        expect(transfer.file).toEqual(dataset)
+      })
+      it('should have data characteristic', function() {
+        expect(transfer.packetPoint).toEqual(packetPoint)
+      })
+      it('should have control point characteristic', function() {
+        expect(transfer.controlPoint).toEqual(controlPoint)
+      })
+      it('should have object type', function() {
+        expect(transfer.objectType).toEqual(transferObjectType)
+      })
+    })
   })
 
   describe("#addTask", function() {
@@ -84,7 +119,6 @@ describe('Transfer', function() {
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
-        console.log(characteristic.writeValue());
         expect( function() { transfer.begin() }).not.toThrow()
         done()
       })
@@ -118,7 +152,7 @@ describe('Transfer', function() {
 
 
       beforeEach(function() {
-        contentArray = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
+        contentArray = Array.from({length: 29}, () => Math.floor(Math.random() * 9));
         transfer.file = contentArray;
       })
 
@@ -138,6 +172,14 @@ describe('Transfer', function() {
         expect(transfer.objects[0].dataslice).toEqual(contentArray);
       })
 
+      it('dataslice should equal chunks', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        let calculation = []
+        for(var transferObject of transfer.objects) {
+          calculation = calculation.concat(transferObject.dataslice)
+        }
+        expect(calculation).toEqual(contentArray)
+      })
     })
 
     describe("content length equal to object size", function() {
@@ -146,57 +188,64 @@ describe('Transfer', function() {
         contentArray = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
         transfer.file = contentArray;
       })
-
       it('does not throw error', function() {
         expect( () => {
           transfer.prepareTransferObjects(255,0,0);
         }).not.toThrowError();
       })
-
       it('has one object to transfer', function() {
         transfer.prepareTransferObjects(255,0,0);
         expect(transfer.objects.length).toBe(1);
       })
-
       it('transfer object data matches content', function() {
         transfer.prepareTransferObjects(255,0,0);
         expect(transfer.objects[0].dataslice).toEqual(contentArray);
       })
-
+      it('dataslice should equal chunks', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        let calculation = []
+        for(var transferObject of transfer.objects) {
+          calculation = calculation.concat(transferObject.dataslice)
+        }
+        expect(calculation).toEqual(contentArray)
+      })
     })
 
     describe("content length larger then object size", function() {
-
       beforeEach(function() {
         contentArray = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
         transfer.file = contentArray;
       })
-
       it('does not throw error', function() {
         expect( () => {
           transfer.prepareTransferObjects(255,0,0);
         }).not.toThrowError();
       })
-
       it('has one object to transfer', function() {
         transfer.prepareTransferObjects(255,0,0);
         // 512 fits in 3 objects if max size is 255.
         expect(transfer.objects.length).toBe(3);
       })
-
       it('first and last transfer object data matches content', function() {
         transfer.prepareTransferObjects(255,0,0);
         expect(transfer.objects[0].dataslice).toEqual(contentArray.slice(0,255));
         expect(transfer.objects[2].dataslice).toEqual(contentArray.slice(510,512));
       })
-
       it('skips to the right offset content', function() {
         transfer.prepareTransferObjects(255,255,0);
         expect(transfer.currentObjectIndex).toBe(1);
         expect(transfer.objects[1].dataslice).toEqual(contentArray.slice(255,510));
       })
-
+      it('dataslice should equal chunks', function() {
+        transfer.prepareTransferObjects(255,0,0);
+        let calculation = []
+        for(var transferObject of transfer.objects) {
+          calculation = calculation.concat(transferObject.dataslice)
+        }
+        expect(calculation).toEqual(contentArray)
+      })
     })
+
   })
 
   describe("#onEvent", function() {

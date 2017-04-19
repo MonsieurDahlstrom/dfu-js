@@ -39,7 +39,7 @@ class Transfer {
     }, 1000)
   }
 
-  constructor (fileData,  packetPoint, controlPoint, objectType) {
+  constructor (fileData, controlPoint, packetPoint, objectType) {
     this.state = TransferState.Prepare
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
@@ -75,14 +75,16 @@ class Transfer {
     this.objects = []
     this.currentObjectIndex = 0
     let counter = 0
-    while (this.file.length > counter * this.objectLength) {
-      let offset = counter * this.objectLength
-      let dataslice = this.file.slice(offset, offset + this.objectLength)
-      this.objects[counter] = new TransferObject(dataslice, offset, this.objectType, this, this.nextObject.bind(this))
-      counter++
-    }
+    do {
+      let dataslice = this.file.slice(counter, counter + this.objectLength)
+      let obj = new TransferObject(dataslice, counter, this.objectType, this, this.nextObject.bind(this))
+      if(obj) this.objects.push(obj)
+      counter += this.objectLength
+    }while (this.file.length > counter)
     /** Skip to object for the offset **/
-    let object = this.objects.find((item) => item.offset === currentoffset)
+    let object = this.objects.find((item) => {
+      return item.offset === currentoffset
+    })
     if (object) {
       this.currentObjectIndex = this.objects.indexOf(object)
     }

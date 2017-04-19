@@ -1,5 +1,7 @@
 import {TransferObject,TransferObjectState} from '../../src/dfu/TransferObject'
 import {Task, TaskType, TaskResult} from '../../src/dfu/Task'
+import {Transfer} from '../../src/dfu/Transfer'
+import crc from 'crc'
 
 describe("TransferObject", function() {
 
@@ -18,17 +20,57 @@ describe("TransferObject", function() {
   })
 
   describe("#constructor", function() {
-    it('throws error without data', function() {
-        expect( () => {
-          new TransferObject()
-        }).toThrow();
+    describe('no parameters', function() {
+      it('throws without dataset', function() {
+          expect( ()=> new TransferObject()).toThrow();
+      })
     })
-    it("with data", function() {
-      expect( () => {
-        let dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-        let transferObject = new TransferObject(dataset)
-        expect(transferObject.chunks.length).toBe(2)
-      }).not.toThrow();
+    describe('with parameters', function() {
+      //dataslice, offset, type, transfer, onCompletition
+      let dataset
+      let type
+      let offset = 0
+      let transfer = new Transfer()
+      let onCompletition = function() {}
+      beforeEach(function() {
+        dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
+        let type = (Math.random() <= 0.5) === true ? 1 : 2;
+      })
+      it('no errors', function() {
+        expect( ()=> new TransferObject(dataset,offset,type,transfer, onCompletition)).not.toThrow();
+      })
+      it('has dataset', function() {
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        expect(transferObject.dataslice).toBe(dataset)
+      })
+      it('belongs to a Transfer', function(){
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        expect(transferObject.parentTransfer).toBe(transfer)
+      })
+      it('has completition callback', function() {
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        expect(transferObject.completitionCB).toBe(onCompletition)
+      })
+      it('has chuncked dataset', function() {
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        expect(transferObject.chunks).toEqual(jasmine.any(Array))
+      })
+      it('chunks equal dataset', function() {
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let calculation = []
+        for(var chunk of transferObject.chunks) {
+          calculation = calculation.concat(chunk)
+        }
+        expect(calculation).toEqual(dataset)
+      })
+      it('chunks and dataset share CRC32', function() {
+        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let calculation = []
+        for(var chunk of transferObject.chunks) {
+          calculation = calculation.concat(chunk)
+        }
+        expect(crc.crc32(calculation)).toEqual(transferObject.crc)
+      })
     })
   })
 
