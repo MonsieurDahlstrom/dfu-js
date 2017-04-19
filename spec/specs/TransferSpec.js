@@ -30,7 +30,7 @@ describe('Transfer', function() {
     })
 
     it("error without onCompleition", function() {
-      var testTask = new Task()
+      var testTask = new Transfer()
       expect( function() {
         Transfer.Worker(testTask,null);
       }).toThrowError("onCompleition is not set");

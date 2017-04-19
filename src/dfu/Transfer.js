@@ -19,7 +19,7 @@ const TransferObjectType = {
 class Transfer {
 
   static Worker (task, onCompleition) {
-    if(task instanceof Task === false) {
+    if(task instanceof Transfer === false) {
       throw new Error("task is not of type Task")
     }
     if(!onCompleition) {
