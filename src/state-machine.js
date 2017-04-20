@@ -21,8 +21,8 @@
 
 
 import queue from 'async/queue'
-import {Firmware, FirmwareType} from './firmware'
-import {Transfer,TransferState, TransferObjectType} from './dfu'
+import {Firmware} from './firmware'
+import {Transfer, TransferObjectType} from './dfu'
 
 /**
 The states a DFU StateMachine can have:
@@ -52,12 +52,11 @@ class StateMachine {
     this.setPacketPoint(webBluetoothPacketPoint)
     /** TODO: The queue should have better error reporting which are tied to state */
     this.fileTransfers = queue(Transfer.Worker, 1)
-    if(this.controlpointCharacteristic && this.packetCharacteristic) {
+    if (this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE
     } else {
       this.state = StateMachineStates.NOT_CONFIGURED
     }
-
   }
 
   setControlPoint (webBluetoothCharacteristic) {
@@ -83,17 +82,17 @@ class StateMachine {
     Send a firmware to a device. Throws when parameter or state is invalid for sending a firmware
   **/
   sendFirmware (firmware) {
-    if(this.state === StateMachineStates.NOT_CONFIGURED) {
-      throw new Error("StateMachine is not configured with bluetooth characteristics")
+    if (this.state === StateMachineStates.NOT_CONFIGURED) {
+      throw new Error('StateMachine is not configured with bluetooth characteristics')
     }
-    if(this.state !== StateMachineStates.IDLE) {
-      throw new Error("Can only initate transfer when idle");
+    if (this.state !== StateMachineStates.IDLE) {
+      throw new Error('Can only initate transfer when idle')
     }
-    if(firmware instanceof Firmware === false) {
-      throw new Error("Firmware needs to be of class Firmware");
+    if (firmware instanceof Firmware === false) {
+      throw new Error('Firmware needs to be of class Firmware')
     }
-    this.addTransfer(new Transfer(firmware.sections[0].dat, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Command))
-    this.addTransfer(new Transfer(firmware.sections[0].bin, this.packetCharacteristic, this.controlpointCharacteristic, TransferObjectType.Data))
+    this.addTransfer(new Transfer(firmware.sections[0].dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Command))
+    this.addTransfer(new Transfer(firmware.sections[0].bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Data))
   }
 
 }

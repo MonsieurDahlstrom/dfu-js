@@ -41,7 +41,7 @@ class Firmware {
   }
 
   async parseManifest () {
-    if(!this.zip) {
+    if (!this.zip) {
       this.type = FirmwareType.Invalid
       return
     }
@@ -80,13 +80,11 @@ class Firmware {
     } else if (json.manifest.softdevice_bootloader) {
       // TODO: Implmentation needed to handle the dual sizes of both sd and bl.
       this.type = FirmwareType.SoftdeviceBootloader
-
     } else {
       this.type = FirmwareType.Invalid
     }
   }
 }
-
 
 module.exports.Firmware = Firmware
 module.exports.FirmwareType = FirmwareType

@@ -22,7 +22,7 @@
 /** Library imports */
 import queue from 'async/queue'
 /** internal imports */
-import {TransferObject,TransferObjectState} from './TransferObject'
+import {TransferObject} from './TransferObject'
 import {Task, TaskType, TaskResult} from './Task'
 
 const TransferState = {
@@ -40,11 +40,11 @@ const TransferObjectType = {
 class Transfer {
 
   static Worker (task, onCompleition) {
-    if(task instanceof Transfer === false) {
-      throw new Error("task is not of type Task")
+    if (task instanceof Transfer === false) {
+      throw new Error('task is not of type Task')
     }
-    if(!onCompleition) {
-      throw new Error("onCompleition is not set")
+    if (!onCompleition) {
+      throw new Error('onCompleition is not set')
     }
     task.begin()
     const intervalTimer = setInterval(() => {
@@ -67,16 +67,23 @@ class Transfer {
     this.file = fileData
     this.objectType = objectType
     this.bleTasks = queue(Task.Worker, 1)
+    this.bleTasks.empty = () => {
+    }
+    this.bleTasks.error = (error, task) => {
+      console.error(error)
+      console.error(task)
+    }
   }
 
   addTask (dfuTask) {
-    if(dfuTask instanceof Task === false) {
-      throw new Error("task is not of type Task")
+    if (dfuTask instanceof Task === false) {
+      throw new Error('task is not of type Task')
     }
     this.bleTasks.push(dfuTask, (error) => {
       if (error) {
         this.bleTasks.kill()
         this.state = TransferState.Failed
+        console.error(error)
       }
     })
   }
@@ -91,26 +98,31 @@ class Transfer {
     this.controlPoint.removeEventListener('characteristicvaluechanged', this.onEvent)
   }
 
-  prepareTransferObjects (maxiumSize, currentoffset, currentCRC) {
-    this.objectLength = maxiumSize
+  prepareTransferObjects (maxiumSize, currentOffset, currentCRC) {
+    this.maxObjectLength = maxiumSize
     this.objects = []
     this.currentObjectIndex = 0
-    let counter = 0
-    do {
-      let dataslice = this.file.slice(counter, counter + this.objectLength)
-      let obj = new TransferObject(dataslice, counter, this.objectType, this, this.nextObject.bind(this))
-      if(obj) this.objects.push(obj)
-      counter += this.objectLength
-    }while (this.file.length > counter)
+    this.generateObjects()
     /** Skip to object for the offset **/
-    let object = this.objects.find((item) => {
-      return item.offset === currentoffset
-    })
+    let object = this.objects.find((item) => item.hasOffset(currentOffset))
     if (object) {
       this.currentObjectIndex = this.objects.indexOf(object)
     }
     this.state = TransferState.Transfer
-    this.objects[this.currentObjectIndex].begin()
+    this.objects[this.currentObjectIndex].validate(currentOffset, currentCRC)
+  }
+
+  generateObjects () {
+    let fileBegin = 0
+    let fileEnd = this.file.length
+    let index = fileBegin
+    while (index < fileEnd) {
+      let objectBegin = index
+      let objectEnd = objectBegin + this.maxObjectLength < fileEnd ? this.maxObjectLength : (fileEnd - index)
+      let object = new TransferObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this))
+      this.objects.push(object)
+      index += this.maxObjectLength
+    }
   }
 
   onEvent (event) {
@@ -133,7 +145,6 @@ class Transfer {
         break
       }
       default: {
-
         this.objects[this.currentObjectIndex].eventHandler(dataView)
         break
       }
