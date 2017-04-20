@@ -24,6 +24,14 @@ import queue from 'async/queue'
 import {Firmware, FirmwareType} from './firmware'
 import {Transfer,TransferState, TransferObjectType} from './dfu'
 
+/**
+The states a DFU StateMachine can have:
+  - NOT_CONFIGURED, bluetooth characteristics have not been set
+  - IDLE, state machine is ready for use
+  - TRANSFERING, state machine is i the process of updating a device
+  - COMPLETE, indicates that a device update has been completed
+  - FAILED, device update failed
+**/
 const StateMachineStates = {
   NOT_CONFIGURED: 0x00,
   IDLE: 0x01,
@@ -32,11 +40,17 @@ const StateMachineStates = {
   FAILED: 0x04
 }
 
+/**
+Main Facade class to the library
+  Create StateMachine with WebBluetoothCharacteristics representing the data and control point
+  Monitor the state property and use the function sendFirmware() to send a DFU zip.
+**/
 class StateMachine {
 
   constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
     this.setControlPoint(webBluetoothControlPoint)
     this.setPacketPoint(webBluetoothPacketPoint)
+    /** TODO: The queue should have better error reporting which are tied to state */
     this.fileTransfers = queue(Transfer.Worker, 1)
     if(this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE
@@ -54,6 +68,9 @@ class StateMachine {
     this.packetCharacteristic = webBluetoothCharacteristic
   }
 
+  /**
+    Internal method used to slot each part of a dfu zip for transfer to device
+  **/
   addTransfer (transfer) {
     this.fileTransfers.push(transfer, (error) => {
       if (error) {
@@ -62,6 +79,9 @@ class StateMachine {
     })
   }
 
+  /**
+    Send a firmware to a device. Throws when parameter or state is invalid for sending a firmware
+  **/
   sendFirmware (firmware) {
     if(this.state === StateMachineStates.NOT_CONFIGURED) {
       throw new Error("StateMachine is not configured with bluetooth characteristics")
