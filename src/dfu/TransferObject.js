@@ -14,20 +14,33 @@ const TransferObjectState = {
 
 class TransferObject {
 
-  constructor (dataslice, offset, type, transfer, onCompletition) {
-    this.completitionCB = onCompletition
+  constructor (offset, length, transfer, transferType, onCompletitionCallback) {
+    // function to call when transfer completes or fails
+    this.onCompletition = onCompletitionCallback
+    // Reference to parent transfer that stores the file data
     this.parentTransfer = transfer
+    // The offset into the file data
+    this.parentOffset = offset
+    // How long this object is
+    this.objectLength = length
+    // TransferObjectType for this transfer object
+    this.objectType = transferType
+    // Initial state
     this.state = TransferObjectState.NotStarted
-    this.dataslice = dataslice
-    this.offset = offset
-    this.objectType = type
-    this.crc = crc.crc32(dataslice)
+  }
+
+  toPackets (offset) {
     this.chunks = []
-    let counter = 0
-    do {
-      this.chunks.push(this.dataslice.slice(counter, counter + DATA_CHUNK_SIZE))
-      counter += DATA_CHUNK_SIZE
-    }while (this.dataslice.length > counter)
+    let parentFileEnd = this.parentOffset + this.objectLength
+    let parentFileBegin = this.parentOffset + offset
+    let index = parentFileBegin
+    while (index < parentFileEnd) {
+      let chunkBegin = index
+      let chunkEnd = chunkBegin + DATA_CHUNK_SIZE < parentFileEnd ? chunkBegin + DATA_CHUNK_SIZE : chunkBegin + (parentFileEnd - index)
+      let chunk = this.parentTransfer.file.slice(chunkBegin, chunkEnd)
+      this.chunks.push(chunk)
+      index += DATA_CHUNK_SIZE
+    }
   }
 
   begin () {
@@ -38,33 +51,38 @@ class TransferObject {
   verify (dataView) {
     let currentOffset = dataView.getUint32(7, true)
     let currentCRC = dataView.getUint32(11, true)
-    this.parentTransfer.addTask(this.setPacketReturnNotification())
     this.validate(currentOffset, currentCRC)
   }
 
+  hasOffset (offset) {
+    let min = this.parentOffset
+    let max = min + this.objectLength
+    return offset >= min && offset <= max
+  }
+
   validate (offset, checksum) {
-    if (offset !== this.offset + this.dataslice.length || checksum !== this.crc) {
-      if (offset === 0 || offset > this.offset + this.dataslice.length || checksum !== this.crc) {
-        this.state = TransferObjectState.Creating
-        let operation = Task.create(this.objectType, this.dataslice.length, this.parentTransfer.controlPoint)
-        this.parentTransfer.addTask(operation)
-      } else {
-        this.state = TransferObjectState.Transfering
-        this.transfer(offset)
-      }
-    } else {
+    let fileCRCToOffset = crc.crc32(this.parentTransfer.file.slice(0, offset))
+    if (offset === this.parentOffset + this.objectLength && checksum === fileCRCToOffset) {
       this.state = TransferObjectState.Storing
       let operation = Task.execute(this.parentTransfer.controlPoint)
       this.parentTransfer.addTask(operation)
+    } else if (offset === this.parentOffset || offset > this.parentOffset + this.objectLength || checksum !== fileCRCToOffset) {
+      this.state = TransferObjectState.Creating
+      let operation = Task.create(this.objectType, this.objectLength, this.parentTransfer.controlPoint)
+      this.parentTransfer.addTask(operation)
+    } else {
+      this.state = TransferObjectState.Transfering
+      this.toPackets(offset)
+      this.parentTransfer.addTask(this.setPacketReturnNotification())
+      this.transfer()
     }
   }
 
-  transfer (offset) {
+  transfer () {
     for (let index = 0; index < this.chunks.length; index++) {
       let buffer = this.chunks[index].buffer
       this.parentTransfer.addTask(Task.writePackage(buffer, this.parentTransfer.packetPoint))
     }
-    // this.parentTransfer.addTask(Task.checksum(this.parentTransfer.controlPoint))
   }
 
   setPacketReturnNotification () {
@@ -119,7 +137,9 @@ class TransferObject {
   onCreate (dataView) {
     this.state = TransferObjectState.Transfering
     /** start the transfer of the object  */
-    this.transfer(0)
+    this.toPackets(0)
+    this.parentTransfer.addTask(this.setPacketReturnNotification())
+    this.transfer()
   }
 
   onChecksum (dataView) {
@@ -133,7 +153,7 @@ class TransferObject {
 
   onExecute (dataView) {
     this.state = TransferObjectState.Completed
-    this.completitionCB()
+    this.onCompletition()
   }
 }
 
