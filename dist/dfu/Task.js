@@ -1,22 +1,43 @@
-"use strict";
+'use strict';
 
-var _regenerator = require("babel-runtime/regenerator");
+var _regenerator = require('babel-runtime/regenerator');
 
 var _regenerator2 = _interopRequireDefault(_regenerator);
 
-var _asyncToGenerator2 = require("babel-runtime/helpers/asyncToGenerator");
+var _asyncToGenerator2 = require('babel-runtime/helpers/asyncToGenerator');
 
 var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
-var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");
+var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
 var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
-var _createClass2 = require("babel-runtime/helpers/createClass");
+var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Copyright (c) 2017 Monsieur Dahlström Ltd
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 var TaskType = {
   CREATE: 0x01,
@@ -49,7 +70,7 @@ var Task = function () {
   }
 
   (0, _createClass3.default)(Task, null, [{
-    key: "Worker",
+    key: 'Worker',
     value: function () {
       var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(task, onCompleition) {
         return _regenerator2.default.wrap(function _callee$(_context) {
@@ -61,7 +82,7 @@ var Task = function () {
                   break;
                 }
 
-                throw new Error("task not of type Task");
+                throw new Error('task not of type Task');
 
               case 2:
                 if (onCompleition) {
@@ -69,7 +90,7 @@ var Task = function () {
                   break;
                 }
 
-                throw new Error("onCompleition is not set");
+                throw new Error('onCompleition is not set');
 
               case 4:
                 _context.prev = 4;
@@ -85,13 +106,13 @@ var Task = function () {
 
               case 10:
                 _context.prev = 10;
-                _context.t0 = _context["catch"](4);
+                _context.t0 = _context['catch'](4);
 
                 console.log(_context.t0);
                 onCompleition('BLE Transfer Failed');
 
               case 14:
-              case "end":
+              case 'end':
                 return _context.stop();
             }
           }
@@ -105,7 +126,7 @@ var Task = function () {
       return Worker;
     }()
   }, {
-    key: "verify",
+    key: 'verify',
     value: function verify(objectType, characteristic) {
       var dataView = new DataView(new ArrayBuffer(2));
       dataView.setUint8(0, TaskType.SELECT);
@@ -113,7 +134,7 @@ var Task = function () {
       return new Task(characteristic, dataView.buffer, TaskType.SELECT);
     }
   }, {
-    key: "create",
+    key: 'create',
     value: function create(objectType, length, characteristic) {
       var dataView = new DataView(new ArrayBuffer(6));
       dataView.setUint8(0, TaskType.CREATE);
@@ -123,7 +144,7 @@ var Task = function () {
       return new Task(characteristic, dataView.buffer, TaskType.CREATE);
     }
   }, {
-    key: "setPacketReturnNotification",
+    key: 'setPacketReturnNotification',
     value: function setPacketReturnNotification(packageCount, characteristic) {
       var dataView = new DataView(new ArrayBuffer(3));
       dataView.setUint8(0, TaskType.SET_PRN);
@@ -132,19 +153,19 @@ var Task = function () {
       return new Task(characteristic, dataView.buffer, TaskType.SET_PRN);
     }
   }, {
-    key: "writePackage",
+    key: 'writePackage',
     value: function writePackage(buffer, characteristic) {
       return new Task(characteristic, buffer);
     }
   }, {
-    key: "checksum",
+    key: 'checksum',
     value: function checksum(characteristic) {
       var dataView = new DataView(new ArrayBuffer(1));
       dataView.setUint8(0, TaskType.CALCULATE_CHECKSUM);
       return new Task(characteristic, dataView.buffer, TaskType.CALCULATE_CHECKSUM);
     }
   }, {
-    key: "execute",
+    key: 'execute',
     value: function execute(characteristic) {
       var dataView = new DataView(new ArrayBuffer(1));
       dataView.setUint8(0, TaskType.EXECUTE);
