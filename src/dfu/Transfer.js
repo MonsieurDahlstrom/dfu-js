@@ -32,13 +32,26 @@ const TransferState = {
   Failed: 0x03
 }
 
+/**
+Nordic defines two different type of file transfers:
+    init package is known as Command object
+    firmware is known as Data object
+**/
 const TransferObjectType = {
   Command: 0x01,
   Data: 0x02
 }
 
+/**
+Transfer class represents a binary file inside a firmware update zip.
+A firmware update consists of a init package and data file. The StateMachine
+parases the zip file and creates a transfer object for each entry in the zip
+
+The statemachine uses a queue to slot the Transfers in order
+**/
 class Transfer {
 
+  /** The queue inside StateMachine uses this function to process each Transfer **/
   static Worker (task, onCompleition) {
     if (task instanceof Transfer === false) {
       throw new Error('task is not of type Task')
@@ -62,19 +75,22 @@ class Transfer {
 
   constructor (fileData, controlPoint, packetPoint, objectType) {
     this.state = TransferState.Prepare
+    /** The WebBluetooth Characteristics needed to transfer a file **/
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
+    /** Data array representing the actual file to transfer **/
     this.file = fileData
+    /** The TransferObjectType this file represents */
     this.objectType = objectType
+    /** Create a queue to process the TransferObject's for this file in order */
     this.bleTasks = queue(Task.Worker, 1)
-    this.bleTasks.empty = () => {
-    }
     this.bleTasks.error = (error, task) => {
       console.error(error)
       console.error(task)
     }
   }
 
+  /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
   addTask (dfuTask) {
     if (dfuTask instanceof Task === false) {
       throw new Error('task is not of type Task')
@@ -88,16 +104,26 @@ class Transfer {
     })
   }
 
+  /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
   begin () {
     this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this))
     let operation = Task.verify(this.objectType, this.controlPoint)
     this.addTask(operation)
   }
 
+  /** Clean up event registrations when transfer is completed **/
   end () {
     this.controlPoint.removeEventListener('characteristicvaluechanged', this.onEvent)
   }
 
+  /**
+  Given the type of device and object type, the maxium size that can be processed
+  at a time varies. This method creates a set of TransferObject with this maxium size
+  set.
+
+  Secondly the device reports back how much of the file has been transfered and what the crc
+  so far is. This method skips object that has already been completed
+  **/
   prepareTransferObjects (maxiumSize, currentOffset, currentCRC) {
     this.maxObjectLength = maxiumSize
     this.objects = []
@@ -112,6 +138,9 @@ class Transfer {
     this.objects[this.currentObjectIndex].validate(currentOffset, currentCRC)
   }
 
+  /**
+  Internal convinence method.
+  **/
   generateObjects () {
     let fileBegin = 0
     let fileEnd = this.file.length
@@ -125,6 +154,7 @@ class Transfer {
     }
   }
 
+  /** handles events received on the Control Point Characteristic **/
   onEvent (event) {
     /** guard to filter events that are not response codes  */
     let dataView = event.target.value
@@ -151,6 +181,7 @@ class Transfer {
     }
   }
 
+  /** Checks if Transfer is complete or starts transferring the next TransferObject **/
   nextObject () {
     if (this.currentObjectIndex < this.objects.length - 1) {
       this.bleTasks.kill()
