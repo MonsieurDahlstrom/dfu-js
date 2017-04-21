@@ -5,89 +5,91 @@ import crc from 'crc'
 
 describe("TransferObject", function() {
 
-  let dataset;
-  let transferObject;
-  let transfer;
-  beforeEach(function() {
-    dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-    transfer = jasmine.createSpyObj('Transfer',['addTask'])
-    transferObject = new TransferObject(dataset,10,0,transfer)
-  })
-  afterEach(function() {
-    dataset = null
-    transfer = null
-    transferObject = null
-  })
-
   describe("#constructor", function() {
     describe('no parameters', function() {
       it('throws without dataset', function() {
-          expect( ()=> new TransferObject()).toThrow();
+          expect( ()=> new TransferObject()).not.toThrow();
       })
     })
     describe('with parameters', function() {
-      //dataslice, offset, type, transfer, onCompletition
-      let dataset
-      let type
+      //offset, length, transfer, transferType, onCompletitionCallback
       let offset = 0
+      let length = 20
       let transfer = new Transfer()
+      let transferType
       let onCompletition = function() {}
       beforeEach(function() {
-        dataset = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
-        let type = (Math.random() <= 0.5) === true ? 1 : 2;
+        transfer.file = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
+        transferType = (Math.random() <= 0.5) === true ? 1 : 2;
       })
       it('no errors', function() {
-        expect( ()=> new TransferObject(dataset,offset,type,transfer, onCompletition)).not.toThrow();
+        expect( ()=> new TransferObject(offset,length,transfer,transferType,onCompletition)).not.toThrow();
       })
-      it('has dataset', function() {
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
-        expect(transferObject.dataslice).toBe(dataset)
+      it('has offset', function() {
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        expect(transferObject.parentOffset).toBe(offset)
+      })
+      it('has a length', function() {
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        expect(transferObject.objectLength).toBe(length)
       })
       it('belongs to a Transfer', function(){
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
         expect(transferObject.parentTransfer).toBe(transfer)
       })
       it('has completition callback', function() {
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
-        expect(transferObject.completitionCB).toBe(onCompletition)
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        expect(transferObject.onCompletition).toBe(onCompletition)
       })
       it('has chuncked dataset', function() {
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        transferObject.toPackets(0)
         expect(transferObject.chunks).toEqual(jasmine.any(Array))
       })
       it('chunks equal dataset', function() {
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        transferObject.toPackets(0)
         let calculation = []
         for(var chunk of transferObject.chunks) {
           calculation = calculation.concat(chunk)
         }
-        expect(calculation).toEqual(dataset)
+        expect(calculation).toEqual(transfer.file.slice(offset,length))
       })
       it('chunks and dataset share CRC32', function() {
-        let transferObject = new TransferObject(dataset,offset,type,transfer, onCompletition)
+        let transferObject = new TransferObject(offset,length,transfer,transferType,onCompletition)
+        transferObject.toPackets(0)
         let calculation = []
         for(var chunk of transferObject.chunks) {
           calculation = calculation.concat(chunk)
         }
-        expect(crc.crc32(calculation)).toEqual(transferObject.crc)
+        expect(crc.crc32(calculation)).toEqual(crc.crc32(transfer.file.slice(offset,length)))
       })
     })
   })
 
-  describe("#begin", function() {
-    it('sets state', function() {
-      expect( () => transferObject.begin()).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Creating)
-    })
-    it('initiate first task', function() {
-      expect( () => transferObject.begin()).not.toThrow()
-      expect(transfer.addTask).toHaveBeenCalled()
-    })
+describe("#begin", function() {
+  let transferObject
+  let transferMock
+  beforeEach(function() {
+    transferObject = new TransferObject()
+    transferMock = jasmine.createSpyObj('Transfer',['addTask'])
+    transferObject.parentTransfer = transferMock
+  })
+  it('sets state', function() {
+    transferObject.begin()
+    expect(transferObject.state).toEqual(TransferObjectState.Creating)
+  })
+  it('initiate first task', function() {
+    transferObject.begin()
+    expect(transferMock.addTask).toHaveBeenCalled()
+  })
   })
 
   describe("#verify", function() {
     let dataView;
+    let transferObject
     beforeEach(function() {
+      transferObject = new TransferObject()
       dataView = new DataView(new ArrayBuffer(15))
     })
     it('parses offset', function() {
@@ -102,11 +104,6 @@ describe("TransferObject", function() {
       expect(() => transferObject.verify(dataView)).not.toThrow()
       expect(objectMock).toHaveBeenCalledWith(0,1456)
     })
-    it('adds task', function() {
-      let objectMock = spyOn(transferObject,'validate')
-      expect(() => transferObject.verify(dataView)).not.toThrow()
-      expect(transfer.addTask).toHaveBeenCalled()
-    })
     it('calls validate', function() {
       let objectMock = spyOn(transferObject,'validate')
       expect(() => transferObject.verify(dataView)).not.toThrow()
@@ -115,53 +112,112 @@ describe("TransferObject", function() {
   })
 
   describe("#validate", function() {
-    let transferMock;
-    beforeEach(function() {
-      transferMock = spyOn(transferObject,'transfer')
+
+    describe('with valid crc', function() {
+      let transfer
+      let transferObject
+      let transferObjectCRC
+      let transferObjectTransferSpy
+      beforeEach(function() {
+        transfer = jasmine.createSpyObj('Transfer',['addTask'])
+        transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
+        transferObject = new TransferObject(0,20,transfer,1, function() {})
+        transferObjectTransferSpy = spyOn(transferObject,'transfer')
+      })
+      it('offset larger then content', function() {
+        transferObjectCRC = crc.crc32(transfer.file.slice(0,20))
+        transferObject.validate(35,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset is zero', function() {
+        transferObjectCRC = crc.crc32(transfer.file.slice(0,20))
+        transferObject.validate(0,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset set to content length', function() {
+        transferObjectCRC = crc.crc32(transfer.file.slice(0,20))
+        transferObject.validate(20,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Storing)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset > 0 && offset < content length', function() {
+        transferObjectCRC = crc.crc32(transfer.file.slice(0,1))
+        transferObject.validate(1,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Transfering)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).toHaveBeenCalled()
+      })
     })
-    it('with correct crc and content size', function() {
-      //the object has previously been transfered completly
-      expect( () => transferObject.validate(35,transferObject.crc)).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Storing)
-      expect(transfer.addTask).toHaveBeenCalled()
-      expect(transferMock).not.toHaveBeenCalled()
-    })
-    it('with correct crc and smaller offset then content size', function() {
-      //the object has previously been partially transferred
-      expect( () => transferObject.validate(20,transferObject.crc)).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Transfering)
-      expect(transfer.addTask).not.toHaveBeenCalled()
-      expect(transferMock).toHaveBeenCalled()
-    })
-    it('with larger offset then content', function() {
-      expect( () => transferObject.validate(39,transferObject.crc)).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Creating)
-      expect(transfer.addTask).toHaveBeenCalled()
-      expect(transferMock).not.toHaveBeenCalled()
-    })
-    it('with 0 as offset', function() {
-      expect( () => transferObject.validate(0,transferObject.crc)).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Creating)
-      expect(transfer.addTask).toHaveBeenCalled()
-      expect(transferMock).not.toHaveBeenCalled()
-    })
-    it('with invalid crc', function() {
-      expect( () => transferObject.validate(10,0)).not.toThrow()
-      expect(transferObject.state).toEqual(TransferObjectState.Creating)
-      expect(transfer.addTask).toHaveBeenCalled()
-      expect(transferMock).not.toHaveBeenCalled()
+
+    describe('invalid src', function() {
+      let transfer
+      let transferObject
+      let transferObjectCRC
+      let transferObjectTransferSpy
+      beforeEach(function() {
+        transfer = jasmine.createSpyObj('Transfer',['addTask'])
+        transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
+        transferObject = new TransferObject(0,20,transfer,1, function() {})
+        transferObjectCRC = crc.crc32(transfer.file.slice(0,85))
+        transferObjectTransferSpy = spyOn(transferObject,'transfer')
+      })
+      it('offset larger then content', function() {
+        transferObject.validate(35,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset is zero', function() {
+        transferObject.validate(0,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset set to content length', function() {
+        transferObject.validate(20,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
+      it('offset > 0 && offset < content length', function() {
+        transferObject.validate(1,transferObjectCRC)
+        expect(transferObject.state).toEqual(TransferObjectState.Creating)
+        expect(transfer.addTask).toHaveBeenCalled()
+        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      })
     })
   })
 
   describe("#transfer", function() {
+    let transfer
+    let transferObject
+    beforeEach(function() {
+      transfer = jasmine.createSpyObj('Transfer',['addTask'])
+      transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
+      transferObject = new TransferObject(0,20,transfer,1, function() {})
+      transferObject.toPackets()
+    })
     it('slots a task for each data chunck in the transfer', function() {
       expect( () => transferObject.transfer(0)).not.toThrow()
       //maximum ble transmission size is 20. 25 fits in two chunks.
-      expect(transfer.addTask.calls.count()).toBe(2)
+      expect(transfer.addTask.calls.count()).toEqual(transferObject.chunks.length)
     })
   })
 
   describe("#setPacketReturnNotification", function() {
+    let transfer
+    let transferObject
+    beforeEach(function() {
+      transfer = jasmine.createSpyObj('Transfer',['addTask'])
+      transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
+      transferObject = new TransferObject(0,20,transfer,1, function() {})
+      transferObject.toPackets()
+    })
     it('slots a task for each data chunck in the transfer', function() {
       expect( () => transferObject.setPacketReturnNotification()).not.toThrow()
     })
@@ -172,8 +228,10 @@ describe("TransferObject", function() {
 
   describe("#eventHandler", function() {
     let dataView;
+    let transferObject
     beforeEach(function() {
       dataView = new DataView(new ArrayBuffer(15))
+      transferObject = new TransferObject()
     })
     describe('when in Creating state', function() {
       beforeEach(function(){

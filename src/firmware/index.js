@@ -21,6 +21,11 @@
 
 import {Section} from './Section'
 
+/**
+  The different types of firmware updates a zip file can represent
+    currently only Application is fully implmented
+    http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v12.2.0/ble_sdk_app_dfu_bootloader.html?cp=4_0_1_4_2_3_2#lib_dfu_image
+**/
 const FirmwareType = {
   Application: 0x01,
   Bootloader: 0x02,
@@ -32,14 +37,19 @@ const FirmwareType = {
   NOT_IN_USE_2: 0x80
 }
 
+/**
+Firmware, instances takes a zip file as input and unpacks the compressed update
+**/
 class Firmware {
 
+  /** Create a new instance based on zip file and set inital state **/
   constructor (zipFile) {
     this.type = FirmwareType.NotConfigured
     this.zip = zipFile
     this.sections = []
   }
 
+  /** parses the manifest and unpack the binaries **/
   async parseManifest () {
     if (!this.zip) {
       this.type = FirmwareType.Invalid
