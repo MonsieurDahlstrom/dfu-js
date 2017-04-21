@@ -59,9 +59,9 @@ describe('Transfer', function() {
         .then(result => {
           packetPoint = result[0]
           controlPoint = result[1]
+          transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
           done()
         })
-        transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
       })
       it("no exceptions", function() {
         expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).not.toThrow()
@@ -318,7 +318,7 @@ describe('Transfer', function() {
 
   })
 
-  fdescribe("#nextObject", function() {
+  describe("#nextObject", function() {
     let transfer
     beforeEach(function() {
       transfer = new Transfer()
