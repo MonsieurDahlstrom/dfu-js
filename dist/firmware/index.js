@@ -78,7 +78,7 @@ var Firmware = function () {
     key: 'parseManifest',
     value: function () {
       var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee() {
-        var content, json, bin, dat, section, _bin, _dat, _section, _bin2, _dat2, _section2;
+        var content, json, bin, dat, section, _bin, _dat, _section, _bin2, _dat2, _section2, _bin3, _dat3, _section3;
 
         return _regenerator2.default.wrap(function _callee$(_context) {
           while (1) {
@@ -157,8 +157,16 @@ var Firmware = function () {
                     console.log('WWFirmwareUpdate.parseManifest softdevice ' + e);
                   }
                 } else if (json.manifest.softdevice_bootloader) {
-                  // TODO: Implmentation needed to handle the dual sizes of both sd and bl.
-                  this.type = FirmwareType.SoftdeviceBootloader;
+                  try {
+                    _bin3 = this.zip.file(json.manifest.softdevice_bootloader.bin_file, 'uint8Array');
+                    _dat3 = this.zip.file(json.manifest.softdevice_bootloader.dat_file, 'uint8Array');
+                    _section3 = new _Section.Section(_bin3, _dat3, FirmwareType.SoftdeviceBootloader);
+
+                    this.sections.push(_section3);
+                    this.type = FirmwareType.SoftdeviceBootloader;
+                  } catch (e) {
+                    console.log('WWFirmwareUpdate.parseManifest softdevice & bootloader ' + e);
+                  }
                 } else {
                   this.type = FirmwareType.Invalid;
                 }

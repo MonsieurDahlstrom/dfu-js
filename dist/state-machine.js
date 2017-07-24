@@ -118,8 +118,31 @@ var StateMachine = function () {
       if (firmware instanceof _firmware.Firmware === false) {
         throw new Error('Firmware needs to be of class Firmware');
       }
-      this.addTransfer(new _dfu.Transfer(firmware.sections[0].dat, this.controlpointCharacteristic, this.packetCharacteristic, _dfu.TransferObjectType.Command));
-      this.addTransfer(new _dfu.Transfer(firmware.sections[0].bin, this.controlpointCharacteristic, this.packetCharacteristic, _dfu.TransferObjectType.Data));
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = firmware.sections[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var section = _step.value;
+
+          this.addTransfer(new _dfu.Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, _dfu.TransferObjectType.Command));
+          this.addTransfer(new _dfu.Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, _dfu.TransferObjectType.Data));
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
     }
   }]);
   return StateMachine;
