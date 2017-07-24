@@ -89,8 +89,10 @@ class StateMachine {
     if (firmware instanceof Firmware === false) {
       throw new Error('Firmware needs to be of class Firmware')
     }
-    this.addTransfer(new Transfer(firmware.sections[0].dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Command))
-    this.addTransfer(new Transfer(firmware.sections[0].bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Data))
+    for(var section of firmware.sections) {
+      this.addTransfer(new Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Command))
+      this.addTransfer(new Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Data))
+    }
   }
 
 }

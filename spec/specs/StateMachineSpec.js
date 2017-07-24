@@ -56,66 +56,130 @@ describe('StateMachine', function() {
 
   describe('#sendFirmware', function() {
 
-    let firmware;
-    let stateMachine;
-
-    beforeAll(function(done) {
-      let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
-      return JSZip.loadAsync(content)
-      .then(zip => {
-        firmware = new Firmware(zip)
-        return firmware.parseManifest()
+    describe('softdevice & bootloader', function () {
+      let firmware;
+      let stateMachine;
+      beforeAll(function(done) {
+        let content = fs.readFileSync('spec/data/bl_sd.zip')
+        return JSZip.loadAsync(content)
+        .then(zip => {
+          firmware = new Firmware(zip)
+          return firmware.parseManifest()
+        })
+        .then(() => {
+          done();
+        })
       })
-      .then(() => {
-        done();
+
+      beforeEach(function() {
+        stateMachine = new StateMachine();
+      })
+
+      afterEach(function() {
+        stateMachine = undefined;
+      })
+
+      it('fails when not configured', function() {
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).toThrowError("StateMachine is not configured with bluetooth characteristics");
+      })
+      it('fails when not idle', function() {
+        stateMachine.state = States.TRANSFERING
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).toThrowError("Can only initate transfer when idle")
+      })
+
+      it('fails without firmware', function() {
+        stateMachine.state = States.IDLE
+        expect( function() {
+          stateMachine.sendFirmware(null);
+        }).toThrowError("Firmware needs to be of class Firmware");
+      })
+
+      it('succeed when idle and firmware is valid', function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).not.toThrow();
+      })
+
+      it("addTransfers called", function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        let spyObject = spyOn(stateMachine, 'addTransfer');
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).not.toThrow();
+        expect(spyObject.calls.count()).toBe(2);
       })
     })
 
-    beforeEach(function() {
-      stateMachine = new StateMachine();
+    describe('application dfu', function() {
+      let firmware;
+      let stateMachine;
+
+      beforeAll(function(done) {
+        let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
+        return JSZip.loadAsync(content)
+        .then(zip => {
+          firmware = new Firmware(zip)
+          return firmware.parseManifest()
+        })
+        .then(() => {
+          done();
+        })
+      })
+
+      beforeEach(function() {
+        stateMachine = new StateMachine();
+      })
+
+      afterEach(function() {
+        stateMachine = undefined;
+      })
+
+
+      it('fails when not configured', function() {
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).toThrowError("StateMachine is not configured with bluetooth characteristics");
+      })
+
+      it('fails when not idle', function() {
+        stateMachine.state = States.TRANSFERING
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).toThrowError("Can only initate transfer when idle")
+      })
+
+      it('fails without firmware', function() {
+        stateMachine.state = States.IDLE
+        expect( function() {
+          stateMachine.sendFirmware(null);
+        }).toThrowError("Firmware needs to be of class Firmware");
+      })
+
+      it('succeed when idle and firmware is valid', function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).not.toThrow();
+      })
+
+      it("addTransfers called", function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        let spyObject = spyOn(stateMachine, 'addTransfer');
+        expect( function() {
+          stateMachine.sendFirmware(firmware);
+        }).not.toThrow();
+        expect(spyObject.calls.count()).toBe(2);
+      })
     })
 
-    afterEach(function() {
-      stateMachine = undefined;
-    })
-
-
-    it('fails when not configured', function() {
-      expect( function() {
-        stateMachine.sendFirmware(firmware);
-      }).toThrowError("StateMachine is not configured with bluetooth characteristics");
-    })
-
-    it('fails when not idle', function() {
-      stateMachine.state = States.TRANSFERING
-      expect( function() {
-        stateMachine.sendFirmware(firmware);
-      }).toThrowError("Can only initate transfer when idle")
-    })
-
-    it('fails without firmware', function() {
-      stateMachine.state = States.IDLE
-      expect( function() {
-        stateMachine.sendFirmware(null);
-      }).toThrowError("Firmware needs to be of class Firmware");
-    })
-
-    it('succeed when idle and firmware is valid', function() {
-      stateMachine.state = States.IDLE
-      stateMachine.fileTransfers.pause()
-      expect( function() {
-        stateMachine.sendFirmware(firmware);
-      }).not.toThrow();
-    })
-
-    it("addTransfers called", function() {
-      stateMachine.state = States.IDLE
-      stateMachine.fileTransfers.pause()
-      let spyObject = spyOn(stateMachine, 'addTransfer');
-      expect( function() {
-        stateMachine.sendFirmware(firmware);
-      }).not.toThrow();
-      expect(spyObject.calls.count()).toBe(2);
-    })
   })
 })

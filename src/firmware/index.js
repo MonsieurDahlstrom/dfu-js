@@ -88,8 +88,16 @@ class Firmware {
         console.log('WWFirmwareUpdate.parseManifest softdevice ' + e)
       }
     } else if (json.manifest.softdevice_bootloader) {
-      // TODO: Implmentation needed to handle the dual sizes of both sd and bl.
-      this.type = FirmwareType.SoftdeviceBootloader
+      try {
+        let bin = this.zip.file(json.manifest.softdevice_bootloader.bin_file, 'uint8Array')
+        let dat = this.zip.file(json.manifest.softdevice_bootloader.dat_file, 'uint8Array')
+        let section = new Section(bin, dat, FirmwareType.SoftdeviceBootloader)
+        this.sections.push(section)
+        this.type = FirmwareType.SoftdeviceBootloader
+      } catch (e) {
+        console.log('WWFirmwareUpdate.parseManifest softdevice & bootloader ' + e)
+      }
+
     } else {
       this.type = FirmwareType.Invalid
     }
