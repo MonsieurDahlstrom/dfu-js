@@ -18,7 +18,6 @@ var _Task = require('./Task');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/** internal imports */
 var TransferState = {
   Prepare: 0x00,
   Transfer: 0x01,
@@ -26,52 +25,14 @@ var TransferState = {
   Failed: 0x03
 };
 
-/**
-Nordic defines two different type of file transfers:
-    init package is known as Command object
-    firmware is known as Data object
-**/
-// Copyright (c) 2017 Monsieur Dahlström Ltd
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-/** Library imports */
 var TransferObjectType = {
   Command: 0x01,
   Data: 0x02
 };
 
-/**
-Transfer class represents a binary file inside a firmware update zip.
-A firmware update consists of a init package and data file. The StateMachine
-parases the zip file and creates a transfer object for each entry in the zip
-
-The statemachine uses a queue to slot the Transfers in order
-**/
-
 var Transfer = function () {
   (0, _createClass3.default)(Transfer, null, [{
     key: 'Worker',
-
-
-    /** The queue inside StateMachine uses this function to process each Transfer **/
     value: function Worker(task, onCompleition) {
       if (task instanceof Transfer === false) {
         throw new Error('task is not of type Task');
@@ -98,23 +59,20 @@ var Transfer = function () {
     (0, _classCallCheck3.default)(this, Transfer);
 
     this.state = TransferState.Prepare;
-    /** The WebBluetooth Characteristics needed to transfer a file **/
+
     this.packetPoint = packetPoint;
     this.controlPoint = controlPoint;
-    /** Data array representing the actual file to transfer **/
+
     this.file = fileData;
-    /** The TransferObjectType this file represents */
+
     this.objectType = objectType;
-    /** Create a queue to process the TransferObject's for this file in order */
+
     this.bleTasks = (0, _queue2.default)(_Task.Task.Worker, 1);
     this.bleTasks.error = function (error, task) {
       console.error(error);
       console.error(task);
     };
   }
-
-  /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
-
 
   (0, _createClass3.default)(Transfer, [{
     key: 'addTask',
@@ -132,9 +90,6 @@ var Transfer = function () {
         }
       });
     }
-
-    /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
-
   }, {
     key: 'begin',
     value: function begin() {
@@ -142,23 +97,11 @@ var Transfer = function () {
       var operation = _Task.Task.verify(this.objectType, this.controlPoint);
       this.addTask(operation);
     }
-
-    /** Clean up event registrations when transfer is completed **/
-
   }, {
     key: 'end',
     value: function end() {
       this.controlPoint.removeEventListener('characteristicvaluechanged', this.onEvent);
     }
-
-    /**
-    Given the type of device and object type, the maxium size that can be processed
-    at a time varies. This method creates a set of TransferObject with this maxium size
-    set.
-      Secondly the device reports back how much of the file has been transfered and what the crc
-    so far is. This method skips object that has already been completed
-    **/
-
   }, {
     key: 'prepareTransferObjects',
     value: function prepareTransferObjects(maxiumSize, currentOffset, currentCRC) {
@@ -166,7 +109,7 @@ var Transfer = function () {
       this.objects = [];
       this.currentObjectIndex = 0;
       this.generateObjects();
-      /** Skip to object for the offset **/
+
       var object = this.objects.find(function (item) {
         return item.hasOffset(currentOffset);
       });
@@ -176,11 +119,6 @@ var Transfer = function () {
       this.state = TransferState.Transfer;
       this.objects[this.currentObjectIndex].validate(currentOffset, currentCRC);
     }
-
-    /**
-    Internal convinence method.
-    **/
-
   }, {
     key: 'generateObjects',
     value: function generateObjects() {
@@ -195,13 +133,9 @@ var Transfer = function () {
         index += this.maxObjectLength;
       }
     }
-
-    /** handles events received on the Control Point Characteristic **/
-
   }, {
     key: 'onEvent',
     value: function onEvent(event) {
-      /** guard to filter events that are not response codes  */
       var dataView = event.target.value;
       if (dataView && dataView.getInt8(0) !== _Task.TaskType.RESPONSE_CODE) {
         console.log('Transfer.onEvent() opcode was not a response code');
@@ -227,9 +161,6 @@ var Transfer = function () {
           }
       }
     }
-
-    /** Checks if Transfer is complete or starts transferring the next TransferObject **/
-
   }, {
     key: 'nextObject',
     value: function nextObject() {
