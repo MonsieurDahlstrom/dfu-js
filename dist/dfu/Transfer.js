@@ -30,16 +30,25 @@ var TransferObjectType = {
   Data: 0x02
 };
 
-var Transfer = function () {
-  (0, _createClass3.default)(Transfer, null, [{
-    key: 'Worker',
-    value: function Worker(task, onCompleition) {
+var TransferWorker = function () {
+  function TransferWorker() {
+    (0, _classCallCheck3.default)(this, TransferWorker);
+
+    this.currentTransfer = undefined;
+  }
+
+  (0, _createClass3.default)(TransferWorker, [{
+    key: 'work',
+    value: function work(task, onCompleition) {
+      var _this = this;
+
       if (task instanceof Transfer === false) {
         throw new Error('task is not of type Task');
       }
       if (!onCompleition) {
         throw new Error('onCompleition is not set');
       }
+      this.currentTransfer = task;
       task.begin();
       var intervalTimer = setInterval(function () {
         if (task.state === TransferState.Failed) {
@@ -49,12 +58,16 @@ var Transfer = function () {
         } else if (task.state === TransferState.Completed) {
           clearInterval(intervalTimer);
           task.end();
+          _this.currentTransfer = undefined;
           onCompleition();
         }
       }, 1000);
     }
   }]);
+  return TransferWorker;
+}();
 
+var Transfer = function () {
   function Transfer(fileData, controlPoint, packetPoint, objectType) {
     (0, _classCallCheck3.default)(this, Transfer);
 
@@ -75,17 +88,40 @@ var Transfer = function () {
   }
 
   (0, _createClass3.default)(Transfer, [{
+    key: 'progress',
+    value: function progress() {
+      switch (this.state) {
+        case TransferState.Prepare:
+          {
+            return 0.0;
+          }
+        case TransferState.Transfer:
+          {
+            var difference = (this.currentObjectIndex + 1) / this.objects.length;
+            if (difference < 1.0) {
+              return difference - this.objects[this.currentObjectIndex].progress();
+            } else {
+              return difference - 0.02;
+            }
+          }
+        default:
+          {
+            return 1.0;
+          }
+      }
+    }
+  }, {
     key: 'addTask',
     value: function addTask(dfuTask) {
-      var _this = this;
+      var _this2 = this;
 
       if (dfuTask instanceof _Task.Task === false) {
         throw new Error('task is not of type Task');
       }
       this.bleTasks.push(dfuTask, function (error) {
         if (error) {
-          _this.bleTasks.kill();
-          _this.state = TransferState.Failed;
+          _this2.bleTasks.kill();
+          _this2.state = TransferState.Failed;
           console.error(error);
         }
       });
@@ -177,6 +213,8 @@ var Transfer = function () {
 }();
 
 module.exports.Transfer = Transfer;
+module.exports.TransferWorker = TransferWorker;
+
 module.exports.TransferState = TransferState;
 module.exports.TransferObjectType = TransferObjectType;
 //# sourceMappingURL=Transfer.js.map

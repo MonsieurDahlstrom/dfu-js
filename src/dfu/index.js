@@ -19,8 +19,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import {Transfer, TransferState, TransferObjectType} from './Transfer'
+import {Transfer, TransferWorker, TransferState, TransferObjectType} from './Transfer'
 
 module.exports.Transfer = Transfer
 module.exports.TransferState = TransferState
 module.exports.TransferObjectType = TransferObjectType
+module.exports.TransferWorker = TransferWorker

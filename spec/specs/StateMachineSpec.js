@@ -23,34 +23,75 @@ describe('StateMachine', function() {
         let stateMachine = new StateMachine()
         expect(stateMachine.state).toBe(States.NOT_CONFIGURED)
       })
+      it('progress shouldnt be started', function () {
+        let stateMachine = new StateMachine()
+        expect(stateMachine.progress()).toBe(0.0)
+      })
     })
 
     describe("with characteristics", function() {
       let controlPoint
       let packetPoint
+      let stateMachine
       beforeAll(function() {
         controlPoint = {}
         packetPoint = {}
+      })
+      beforeEach(function () {
+        stateMachine = new StateMachine(controlPoint,packetPoint)
       })
       it("throws no error", function() {
         expect(()=> stateMachine = new StateMachine(controlPoint,packetPoint)).not.toThrow()
       })
       it("is an instance of StateMachien", function() {
-        let stateMachine = new StateMachine(controlPoint,packetPoint)
         expect(stateMachine instanceof StateMachine).toBeTruthy();
       })
       it("is not configured", function() {
-        let stateMachine = new StateMachine(controlPoint,packetPoint)
         expect(stateMachine.state).toBe(States.IDLE)
       })
       it("has control point characteristic", function() {
-        let stateMachine = new StateMachine(controlPoint,packetPoint)
         expect(stateMachine.controlpointCharacteristic).toBe(controlPoint)
       })
       it("has packet point characteristic", function() {
-        let stateMachine = new StateMachine(controlPoint,packetPoint)
         expect(stateMachine.packetCharacteristic).toBe(packetPoint)
       })
+      it('progress shouldnt be started', function () {
+        expect(stateMachine.progress()).toBe(0.0)
+      })
+    })
+  })
+
+  describe("#progress", function () {
+    let controlPoint
+    let packetPoint
+    let stateMachine
+    beforeAll(function() {
+      controlPoint = {}
+      packetPoint = {}
+    })
+    beforeEach(function () {
+      stateMachine = new StateMachine(controlPoint,packetPoint)
+    })
+    it('when not configured', function () {
+      stateMachine.state = States.NOT_CONFIGURED
+      expect(stateMachine.progress()).toBe(0.0)
+    })
+    it('when idle', function () {
+      stateMachine.state = States.IDLE
+      expect(stateMachine.progress()).toBe(0.0)
+    })
+    it('when transfering', function () {
+      stateMachine.state = States.TRANSFERING
+      stateMachine.worker.currentTransfer = {progress: function () { return 0.63}}
+      expect(stateMachine.progress()).toBe(0.63)
+    })
+    it('when completed', function () {
+      stateMachine.state = States.COMPLETE
+      expect(stateMachine.progress()).toBe(1.0)
+    })
+    it('when failed', function () {
+      stateMachine.state = States.FAILED
+      expect(stateMachine.progress()).toBe(1.0)
     })
   })
 
@@ -114,6 +155,13 @@ describe('StateMachine', function() {
           stateMachine.sendFirmware(firmware);
         }).not.toThrow();
         expect(spyObject.calls.count()).toBe(2);
+      })
+
+      it('progress should be incomplete', function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        stateMachine.sendFirmware(firmware);
+        expect(stateMachine.progress()).not.toBe(1.0);
       })
     })
 
@@ -179,6 +227,14 @@ describe('StateMachine', function() {
         }).not.toThrow();
         expect(spyObject.calls.count()).toBe(2);
       })
+
+      it('progress should be incomplete', function() {
+        stateMachine.state = States.IDLE
+        stateMachine.fileTransfers.pause()
+        stateMachine.sendFirmware(firmware);
+        expect(stateMachine.progress()).not.toBe(1.0);
+      })
+
     })
 
   })

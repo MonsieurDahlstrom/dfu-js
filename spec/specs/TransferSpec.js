@@ -6,38 +6,6 @@ import factory from 'factory-girl';
 
 describe('Transfer', function() {
 
-  describe("#Worker", function() {
-
-    it("runs with null parameters", function () {
-      expect( function() {
-        Transfer.Worker(null,null);
-      }).toThrow()
-    })
-
-    it("error with null task", function() {
-      var testCB = jasmine.createSpy('testCB')
-      expect( function() {
-        Transfer.Worker(null,testCB);
-      }).toThrowError("task is not of type Task");
-    })
-
-    it("error with task not set to Task instance", function() {
-      let testCB = jasmine.createSpy('testCB')
-      let task = {}
-      expect( function() {
-        Transfer.Worker(task,testCB);
-      }).toThrowError("task is not of type Task");
-    })
-
-    it("error without onCompleition", function() {
-      var testTask = new Transfer()
-      expect( function() {
-        Transfer.Worker(testTask,null);
-      }).toThrowError("onCompleition is not set");
-    })
-
-  })
-
   describe("#constructor", function() {
 
 
@@ -78,6 +46,55 @@ describe('Transfer', function() {
       it('should have object type', function() {
         expect(transfer.objectType).toEqual(transferObjectType)
       })
+    })
+  })
+
+  describe("#progress", function () {
+    let dataset
+    let packetPoint
+    let controlPoint
+    let transferObjectType
+    let transfer
+    beforeEach(function(done) {
+      dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
+      transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
+      factory.buildMany("WebBluetoothCharacteristic",2)
+      .then(result => {
+        packetPoint = result[0]
+        controlPoint = result[1]
+        transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
+        done()
+      })
+    })
+    it('0.0 when preparing', function () {
+      transfer.state = TransferState.Prepare
+      expect(transfer.progress()).toBe(0.0)
+    })
+    it('1.0 when completed', function () {
+      transfer.state = TransferState.Completed
+      expect(transfer.progress()).toBe(1.0)
+    })
+    it('1.0 when failed', function () {
+      transfer.state = TransferState.Failed
+      expect(transfer.progress()).toBe(1.0)
+    })
+    it('in middle of transfering', function () {
+      transfer.state = TransferState.Transfer
+      transfer.currentObjectIndex = 4
+      transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
+      expect(transfer.progress()).toBe(0.5)
+    })
+    it('start of transfer', function () {
+      transfer.state = TransferState.Transfer
+      transfer.currentObjectIndex = 0
+      transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
+      expect(transfer.progress()).toBe(0.10)
+    })
+    it('end of transfer', function () {
+      transfer.state = TransferState.Transfer
+      transfer.currentObjectIndex = 9
+      transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
+      expect(transfer.progress()).toBe(0.98)
     })
   })
 

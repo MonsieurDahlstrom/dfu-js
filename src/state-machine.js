@@ -20,7 +20,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import queue from 'async/queue'
 import {Firmware} from './firmware'
-import {Transfer, TransferObjectType} from './dfu'
+import {Transfer, TransferWorker, TransferObjectType} from './dfu'
 
 /**
 The states a DFU StateMachine can have:
@@ -49,7 +49,8 @@ class StateMachine {
     this.setControlPoint(webBluetoothControlPoint)
     this.setPacketPoint(webBluetoothPacketPoint)
     /** TODO: The queue should have better error reporting which are tied to state */
-    this.fileTransfers = queue(Transfer.Worker, 1)
+    this.worker = new TransferWorker()
+    this.fileTransfers = queue(this.worker.work, 1)
     if (this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE
     } else {
@@ -65,6 +66,20 @@ class StateMachine {
     this.packetCharacteristic = webBluetoothCharacteristic
   }
 
+  progress () {
+    switch (this.state) {
+      case StateMachineStates.NOT_CONFIGURED:
+        return 0.0
+      case StateMachineStates.IDLE:
+        return 0.0
+      case StateMachineStates.COMPLETE:
+        return 1.0
+      case StateMachineStates.FAILED:
+        return 1.0
+      case StateMachineStates.TRANSFERING:
+        return this.worker.currentTransfer.progress()
+    }
+  }
   /**
     Internal method used to slot each part of a dfu zip for transfer to device
   **/

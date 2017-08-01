@@ -37,7 +37,8 @@ var StateMachine = function () {
     this.setControlPoint(webBluetoothControlPoint);
     this.setPacketPoint(webBluetoothPacketPoint);
 
-    this.fileTransfers = (0, _queue2.default)(_dfu.Transfer.Worker, 1);
+    this.worker = new _dfu.TransferWorker();
+    this.fileTransfers = (0, _queue2.default)(this.worker.work, 1);
     if (this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE;
     } else {
@@ -54,6 +55,22 @@ var StateMachine = function () {
     key: 'setPacketPoint',
     value: function setPacketPoint(webBluetoothCharacteristic) {
       this.packetCharacteristic = webBluetoothCharacteristic;
+    }
+  }, {
+    key: 'progress',
+    value: function progress() {
+      switch (this.state) {
+        case StateMachineStates.NOT_CONFIGURED:
+          return 0.0;
+        case StateMachineStates.IDLE:
+          return 0.0;
+        case StateMachineStates.COMPLETE:
+          return 1.0;
+        case StateMachineStates.FAILED:
+          return 1.0;
+        case StateMachineStates.TRANSFERING:
+          return this.worker.currentTransfer.progress();
+      }
     }
   }, {
     key: 'addTransfer',

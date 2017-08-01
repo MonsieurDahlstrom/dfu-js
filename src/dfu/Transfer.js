@@ -49,16 +49,22 @@ parases the zip file and creates a transfer object for each entry in the zip
 
 The statemachine uses a queue to slot the Transfers in order
 **/
-class Transfer {
+
+class TransferWorker {
+
+  constructor () {
+    this.currentTransfer = undefined
+  }
 
   /** The queue inside StateMachine uses this function to process each Transfer **/
-  static Worker (task, onCompleition) {
+  work (task, onCompleition) {
     if (task instanceof Transfer === false) {
       throw new Error('task is not of type Task')
     }
     if (!onCompleition) {
       throw new Error('onCompleition is not set')
     }
+    this.currentTransfer = task
     task.begin()
     const intervalTimer = setInterval(() => {
       if (task.state === TransferState.Failed) {
@@ -68,10 +74,14 @@ class Transfer {
       } else if (task.state === TransferState.Completed) {
         clearInterval(intervalTimer)
         task.end()
+        this.currentTransfer = undefined
         onCompleition()
       }
     }, 1000)
   }
+}
+
+class Transfer {
 
   constructor (fileData, controlPoint, packetPoint, objectType) {
     this.state = TransferState.Prepare
@@ -87,6 +97,28 @@ class Transfer {
     this.bleTasks.error = (error, task) => {
       console.error(error)
       console.error(task)
+    }
+  }
+
+  progress () {
+    switch (this.state) {
+      case TransferState.Prepare:
+      {
+        return 0.0
+      }
+      case TransferState.Transfer:
+      {
+        var difference = (this.currentObjectIndex+1) / this.objects.length
+        if (difference < 1.0) {
+          return difference - this.objects[this.currentObjectIndex].progress()
+        } else {
+          return difference - 0.02
+        }
+      }
+      default:
+      {
+        return 1.0
+      }
     }
   }
 
@@ -194,5 +226,7 @@ class Transfer {
 }
 
 module.exports.Transfer = Transfer
+module.exports.TransferWorker = TransferWorker
+
 module.exports.TransferState = TransferState
 module.exports.TransferObjectType = TransferObjectType

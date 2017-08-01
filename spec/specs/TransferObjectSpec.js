@@ -67,22 +67,67 @@ describe("TransferObject", function() {
     })
   })
 
-describe("#begin", function() {
-  let transferObject
-  let transferMock
-  beforeEach(function() {
-    transferObject = new TransferObject()
-    transferMock = jasmine.createSpyObj('Transfer',['addTask'])
-    transferObject.parentTransfer = transferMock
+  describe("#progress", function () {
+    let transferObject
+    beforeEach(function() {
+      transferObject = new TransferObject()
+    })
+    it('0.0 when not started', function () {
+      transferObject.state = TransferObjectState.NotStarted
+      expect(transferObject.progress()).toBe(0.0)
+    })
+    it('0.01 when creating', function () {
+      transferObject.state = TransferObjectState.Creating
+      expect(transferObject.progress()).toBe(0.01)
+    })
+    it('0.99 when storing', function () {
+      transferObject.state = TransferObjectState.Storing
+      expect(transferObject.progress()).toBe(0.99)
+    })
+    it('1.0 when completed', function () {
+      transferObject.state = TransferObjectState.Completed
+      expect(transferObject.progress()).toBe(1.0)
+    })
+    it('1.0 when failed', function () {
+      transferObject.state = TransferObjectState.Failed
+      expect(transferObject.progress()).toBe(1.0)
+    })
+    it('in middle of transfering', function () {
+      transferObject.state = TransferObjectState.Transfering
+      transferObject.parentTransfer = {bleTasks: {length: 2}}
+      transferObject.chunks = [5,2,3,4,5,7,8,9,10,10]
+      expect(transferObject.progress()).toBe(0.78)
+    })
+    it('start of transfer', function () {
+      transferObject.state = TransferObjectState.Transfering
+      transferObject.parentTransfer = {bleTasks: {length: 10}}
+      transferObject.chunks = [5,2,3,4,5,7,8,9,10,10]
+      expect(transferObject.progress()).toBe(0.02)
+    })
+    it('end of transfer', function () {
+      transferObject.state = TransferObjectState.Transfering
+      transferObject.parentTransfer = {bleTasks: {length: 0}}
+      transferObject.chunks = [5,2,3,4,5,7,8,9,10,10]
+      expect(transferObject.progress()).toBe(0.98)
+    })
   })
-  it('sets state', function() {
-    transferObject.begin()
-    expect(transferObject.state).toEqual(TransferObjectState.Creating)
-  })
-  it('initiate first task', function() {
-    transferObject.begin()
-    expect(transferMock.addTask).toHaveBeenCalled()
-  })
+
+  describe("#begin", function() {
+    let transferObject
+    let transferMock
+    beforeEach(function() {
+      transferObject = new TransferObject()
+      transferMock = jasmine.createSpyObj('Transfer',['addTask'])
+      transferObject.parentTransfer = transferMock
+    })
+    it('sets state', function() {
+      transferObject.begin()
+      expect(transferObject.state).toEqual(TransferObjectState.Creating)
+    })
+    it('initiate first task', function() {
+      transferObject.begin()
+      expect(transferMock.addTask).toHaveBeenCalled()
+    })
   })
 
   describe("#verify", function() {
@@ -305,5 +350,4 @@ describe("#begin", function() {
       })
     })
   })
-
 })

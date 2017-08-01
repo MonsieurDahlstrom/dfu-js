@@ -45,6 +45,30 @@ var TransferObject = function () {
   }
 
   (0, _createClass3.default)(TransferObject, [{
+    key: 'progress',
+    value: function progress() {
+      switch (this.state) {
+        case TransferObjectState.NotStarted:
+          return 0.0;
+        case TransferObjectState.Creating:
+          return 0.01;
+        case TransferObjectState.Transfering:
+          var difference = this.parentTransfer.bleTasks.length / this.chunks.length;
+          switch (difference) {
+            case 0:
+              return 0.98;
+            case 1:
+              return 0.02;
+            default:
+              return 1.0 - difference - 0.02;
+          }
+        case TransferObjectState.Storing:
+          return 0.99;
+        default:
+          return 1.0;
+      }
+    }
+  }, {
     key: 'toPackets',
     value: function toPackets(offset) {
       this.chunks = [];
