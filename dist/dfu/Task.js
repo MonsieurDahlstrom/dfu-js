@@ -157,3 +157,4 @@ var Task = function () {
 module.exports.Task = Task;
 module.exports.TaskType = TaskType;
 module.exports.TaskResult = TaskResult;
+//# sourceMappingURL=Task.js.map

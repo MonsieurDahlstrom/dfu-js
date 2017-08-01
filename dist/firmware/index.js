@@ -158,3 +158,4 @@ var Firmware = function () {
 module.exports.Firmware = Firmware;
 module.exports.FirmwareType = FirmwareType;
 module.exports.FirmwareSection = _Section.Section;
+//# sourceMappingURL=index.js.map

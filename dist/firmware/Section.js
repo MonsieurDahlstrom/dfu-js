@@ -15,3 +15,4 @@ var Section = function Section(bin, dat, type) {
 };
 
 module.exports.Section = Section;
+//# sourceMappingURL=Section.js.map

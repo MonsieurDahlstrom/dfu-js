@@ -110,3 +110,4 @@ var StateMachine = function () {
 
 module.exports.States = StateMachineStates;
 module.exports.StateMachine = StateMachine;
+//# sourceMappingURL=state-machine.js.map

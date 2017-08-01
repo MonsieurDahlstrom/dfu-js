@@ -190,3 +190,4 @@ var TransferObject = function () {
 
 module.exports.TransferObject = TransferObject;
 module.exports.TransferObjectState = TransferObjectState;
+//# sourceMappingURL=TransferObject.js.map
