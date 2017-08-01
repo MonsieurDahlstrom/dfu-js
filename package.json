@@ -13,7 +13,7 @@
     "jasmine": "^2.5.3"
   },
   "scripts": {
-    "build": "babel src --out-dir dist",
+    "build": "babel src --out-dir dist --source-maps true",
     "test": "babel-node spec/run.js",
     "test-watch": "babel-watch spec/run.js --watch"
   },
