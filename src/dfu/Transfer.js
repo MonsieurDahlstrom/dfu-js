@@ -49,36 +49,30 @@ parases the zip file and creates a transfer object for each entry in the zip
 
 The statemachine uses a queue to slot the Transfers in order
 **/
+let CurrentTransfer = undefined
 
-class TransferWorker {
-
-  constructor () {
-    this.currentTransfer = undefined
+const TransferWorker = function (task, onCompleition) {
+  if (task instanceof Transfer === false) {
+    throw new Error('task is not of type Task')
   }
-
-  /** The queue inside StateMachine uses this function to process each Transfer **/
-  work (task, onCompleition) {
-    if (task instanceof Transfer === false) {
-      throw new Error('task is not of type Task')
-    }
-    if (!onCompleition) {
-      throw new Error('onCompleition is not set')
-    }
-    this.currentTransfer = task
-    task.begin()
-    const intervalTimer = setInterval(() => {
-      if (task.state === TransferState.Failed) {
-        clearInterval(intervalTimer)
-        task.end()
-        onCompleition('Failed Transfer')
-      } else if (task.state === TransferState.Completed) {
-        clearInterval(intervalTimer)
-        task.end()
-        this.currentTransfer = undefined
-        onCompleition()
-      }
-    }, 1000)
+  if (!onCompleition) {
+    throw new Error('onCompleition is not set')
   }
+  CurrentTransfer = task
+  task.begin()
+  const intervalTimer = setInterval(() => {
+    if (task.state === TransferState.Failed) {
+      clearInterval(intervalTimer)
+      task.end()
+      CurrentTransfer = undefined
+      onCompleition('Failed Transfer')
+    } else if (task.state === TransferState.Completed) {
+      clearInterval(intervalTimer)
+      task.end()
+      CurrentTransfer = undefined
+      onCompleition()
+    }
+  }, 1000)
 }
 
 class Transfer {
@@ -207,7 +201,11 @@ class Transfer {
         break
       }
       default: {
-        this.objects[this.currentObjectIndex].eventHandler(dataView)
+        if (this.objects !== undefined && this.objects[this.currentObjectIndex] !== undefined) {
+          this.objects[this.currentObjectIndex].eventHandler(dataView)
+        } else {
+          console.error('Transfer.onEvent called with no objects or no current object')
+        }
         break
       }
     }
@@ -227,6 +225,6 @@ class Transfer {
 
 module.exports.Transfer = Transfer
 module.exports.TransferWorker = TransferWorker
-
+module.exports.CurrentTransfer = CurrentTransfer
 module.exports.TransferState = TransferState
 module.exports.TransferObjectType = TransferObjectType

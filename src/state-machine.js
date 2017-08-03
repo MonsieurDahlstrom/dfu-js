@@ -20,7 +20,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import queue from 'async/queue'
 import {Firmware} from './firmware'
-import {Transfer, TransferWorker, TransferObjectType} from './dfu'
+import {Transfer, TransferWorker, CurrentTransfer, TransferObjectType} from './dfu'
 
 /**
 The states a DFU StateMachine can have:
@@ -46,24 +46,54 @@ Main Facade class to the library
 class StateMachine {
 
   constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
+    this._state = StateMachineStates.NOT_CONFIGURED
+    Object.defineProperty(this,"state",{
+      get: function () {
+        return this._state
+      },
+      set: function (value) {
+        this._state = value
+        if (this.delegate !== undefined) {
+          this.delegate.updateStateMachine()
+        }
+      },
+      configurable: true
+    })
     this.setControlPoint(webBluetoothControlPoint)
     this.setPacketPoint(webBluetoothPacketPoint)
     /** TODO: The queue should have better error reporting which are tied to state */
-    this.worker = new TransferWorker()
-    this.fileTransfers = queue(this.worker.work, 1)
+    this.fileTransfers = queue(TransferWorker, 1)
     if (this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE
-    } else {
-      this.state = StateMachineStates.NOT_CONFIGURED
     }
+  }
+/*
+  constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
+    this.state = StateMachineStates.NOT_CONFIGURED
+    this.setControlPoint(webBluetoothControlPoint)
+    this.setPacketPoint(webBluetoothPacketPoint)
+    this.fileTransfers = queue(TransferWorker, 1)
+    if (this.controlpointCharacteristic && this.packetCharacteristic) {
+      this.state = StateMachineStates.IDLE
+    }
+  }
+*/
+  setDelegate (delegate) {
+    this.delegate = delegate
   }
 
   setControlPoint (webBluetoothCharacteristic) {
     this.controlpointCharacteristic = webBluetoothCharacteristic
+    if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+      this.state = StateMachineStates.IDLE
+    }
   }
 
   setPacketPoint (webBluetoothCharacteristic) {
     this.packetCharacteristic = webBluetoothCharacteristic
+    if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+      this.state = StateMachineStates.IDLE
+    }
   }
 
   progress () {
@@ -77,7 +107,12 @@ class StateMachine {
       case StateMachineStates.FAILED:
         return 1.0
       case StateMachineStates.TRANSFERING:
-        return this.worker.currentTransfer.progress()
+        if (CurrentTransfer !== undefined) {
+          return CurrentTransfer.progress()
+        } else {
+          console.error('DFU StateMachine is in State Transfering but no transfer is set')
+          return 0.0
+        }
     }
   }
   /**

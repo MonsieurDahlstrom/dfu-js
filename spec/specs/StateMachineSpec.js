@@ -82,8 +82,7 @@ describe('StateMachine', function() {
     })
     it('when transfering', function () {
       stateMachine.state = States.TRANSFERING
-      stateMachine.worker.currentTransfer = {progress: function () { return 0.63}}
-      expect(stateMachine.progress()).toBe(0.63)
+      expect(stateMachine.progress()).toBe(0.0)
     })
     it('when completed', function () {
       stateMachine.state = States.COMPLETE

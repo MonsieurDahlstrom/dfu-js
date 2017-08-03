@@ -96,53 +96,120 @@ var Firmware = function () {
                 console.log(_context.t0);
 
               case 23:
-                _context.next = 26;
+                _context.next = 80;
                 break;
 
               case 25:
-                if (json.manifest.bootloader) {
-                  try {
-                    _bin = this.zip.file(json.manifest.bootloader.bin_file, 'uint8Array');
-                    _dat = this.zip.file(json.manifest.bootloader.dat_file, 'uint8Array');
-                    _section = new _Section.Section(_bin, _dat, FirmwareType.Bootloader);
-
-                    this.sections.push(_section);
-                    this.type = FirmwareType.Bootloader;
-                  } catch (e) {
-                    console.log('WWFirmwareUpdate.parseManifest bootloader ' + e);
-                  }
-                } else if (json.manifest.softdevice) {
-                  try {
-                    _bin2 = this.zip.file(json.manifest.softdevice.bin_file, 'uint8Array');
-                    _dat2 = this.zip.file(json.manifest.softdevice.dat_file, 'uint8Array');
-                    _section2 = new _Section.Section(_bin2, _dat2, FirmwareType.Application);
-
-                    this.sections.push(_section2);
-                    this.type = FirmwareType.Softdevice;
-                  } catch (e) {
-                    console.log('WWFirmwareUpdate.parseManifest softdevice ' + e);
-                  }
-                } else if (json.manifest.softdevice_bootloader) {
-                  try {
-                    _bin3 = this.zip.file(json.manifest.softdevice_bootloader.bin_file, 'uint8Array');
-                    _dat3 = this.zip.file(json.manifest.softdevice_bootloader.dat_file, 'uint8Array');
-                    _section3 = new _Section.Section(_bin3, _dat3, FirmwareType.SoftdeviceBootloader);
-
-                    this.sections.push(_section3);
-                    this.type = FirmwareType.SoftdeviceBootloader;
-                  } catch (e) {
-                    console.log('WWFirmwareUpdate.parseManifest softdevice & bootloader ' + e);
-                  }
-                } else {
-                  this.type = FirmwareType.Invalid;
+                if (!json.manifest.bootloader) {
+                  _context.next = 43;
+                  break;
                 }
 
-              case 26:
+                _context.prev = 26;
+                _context.next = 29;
+                return this.zip.file(json.manifest.bootloader.bin_file).async("uint8array");
+
+              case 29:
+                _bin = _context.sent;
+                _context.next = 32;
+                return this.zip.file(json.manifest.bootloader.dat_file).async("uint8array");
+
+              case 32:
+                _dat = _context.sent;
+                _section = new _Section.Section(_bin, _dat, FirmwareType.Bootloader);
+
+                this.sections.push(_section);
+                this.type = FirmwareType.Bootloader;
+                _context.next = 41;
+                break;
+
+              case 38:
+                _context.prev = 38;
+                _context.t1 = _context['catch'](26);
+
+                console.log('WWFirmwareUpdate.parseManifest bootloader ' + _context.t1);
+
+              case 41:
+                _context.next = 80;
+                break;
+
+              case 43:
+                if (!json.manifest.softdevice) {
+                  _context.next = 61;
+                  break;
+                }
+
+                _context.prev = 44;
+                _context.next = 47;
+                return this.zip.file(json.manifest.softdevice.bin_file).async("uint8array");
+
+              case 47:
+                _bin2 = _context.sent;
+                _context.next = 50;
+                return this.zip.file(json.manifest.softdevice.dat_file).async("uint8array");
+
+              case 50:
+                _dat2 = _context.sent;
+                _section2 = new _Section.Section(_bin2, _dat2, FirmwareType.Application);
+
+                this.sections.push(_section2);
+                this.type = FirmwareType.Softdevice;
+                _context.next = 59;
+                break;
+
+              case 56:
+                _context.prev = 56;
+                _context.t2 = _context['catch'](44);
+
+                console.log('WWFirmwareUpdate.parseManifest softdevice ' + _context.t2);
+
+              case 59:
+                _context.next = 80;
+                break;
+
+              case 61:
+                if (!json.manifest.softdevice_bootloader) {
+                  _context.next = 79;
+                  break;
+                }
+
+                _context.prev = 62;
+                _context.next = 65;
+                return this.zip.file(json.manifest.softdevice_bootloader.bin_file).async("uint8array");
+
+              case 65:
+                _bin3 = _context.sent;
+                _context.next = 68;
+                return this.zip.file(json.manifest.softdevice_bootloader.dat_file).async("uint8array");
+
+              case 68:
+                _dat3 = _context.sent;
+                _section3 = new _Section.Section(_bin3, _dat3, FirmwareType.SoftdeviceBootloader);
+
+                this.sections.push(_section3);
+                this.type = FirmwareType.SoftdeviceBootloader;
+                _context.next = 77;
+                break;
+
+              case 74:
+                _context.prev = 74;
+                _context.t3 = _context['catch'](62);
+
+                console.log('WWFirmwareUpdate.parseManifest softdevice & bootloader ' + _context.t3);
+
+              case 77:
+                _context.next = 80;
+                break;
+
+              case 79:
+                this.type = FirmwareType.Invalid;
+
+              case 80:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this, [[8, 20]]);
+        }, _callee, this, [[8, 20], [26, 38], [44, 56], [62, 74]]);
       }));
 
       function parseManifest() {

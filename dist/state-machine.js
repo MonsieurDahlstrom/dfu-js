@@ -34,27 +34,48 @@ var StateMachine = function () {
   function StateMachine(webBluetoothControlPoint, webBluetoothPacketPoint) {
     (0, _classCallCheck3.default)(this, StateMachine);
 
+    this._state = StateMachineStates.NOT_CONFIGURED;
+    Object.defineProperty(this, "state", {
+      get: function get() {
+        return this._state;
+      },
+      set: function set(value) {
+        this._state = value;
+        if (this.delegate !== undefined) {
+          this.delegate.updateStateMachine();
+        }
+      },
+      configurable: true
+    });
     this.setControlPoint(webBluetoothControlPoint);
     this.setPacketPoint(webBluetoothPacketPoint);
 
-    this.worker = new _dfu.TransferWorker();
-    this.fileTransfers = (0, _queue2.default)(this.worker.work, 1);
+    this.fileTransfers = (0, _queue2.default)(_dfu.TransferWorker, 1);
     if (this.controlpointCharacteristic && this.packetCharacteristic) {
       this.state = StateMachineStates.IDLE;
-    } else {
-      this.state = StateMachineStates.NOT_CONFIGURED;
     }
   }
 
   (0, _createClass3.default)(StateMachine, [{
+    key: 'setDelegate',
+    value: function setDelegate(delegate) {
+      this.delegate = delegate;
+    }
+  }, {
     key: 'setControlPoint',
     value: function setControlPoint(webBluetoothCharacteristic) {
       this.controlpointCharacteristic = webBluetoothCharacteristic;
+      if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+        this.state = StateMachineStates.IDLE;
+      }
     }
   }, {
     key: 'setPacketPoint',
     value: function setPacketPoint(webBluetoothCharacteristic) {
       this.packetCharacteristic = webBluetoothCharacteristic;
+      if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+        this.state = StateMachineStates.IDLE;
+      }
     }
   }, {
     key: 'progress',
@@ -69,7 +90,12 @@ var StateMachine = function () {
         case StateMachineStates.FAILED:
           return 1.0;
         case StateMachineStates.TRANSFERING:
-          return this.worker.currentTransfer.progress();
+          if (_dfu.CurrentTransfer !== undefined) {
+            return _dfu.CurrentTransfer.progress();
+          } else {
+            console.error('DFU StateMachine is in State Transfering but no transfer is set');
+            return 0.0;
+          }
       }
     }
   }, {

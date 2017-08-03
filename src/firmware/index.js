@@ -69,8 +69,8 @@ class Firmware {
       }
     } else if (json.manifest.bootloader) {
       try {
-        let bin = this.zip.file(json.manifest.bootloader.bin_file, 'uint8Array')
-        let dat = this.zip.file(json.manifest.bootloader.dat_file, 'uint8Array')
+        let bin = await this.zip.file(json.manifest.bootloader.bin_file).async("uint8array")
+        let dat = await this.zip.file(json.manifest.bootloader.dat_file).async("uint8array")
         let section = new Section(bin, dat, FirmwareType.Bootloader)
         this.sections.push(section)
         this.type = FirmwareType.Bootloader
@@ -79,8 +79,8 @@ class Firmware {
       }
     } else if (json.manifest.softdevice) {
       try {
-        let bin = this.zip.file(json.manifest.softdevice.bin_file, 'uint8Array')
-        let dat = this.zip.file(json.manifest.softdevice.dat_file, 'uint8Array')
+        let bin = await this.zip.file(json.manifest.softdevice.bin_file).async("uint8array")
+        let dat = await this.zip.file(json.manifest.softdevice.dat_file).async("uint8array")
         let section = new Section(bin, dat, FirmwareType.Application)
         this.sections.push(section)
         this.type = FirmwareType.Softdevice
@@ -89,8 +89,8 @@ class Firmware {
       }
     } else if (json.manifest.softdevice_bootloader) {
       try {
-        let bin = this.zip.file(json.manifest.softdevice_bootloader.bin_file, 'uint8Array')
-        let dat = this.zip.file(json.manifest.softdevice_bootloader.dat_file, 'uint8Array')
+        let bin = await this.zip.file(json.manifest.softdevice_bootloader.bin_file).async("uint8array")
+        let dat = await this.zip.file(json.manifest.softdevice_bootloader.dat_file).async("uint8array")
         let section = new Section(bin, dat, FirmwareType.SoftdeviceBootloader)
         this.sections.push(section)
         this.type = FirmwareType.SoftdeviceBootloader

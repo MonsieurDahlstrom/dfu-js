@@ -30,42 +30,31 @@ var TransferObjectType = {
   Data: 0x02
 };
 
-var TransferWorker = function () {
-  function TransferWorker() {
-    (0, _classCallCheck3.default)(this, TransferWorker);
+var CurrentTransfer = undefined;
 
-    this.currentTransfer = undefined;
+var TransferWorker = function TransferWorker(task, onCompleition) {
+  if (task instanceof Transfer === false) {
+    throw new Error('task is not of type Task');
   }
-
-  (0, _createClass3.default)(TransferWorker, [{
-    key: 'work',
-    value: function work(task, onCompleition) {
-      var _this = this;
-
-      if (task instanceof Transfer === false) {
-        throw new Error('task is not of type Task');
-      }
-      if (!onCompleition) {
-        throw new Error('onCompleition is not set');
-      }
-      this.currentTransfer = task;
-      task.begin();
-      var intervalTimer = setInterval(function () {
-        if (task.state === TransferState.Failed) {
-          clearInterval(intervalTimer);
-          task.end();
-          onCompleition('Failed Transfer');
-        } else if (task.state === TransferState.Completed) {
-          clearInterval(intervalTimer);
-          task.end();
-          _this.currentTransfer = undefined;
-          onCompleition();
-        }
-      }, 1000);
+  if (!onCompleition) {
+    throw new Error('onCompleition is not set');
+  }
+  CurrentTransfer = task;
+  task.begin();
+  var intervalTimer = setInterval(function () {
+    if (task.state === TransferState.Failed) {
+      clearInterval(intervalTimer);
+      task.end();
+      CurrentTransfer = undefined;
+      onCompleition('Failed Transfer');
+    } else if (task.state === TransferState.Completed) {
+      clearInterval(intervalTimer);
+      task.end();
+      CurrentTransfer = undefined;
+      onCompleition();
     }
-  }]);
-  return TransferWorker;
-}();
+  }, 1000);
+};
 
 var Transfer = function () {
   function Transfer(fileData, controlPoint, packetPoint, objectType) {
@@ -113,15 +102,15 @@ var Transfer = function () {
   }, {
     key: 'addTask',
     value: function addTask(dfuTask) {
-      var _this2 = this;
+      var _this = this;
 
       if (dfuTask instanceof _Task.Task === false) {
         throw new Error('task is not of type Task');
       }
       this.bleTasks.push(dfuTask, function (error) {
         if (error) {
-          _this2.bleTasks.kill();
-          _this2.state = TransferState.Failed;
+          _this.bleTasks.kill();
+          _this.state = TransferState.Failed;
           console.error(error);
         }
       });
@@ -192,7 +181,11 @@ var Transfer = function () {
           }
         default:
           {
-            this.objects[this.currentObjectIndex].eventHandler(dataView);
+            if (this.objects !== undefined && this.objects[this.currentObjectIndex] !== undefined) {
+              this.objects[this.currentObjectIndex].eventHandler(dataView);
+            } else {
+              console.error('Transfer.onEvent called with no objects or no current object');
+            }
             break;
           }
       }
@@ -214,7 +207,7 @@ var Transfer = function () {
 
 module.exports.Transfer = Transfer;
 module.exports.TransferWorker = TransferWorker;
-
+module.exports.CurrentTransfer = CurrentTransfer;
 module.exports.TransferState = TransferState;
 module.exports.TransferObjectType = TransferObjectType;
 //# sourceMappingURL=Transfer.js.map
