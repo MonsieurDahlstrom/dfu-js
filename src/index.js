@@ -18,12 +18,36 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
+import UpdateActions from './actions/update-actions'
+import TransferActions from './actions/transfer-actions'
+import ObjectActions from './actions/object-actions'
+import WriteActions from './actions/write-actions'
+//
+import UpdateMutations from './mutations/update-mutations'
+import TransferMutations from './mutations/transfer-mutations'
+import ObjectMutations from './mutations/object-mutations'
+import WriteMutations from './mutations/write-mutations'
 
-import {StateMachine,States} from './state-machine'
-import {Firmware, FirmwareType} from './firmware'
-//
-module.exports.States = States
-module.exports.StateMachine = StateMachine
-//
-module.exports.Firmware = Firmware
-module.exports.FirmwareType = FirmwareType
+const state = {
+  updates: [],
+  transfers: [],
+  objects: [],
+  writes: []
+}
+
+const getters = {
+  webBluetoothRunningUpdates: state => state.updates.filter((update) => update.state === TransmissionStatus.Transfering),
+  webBluetoothTransferForUpdate: (state) => (update) => state.transfers.find((transfer) => transfer.update === update && transfer.state === TransmissionStatus.Transfering),
+  webBluetoothObjectForTransfer: (state) => (transfer) => state.objects.find((object) => object.transfer === transfer && object.state === TransmissionStatus.Transfering),
+  webBluetoothWriteForObject: (state) => (object) => state.actions.find((action) => action.object === object && action.state === TransmissionStatus.Transfering)
+}
+
+const actions = Object.assign({}, UpdateActions, TransferActions, ObjectActions, WriteActions)
+const mutations = Object.assign({}, UpdateMutations, TransferMutations, ObjectMutations, WriteMutations)
+
+export default {
+  state,
+  getters,
+  actions,
+  mutations
+}
