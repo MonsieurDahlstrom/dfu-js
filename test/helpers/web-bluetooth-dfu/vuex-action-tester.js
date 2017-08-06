@@ -11,30 +11,26 @@ export default class VuexActionTester {
     this.dispatch = {}
   }
 
-  run () {
+  async run () {
     const  dispatch = this.dispatch
     const  commit = this.commit.bind(this)
-    this.action({dispatch,commit}, this.payload)
-    if (this.mutations.length === 0) {
-      expect(this.count).to.equal(0)
+    try {
+      await this.action({dispatch,commit}, this.payload)
+      expect(this.count).to.equal(this.mutations.length)
       this.done()
+    } catch (e) {
+      this.done(e)
     }
   }
 
   async commit (type,payload) {
+    if(this.mutations.length === 0) {
+      throw Error('Expected no mutations')
+    }
     const mutation = this.mutations[this.count]
-    try {
-      expect(mutation.type).to.equal(type)
-      if (payload && mutation.validation) {
-        expect(mutation.validation(payload)).to.equal(true)
-      }
-    } catch (error) {
-      this.done(error)
-    }
+    expect(mutation.type).to.equal(type)
+    expect(mutation.validation(payload)).to.equal(true)
     this.count++
-    if (this.count >= this.mutations.length) {
-      this.done()
-    }
   }
 
 }

@@ -25,10 +25,8 @@ const WriteActions = {
           await write.characteristic.writeValue(write.buffer)
           attempts = 0
           write.state = TransmissionStatus.Completed
-          console.log('attemps is: ' + attempts);
         } catch (err) {
           attempts--
-          console.log('attemps is: ' + attempts);
           write.error = err
           write.state = TransmissionStatus.Failed
         }
