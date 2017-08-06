@@ -1,74 +1,90 @@
 import factory from 'factory-girl'
+import sinon from 'sinon'
+import {expect} from 'chai'
 import WriteFactories from '../../factories/write-factory'
 import WriteActions from "../../../src/actions/write-actions"
 import WriteMutations from '../../../src/mutations/write-mutations'
 import * as MutationTypes from '../../../src/mutation-types'
 import VuexActionTester from '../../helpers/web-bluetooth-dfu/vuex-action-tester'
-// import * as Write from './../../src/types/write'
+import TransmissionStatus from '../../../src/types/transmission-types'
 
 describe('Write Actions', function () {
 
-  describe('webBluetoothDFUScheduleWrite', function() {
-    let write
-    beforeEach(function(done) {
-      factory.build('writeChecksum')
-      .then((checksum) => {
-        write = checksum
-        done()
-      })
+  var sandbox
+  let write
+  let state
+  beforeEach(function (done) {
+    sandbox = sinon.sandbox.create()
+    state = {writes: []}
+    factory.build('writeChecksum')
+    .then((checksum) => {
+      write = checksum
+      done()
     })
+  });
+  afterEach(function () {
+    sandbox.restore()
+  });
+
+  describe('webBluetoothDFUScheduleWrite', function() {
     it('accepts Write object', function (done) {
-      let mutations = [{ type: MutationTypes.ADD_WRITE, payload: write }]
-      var states = {writes: []}
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, write, states, mutations, done)
+      let validationFunc = function (payload) {
+        try {
+          expect(payload).to.deep.equal(write)
+        } catch (err) {
+          return false
+        } finally {
+          return true
+        }
+       }
+      let mutations = [{ type: MutationTypes.ADD_WRITE, validation: validationFunc }]
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, write, state, mutations, done)
       test.run(0)
     })
   })
   describe('webBluetoothDFURemoveWrite', function () {
-    let write
-    beforeEach(function(done) {
-      factory.build('writeChecksum')
-      .then((checksum) => {
-        write = checksum
-        done()
-      })
-    })
     it('accepts Write object', function (done) {
-      let mutations = [{ type: MutationTypes.REMOVE_WRITE, payload: write }]
-      var states = {writes: [write]}
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, write, states, mutations, done)
-      test.run(0)
+      let validationFunc = function (payload) {
+        try {
+          expect(payload).to.deep.equal(write)
+        } catch (err) {
+          return false
+        } finally {
+          return true
+        }
+       }
+       let mutations = [{ type: MutationTypes.REMOVE_WRITE, validation: validationFunc }]
+       var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, write, state, mutations, done)
+       test.run()
     })
   })
   describe('webBluetoothDFUTransferWrite', function () {
-    /*
-    it("error with null parameters", function () {
-      this.executeAsyncMethod(async function() {
-        expect(await Task.Worker(null,null)).toThrowError()
-      })
+    it('succesfull complete', function (done) {
+      var writeValueStub = sandbox.stub().returns(true)
+      write.characteristic.writeValue = writeValueStub
+      let validationFunc = function (payload) { return payload.state === TransmissionStatus.Completed}
+      let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      test.run()
     })
-
-    it("error with null task", function() {
-      this.executeAsyncMethod(async function() {
-        var testCB = jasmine.createSpy('testCB')
-        expect(await Task.Worker(null,testCB)).toThrowError("task is not of type Task")
-      })
+    it('sucessfull on retry', function (done) {
+      var writeValueStub = sandbox.stub().throws()
+      writeValueStub.onCall(0).throws()
+      writeValueStub.onCall(1).throws()
+      writeValueStub.onCall(2).returns(true)
+      write.characteristic.writeValue = writeValueStub
+      let validationFunc = function (payload) { return payload.state === TransmissionStatus.Completed}
+      let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      test.run()
     })
-
-    it("error with task not set to Task instance", function() {
-      this.executeAsyncMethod(async function() {
-        let callback = jasmine.createSpy('testCB')
-        let task = {}
-        expect(await Task.Worker(task,callback)).toThrowError("task is not of type Task")
-      })
+    it('maximum attempts', function (done) {
+      var writeValueStub = sandbox.stub().throws()
+      write.characteristic.writeValue = writeValueStub
+      let validationFunc = function (payload) { return payload.state === TransmissionStatus.Failed}
+      let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      test.run()
     })
-
-    it("error without onCompleition", function() {
-      this.executeAsyncMethod(async function() {
-        var task = new Task()
-        expect(await Task.Worker(task,null)).toThrowError("task is not of type Task")
-      })
-    })
-    */
   })
 })

@@ -25,8 +25,8 @@ export default class VuexActionTester {
     const mutation = this.mutations[this.count]
     try {
       expect(mutation.type).to.equal(type)
-      if (payload) {
-        expect(mutation.payload).to.deep.equal(payload)
+      if (payload && mutation.validation) {
+        expect(mutation.validation(payload)).to.equal(true)
       }
     } catch (error) {
       this.done(error)

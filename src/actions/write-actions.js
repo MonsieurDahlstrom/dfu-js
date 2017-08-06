@@ -11,22 +11,30 @@ const WriteActions = {
     }
   },
 
-  async webBluetoothDFUWriteRemove ({ dispatch, commit }, action) {
-    commit(MutationTypes.REMOVE_WRITE, action)
+  async webBluetoothDFUWriteRemove ({ dispatch, commit }, write) {
+    if(write instanceof Write) {
+      commit(MutationTypes.REMOVE_WRITE, write)
+    }
   },
 
-  async webBluetoothDFUExecuteWrite ({ dispatch, commit }, action) {
-    var attempts = 3;
-    do {
-      try {
-        await action.characteristic.writeValue(action.buffer)
-        action.state = TransmissionStatus.Completed
-      } catch (err) {
-        action.error = err
-        action.state = TransmissionStatus.Failed
-      }
-    } while (attempts > 0 || action.state === TransmissionStatus.Completed);
-    commit(MutationTypes.UPDATE_WRITE, action)
+  async webBluetoothDFUExecuteWrite ({ dispatch, commit }, write) {
+    if(write instanceof Write) {
+      var attempts = 3;
+      do {
+        try {
+          await write.characteristic.writeValue(write.buffer)
+          attempts = 0
+          write.state = TransmissionStatus.Completed
+          console.log('attemps is: ' + attempts);
+        } catch (err) {
+          attempts--
+          console.log('attemps is: ' + attempts);
+          write.error = err
+          write.state = TransmissionStatus.Failed
+        }
+      } while (attempts > 0);
+      commit(MutationTypes.UPDATE_WRITE, write)
+    }
   }
 }
 
