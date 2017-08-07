@@ -1,5 +1,4 @@
-import factory from 'factory-girl'
-import WritesFactory from '../../factories/write-factory'
+import factory from '../../factories'
 
 import { expect } from 'chai'
 import sinon from 'sinon'

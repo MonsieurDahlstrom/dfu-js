@@ -1,32 +1,32 @@
-import factory from 'factory-girl'
+import factory from '../../factories'
 import sinon from 'sinon'
 import {expect} from 'chai'
-import WriteFactories from '../../factories/write-factory'
 import WriteActions from "../../../src/actions/write-actions"
 import WriteMutations from '../../../src/mutations/write-mutations'
 import * as MutationTypes from '../../../src/mutation-types'
-import VuexActionTester from '../../helpers/web-bluetooth-dfu/vuex-action-tester'
+import VuexActionTester from '../../helpers/vuex-action-tester'
 import TransmissionStatus from '../../../src/types/transmission-types'
 
 describe('Write Actions', function () {
 
   var sandbox
   let write
-  let state
   beforeEach(function (done) {
     sandbox = sinon.sandbox.create()
-    state = {writes: []}
     factory.build('writeChecksum')
     .then((checksum) => {
       write = checksum
       done()
+    })
+    .catch((err) => {
+      console.error(err)
     })
   });
   afterEach(function () {
     sandbox.restore()
   });
 
-  describe('webBluetoothDFUScheduleWrite', function() {
+  describe('#webBluetoothDFUScheduleWrite', function() {
     it('accepts Write object', function (done) {
       let validationFunc = function (payload) {
         try {
@@ -36,17 +36,19 @@ describe('Write Actions', function () {
         } finally {
           return true
         }
-       }
+      }
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
       let mutations = [{ type: MutationTypes.ADD_WRITE, validation: validationFunc }]
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, write, state, mutations, done)
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, write, circumstance, mutations, [], done)
       test.run()
     })
     it('does not store none write object', function (done) {
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, {}, state, [], done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUScheduleWrite, {}, circumstance, [], [], done)
       test.run()
     })
   })
-  describe('webBluetoothDFURemoveWrite', function () {
+  describe('#webBluetoothDFURemoveWrite', function () {
     it('accepts Write object', function (done) {
       let validationFunc = function (payload) {
         try {
@@ -57,26 +59,30 @@ describe('Write Actions', function () {
           return true
         }
        }
+       let circumstance = {state: {writes: []}, validation: function () {return true}}
        let mutations = [{ type: MutationTypes.REMOVE_WRITE, validation: validationFunc }]
-       var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, write, state, mutations, done)
+       var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, write, circumstance, mutations, [], done)
        test.run()
     })
     it('does not store none write object', function (done) {
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, {}, state, [], done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUWriteRemove, {}, circumstance, [], [], done)
       test.run()
     })
   })
-  describe('webBluetoothDFUTransferWrite', function () {
+  describe('#webBluetoothDFUTransferWrite', function () {
     it('succesfull complete', function (done) {
       var writeValueStub = sandbox.stub().returns(true)
       write.characteristic.writeValue = writeValueStub
       let validationFunc = function (payload) { return payload.state === TransmissionStatus.Completed}
       let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, circumstance, mutations, [], done)
       test.run()
     })
     it('does not store none write object', function (done) {
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, {}, state, [], done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, {}, circumstance, [], [], done)
       test.run()
     })
     it('sucessfull on retry', function (done) {
@@ -87,7 +93,8 @@ describe('Write Actions', function () {
       write.characteristic.writeValue = writeValueStub
       let validationFunc = function (payload) { return payload.state === TransmissionStatus.Completed}
       let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, circumstance, mutations, [], done)
       test.run()
     })
     it('maximum attempts', function (done) {
@@ -95,7 +102,8 @@ describe('Write Actions', function () {
       write.characteristic.writeValue = writeValueStub
       let validationFunc = function (payload) { return payload.state === TransmissionStatus.Failed}
       let mutations = [{ type: MutationTypes.UPDATE_WRITE, validation: validationFunc }]
-      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, state, mutations, done)
+      let circumstance = {state: {writes: []}, validation: function () {return true}}
+      var test = new VuexActionTester(WriteActions.webBluetoothDFUExecuteWrite, write, circumstance, mutations, [], done)
       test.run()
     })
   })

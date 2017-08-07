@@ -8,17 +8,12 @@ export class Write {
     this.command = commandToExecute
     this.state = TransmissionStatus.Prepared
     this.error = undefined
+    this.transferObject = undefined
   }
 }
 
 export class Verify extends Write {
   constructor (characteristic,objectType) {
-    if (typeof(objectType) !== 'number') {
-      throw new TypeError("object type is not a number")
-    }
-    if (typeof(characteristic) !== 'object') {
-      throw new TypeError('characteristic is undefined')
-    }
     let dataView = new DataView(new ArrayBuffer(2))
     dataView.setUint8(0, WriteTypes.SELECT)
     dataView.setUint8(1, objectType)
@@ -28,15 +23,6 @@ export class Verify extends Write {
 
 export class Create extends Write {
   constructor  (characteristic, objectType, length) {
-    if (typeof(length) !== 'number') {
-      throw new TypeError('object length is not a number')
-    }
-    if (typeof(objectType) !== 'number') {
-      throw new TypeError("object type is not a number")
-    }
-    if (typeof(characteristic) !== 'object') {
-      throw new TypeError('characteristic is not an object')
-    }
     let dataView = new DataView(new ArrayBuffer(6))
     dataView.setUint8(0, WriteTypes.CREATE)
     dataView.setUint8(1, objectType)
@@ -48,12 +34,6 @@ export class Create extends Write {
 
 export class PacketReturnNotification extends Write {
   constructor (characteristic,packageCount) {
-    if (typeof(packageCount) !== 'number') {
-      throw new TypeError("package count is not provided")
-    }
-    if (characteristic === undefined) {
-      throw new TypeError('characteristic is undefined')
-    }
     let dataView = new DataView(new ArrayBuffer(3))
     dataView.setUint8(0, WriteTypes.SET_PRN)
     /** Set the package received notification to the number of expected packages */
@@ -65,21 +45,12 @@ export class PacketReturnNotification extends Write {
 
 export class Package extends Write {
   constructor (characteristic, buffer) {
-    if (typeof(buffer) !== 'object') {
-      throw new TypeError("buffer is not provided")
-    }
-    if (typeof(characteristic) !== 'object') {
-      throw new TypeError('characteristic is undefined')
-    }
     super(characteristic, buffer, undefined);
   }
 }
 
 export class Checksum extends Write {
   constructor (characteristic) {
-    if (typeof(characteristic) !== 'object') {
-      throw new TypeError('characteristic is not an object')
-    }
     let dataView = new DataView(new ArrayBuffer(1))
     dataView.setUint8(0, WriteTypes.CALCULATE_CHECKSUM)
     super(characteristic, dataView.buffer, WriteTypes.CALCULATE_CHECKSUM);
@@ -88,12 +59,8 @@ export class Checksum extends Write {
 
 export class Execute extends Write {
   constructor (characteristic) {
-    if (typeof(characteristic) !== 'object') {
-      throw new TypeError('characteristic is not an object')
-    }
     let dataView = new DataView(new ArrayBuffer(1))
     dataView.setUint8(0, WriteTypes.EXECUTE)
     super(characteristic, dataView.buffer, WriteTypes.EXECUTE);
-
   }
 }

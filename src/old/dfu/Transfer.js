@@ -22,25 +22,10 @@
 /** Library imports */
 import queue from 'async/queue'
 /** internal imports */
-import {TransferObject} from './TransferObject'
-import {Task, TaskType, TaskResult} from './Task'
+import {TransferObject} from './transfer-object'
+// import {Task, TaskType, TaskResult} from './Task'
 
-const TransferState = {
-  Prepare: 0x00,
-  Transfer: 0x01,
-  Completed: 0x02,
-  Failed: 0x03
-}
 
-/**
-Nordic defines two different type of file transfers:
-    init package is known as Command object
-    firmware is known as Data object
-**/
-const TransferObjectType = {
-  Command: 0x01,
-  Data: 0x02
-}
 
 /**
 Transfer class represents a binary file inside a firmware update zip.
