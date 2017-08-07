@@ -190,20 +190,22 @@ describe('TransferObject Actions', function () {
       })
     })
 
-    describe("#setPacketReturnNotification", function() {
-      let transfer
-      let transferObject
-      beforeEach(function() {
-        transfer = jasmine.createSpyObj('Transfer',['addTask'])
-        transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-        transferObject = new TransferObject(0,20,transfer,1, function() {})
-        transferObject.toPackets()
-      })
-      it('slots a task for each data chunck in the transfer', function() {
-        expect( () => transferObject.setPacketReturnNotification()).not.toThrow()
-      })
-      it('slots a task for each data chunck in the transfer', function() {
-        expect( transferObject.setPacketReturnNotification()).toEqual(jasmine.any(Task))
+    describe("#webBluetoothDFUObjectSetPacketReturnNotification", function() {
+      it('slots a task for each data chunck in the transfer', function(done) {
+        let circumstance = {state: state, validation: function () {
+          return true
+        }}
+        let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) {
+            expect(payload).to.deep.equal(transferObject)
+            return true
+        }}]
+        let dispatches = [
+          { type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.PacketReturnNotification).to.equal(true); return true}}
+        ]
+        transferObject.chunks.push([1,2,3,4,5,6])
+        transferObject.chunks.push([7,8,9,10])
+        var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectSetPacketReturnNotification, transferObject, circumstance, mutations, dispatches, done)
+        test.run()
       })
     })
 

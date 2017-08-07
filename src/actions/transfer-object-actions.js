@@ -84,9 +84,10 @@ const TransferObjectActions = {
 
   /** Request a notification when all packets for this transferObject has been received on the device **/
   async webBluetoothDFUObjectSetPacketReturnNotification({ dispatch, commit }, transferObject) {
-    let write = Writes.Package(transferObject.chunks.length,transferObject.transfer.packetPoint)
+    let write = new Writes.PacketReturnNotification(transferObject.transfer.packetPoint,transferObject.chunks.length)
     write.transferObject = transferObject
     dispatch('webBluetoothDFUScheduleWrite', write)
+    commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject)
   },
 
   /** handles events received on the Control Point Characteristic **/
