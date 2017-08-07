@@ -10,7 +10,7 @@ import * as MutationTypes from '../../../src/mutation-types'
 import * as Writes from '../../../src/types/write'
 import {TransferObjectState} from '../../../src/types/transfer-object'
 
-describe.only('TransferObject Actions', function () {
+describe('TransferObject Actions', function () {
 
   let sandbox
   let transferObject
@@ -104,7 +104,7 @@ describe.only('TransferObject Actions', function () {
     })
   })
 
-  describe.only("#webBluetoothDFUObjectValidate", function() {
+  describe("#webBluetoothDFUObjectValidate", function() {
 
     describe('with valid crc', function() {
       let transferObjectCRC
@@ -136,6 +136,7 @@ describe.only('TransferObject Actions', function () {
         test.run()
       })
       it('offset > 0 && offset < content length', function(done) {
+        transferObjectCRC = crc.crc32(transferObject.transfer.file.slice(0,1))
         let payload = {checksum: transferObjectCRC, offset: 1, transferObject: transferObject}
         let circumstance = {state: state, validation: function () {return true}}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
@@ -149,45 +150,63 @@ describe.only('TransferObject Actions', function () {
       })
     })
 
-    /*
     describe('invalid src', function() {
+      let transferObjectCRC
+      beforeEach(function() {
+        transferObject.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
+        transferObjectCRC = crc.crc32(transferObject.transfer.file.slice(0,85))
+      })
+      it('offset larger then content', function(done) {
+        let payload = {checksum: transferObjectCRC, offset: 35, transferObject: transferObject}
+        let circumstance = {state: state, validation: function () {return true}}
+        let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, circumstance, mutations, dispatches, done)
+        test.run()
+      })
+      it('offset is zero', function(done) {
+        let payload = {checksum: transferObjectCRC, offset: 0, transferObject: transferObject}
+        let circumstance = {state: state, validation: function () {return true}}
+        let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, circumstance, mutations, dispatches, done)
+        test.run()
+      })
+      it('offset set to content length', function(done) {
+        let payload = {checksum: transferObjectCRC, offset: 20, transferObject: transferObject}
+        let circumstance = {state: state, validation: function () {return true}}
+        let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, circumstance, mutations, dispatches, done)
+        test.run()
+      })
+      it('offset > 0 && offset < content length', function(done) {
+        let payload = {checksum: transferObjectCRC, offset: 1, transferObject: transferObject}
+        let circumstance = {state: state, validation: function () {return true}}
+        let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, circumstance, mutations, dispatches, done)
+        test.run()
+      })
+    })
+
+    describe("#setPacketReturnNotification", function() {
       let transfer
       let transferObject
-      let transferObjectCRC
-      let transferObjectTransferSpy
       beforeEach(function() {
         transfer = jasmine.createSpyObj('Transfer',['addTask'])
         transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
         transferObject = new TransferObject(0,20,transfer,1, function() {})
-        transferObjectCRC = crc.crc32(transfer.file.slice(0,85))
-        transferObjectTransferSpy = spyOn(transferObject,'transfer')
+        transferObject.toPackets()
       })
-      it('offset larger then content', function() {
-        transferObject.validate(35,transferObjectCRC)
-        expect(transferObject.state).toEqual(TransferObjectState.Creating)
-        expect(transfer.addTask).toHaveBeenCalled()
-        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      it('slots a task for each data chunck in the transfer', function() {
+        expect( () => transferObject.setPacketReturnNotification()).not.toThrow()
       })
-      it('offset is zero', function() {
-        transferObject.validate(0,transferObjectCRC)
-        expect(transferObject.state).toEqual(TransferObjectState.Creating)
-        expect(transfer.addTask).toHaveBeenCalled()
-        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
-      })
-      it('offset set to content length', function() {
-        transferObject.validate(20,transferObjectCRC)
-        expect(transferObject.state).toEqual(TransferObjectState.Creating)
-        expect(transfer.addTask).toHaveBeenCalled()
-        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
-      })
-      it('offset > 0 && offset < content length', function() {
-        transferObject.validate(1,transferObjectCRC)
-        expect(transferObject.state).toEqual(TransferObjectState.Creating)
-        expect(transfer.addTask).toHaveBeenCalled()
-        expect(transferObjectTransferSpy).not.toHaveBeenCalled()
+      it('slots a task for each data chunck in the transfer', function() {
+        expect( transferObject.setPacketReturnNotification()).toEqual(jasmine.any(Task))
       })
     })
-    */
+
   })
 
 })

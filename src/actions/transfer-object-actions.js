@@ -63,19 +63,16 @@ const TransferObjectActions = {
     /** The checksum reported back from a NRF51/52 is a crc of the Transfer object's file up till the offset */
     let fileCRCToOffset = crc.crc32(transferObject.transfer.file.slice(0, offset))
     if (offset === transferObject.offset + transferObject.length && checksum === fileCRCToOffset) {
-      console.log('Should Store result')
       /** Object has been transfered and should be moved into its right place on the device **/
       transferObject.state = TransferObjectState.Storing
       let write = new Writes.Execute(transferObject.transfer.packetPoint)
       dispatch('webBluetoothDFUScheduleWrite', write)
     } else if (offset === transferObject.offset || offset > transferObject.offset + transferObject.length || checksum !== fileCRCToOffset) {
-      console.log('Should resend object')
       /** This object has not been trasnfered to the device or is faulty, recreate and transfer a new **/
       transferObject.state = TransferObjectState.Creating
       let write = new Writes.Create(transferObject.transfer.controlPoint,transferObject.type,transferObject.length)
       dispatch('webBluetoothDFUScheduleWrite', write)
     } else {
-      console.log('Should transmit reminder of object')
       /** its the right object on the device but it has not been transfred fully **/
       transferObject.state = TransferObjectState.Transfering
       dispatch('webBluetoothDFUObjectToPackets', transferObject)

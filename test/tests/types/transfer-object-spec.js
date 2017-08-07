@@ -45,7 +45,7 @@ describe("TransferObject", function() {
       })
       it('has offset', function() {
         let transferObject = new TransferObject(0,20,transfer,0, function () {})
-        expect(transferObject.transferOffset).to.equal(0)
+        expect(transferObject.offset).to.equal(0)
       })
       it('has a length', function() {
         let transferObject =new TransferObject(0,20,transfer,0, function () {} )
@@ -69,38 +69,9 @@ describe("TransferObject", function() {
 
 
 
-  describe("#transfer", function() {
-    let transfer
-    let transferObject
-    beforeEach(function() {
-      transfer = jasmine.createSpyObj('Transfer',['addTask'])
-      transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-      transferObject = new TransferObject(0,20,transfer,1, function() {})
-      transferObject.toPackets()
-    })
-    it('slots a task for each data chunck in the transfer', function() {
-      expect( () => transferObject.transfer(0)).not.toThrow()
-      //maximum ble transmission size is 20. 25 fits in two chunks.
-      expect(transfer.addTask.calls.count()).toEqual(transferObject.chunks.length)
-    })
-  })
 
-  describe("#setPacketReturnNotification", function() {
-    let transfer
-    let transferObject
-    beforeEach(function() {
-      transfer = jasmine.createSpyObj('Transfer',['addTask'])
-      transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-      transferObject = new TransferObject(0,20,transfer,1, function() {})
-      transferObject.toPackets()
-    })
-    it('slots a task for each data chunck in the transfer', function() {
-      expect( () => transferObject.setPacketReturnNotification()).not.toThrow()
-    })
-    it('slots a task for each data chunck in the transfer', function() {
-      expect( transferObject.setPacketReturnNotification()).toEqual(jasmine.any(Task))
-    })
-  })
+
+
 
   describe("#eventHandler", function() {
     let dataView;
