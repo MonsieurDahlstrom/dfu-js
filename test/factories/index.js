@@ -8,6 +8,8 @@ import {Checksum} from '../../src/types/write'
 import WriteTypes from '../../src/types/write-types'
 
 factory.define('transfer', Transfer, {
+  packetPoint: factory.assoc('webBluetoothCharacteristic'),
+  controlPoint: factory.assoc('webBluetoothCharacteristic'),
   file: () => Array.from({length: 25}, () => Math.floor(Math.random() * 9))
 });
 

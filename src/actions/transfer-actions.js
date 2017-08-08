@@ -1,4 +1,5 @@
 import {Verify} from '../types/write'
+import * as MutationTypes from '../mutation-types'
 import TransmissionStatus from '../types/transmission-types'
 
 const GenerateObjects = function (dispatch, transfer) {

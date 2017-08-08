@@ -41,7 +41,7 @@ export default class VuexActionTester {
 
   dispatch (type,payload) {
     if(this.dispatches.length === 0) {
-      throw Error('Expected no mutations')
+      throw Error('Expected no dispatches')
     }
     const dispatch = this.dispatches[this.dispatchesCount]
     if(dispatch === undefined) {

@@ -14,7 +14,7 @@ class Transfer {
     /** reference to wrapper function around control point events**/
     this.controlPointEventHandler = undefined
     /** reference to parent transfer**/
-    this.transfer = undefined
+    this.update = undefined
   }
 
 }
