@@ -75,7 +75,7 @@ const TransferActions = {
   async webBluetoothDFUTransferNextObject({ dispatch, commit }, transfer) {
     if (transfer.currentObjectIndex < transfer.objects.length - 1) {
       transfer.currentObjectIndex++
-      dispatch('webBluetoothDFUObjectBegin',transfer.objects[this.currentObjectIndex])
+      dispatch('webBluetoothDFUObjectBegin', transfer.objects[transfer.currentObjectIndex])
     } else {
       transfer.state = TransmissionStatus.Completed
     }

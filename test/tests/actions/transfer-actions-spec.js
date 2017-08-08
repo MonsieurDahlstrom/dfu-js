@@ -9,6 +9,7 @@ import {Verify,Validate} from '../../../src/types/write'
 import * as MutationTypes from '../../../src/mutation-types'
 import TransferActions from '../../../src/actions/transfer-actions'
 import {TransferObject} from '../../../src/types/transfer-object'
+import TransmissionStatus from '../../../src/types/transmission-types'
 
 describe('Transfer Actions', function () {
 
@@ -219,7 +220,56 @@ describe('Transfer Actions', function () {
     })
   })
 
-  describe('#webBluetoothDFUTransferNextObject', function () {})
+  describe('#webBluetoothDFUTransferNextObject', function () {
+    beforeEach(function(done) {
+      factory.buildMany('transferObject',2)
+      .then((list) => {
+        transfer.objects = list
+        done()
+      })
+    })
+    it('startsx next transfer object', function(done) {
+      let mutations = [
+        {
+          type: MutationTypes.UPDATE_TRANSFER,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(transfer)
+            expect(transfer.currentObjectIndex).to.equal(1);
+            return true
+          }
+        }
+      ]
+      let dispatches = [
+        {
+          type: 'webBluetoothDFUObjectBegin',
+          validation: function(payload) {
+            expect(payload instanceof TransferObject).to.equal(true)
+            expect(transfer.objects.indexOf(payload)).to.equal(1)
+            return true
+          }
+        }
+      ]
+      transfer.currentObjectIndex = 0
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, transfer, mutations, dispatches, done)
+      test.run()
+    })
+    it('marks transfer complete if no more objects', function(done) {
+      let mutations = [
+        {
+          type: MutationTypes.UPDATE_TRANSFER,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(transfer)
+            expect(transfer.state).to.equal(TransmissionStatus.Completed);
+            return true
+          }
+        }
+      ]
+      transfer.currentObjectIndex = 1
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, transfer, mutations, [], done)
+      test.run()
+    })
+
+  })
 
   describe('#webBluetoothDFUTransferEventHandler', function () {})
 
