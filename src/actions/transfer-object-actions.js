@@ -1,12 +1,25 @@
 import crc from 'crc'
 //
 import * as Writes from '../types/write'
+import WriteTypes from '../types/write-types'
+import WriteResponses from '../types/write-responses'
+//
 import * as MutationTypes from '../mutation-types'
 import {TransferObjectState} from '../types/transfer-object'
 
 const DATA_CHUNK_SIZE = 20
 
 const TransferObjectActions = {
+
+  /** Adding a TransferObject to the vuex state **/
+  async webBluetoothDFUObjectAdd({ dispatch, commit }, transferObject) {
+    commit(MutationTypes.ADD_TRANSFER_OBJECT, transferObject)
+  },
+
+  /* Remove a TransferObject from the vuex state */
+  async webBluetoothDFUObjectRemove({ dispatch, commit }, transferObject) {
+    commit(MutationTypes.REMOVE_TRANSFER_OBJECT, transferObject)
+  },
 
   /** The first step in transferring this object, ask how much has already been transferred **/
   async webBluetoothDFUObjectBegin({ dispatch, commit }, transferObject) {
@@ -91,64 +104,69 @@ const TransferObjectActions = {
   },
 
   /** handles events received on the Control Point Characteristic **/
-  async webBluetoothDFUObjectHandleEvent ({ dispatch, commit }, dataview) {
+  async webBluetoothDFUObjectHandleEvent ({ dispatch, commit }, payload) {
+    let dataView = payload.dataView
+    let transferObject = payload.transferObject
     /** Depending on which state this object is handle the relevent opcodes */
-    let opCode = dataView.getInt8(1)
-    let responseCode = dataView.getInt8(2)
-    switch (this.state) {
+    payload.opCode = dataView.getInt8(1)
+    payload.responseCode = dataView.getInt8(2)
+    switch (transferObject.state) {
       case TransferObjectState.Creating:
-        dispatch('webBluetoothDFUObjectHandleEventWhileCreating', dataView)
+        dispatch('webBluetoothDFUObjectHandleEventWhileCreating', payload)
         break
       case TransferObjectState.Transfering:
-        dispatch('webBluetoothDFUObjectHandleEventWhileTransfering', dataView)
+        dispatch('webBluetoothDFUObjectHandleEventWhileTransfering', payload)
         break
       case TransferObjectState.Storing: {
-        dispatch('webBluetoothDFUObjectHandleEventWhileStoring', dataView)
+        dispatch('webBluetoothDFUObjectHandleEventWhileStoring', payload)
         break
       }
     }
   },
 
-  async webBluetoothDFUObjectHandleEventWhileCreating ({ dispatch, commit }, dataview) {
-    if (opCode === TaskType.SELECT && responseCode === TaskResult.SUCCESS) {
+  async webBluetoothDFUObjectHandleEventWhileCreating ({ dispatch, commit }, payload) {
+    if (payload.opCode === WriteTypes.SELECT && payload.responseCode === WriteResponses.SUCCESS) {
       /** verify how much how the transfer that has been completed */
-      let currentOffset = dataView.getUint32(7, true)
-      let currentCRC = dataView.getUint32(11, true)
-      this.validate(currentOffset, currentCRC)
-    } else if (opCode === TaskType.CREATE && responseCode === TaskResult.SUCCESS) {
-      this.state = TransferObjectState.Transfering
+      payload.offset = payload.dataView.getUint32(7, true)
+      payload.checksum = payload.dataView.getUint32(11, true)
+      dispatch('webBluetoothDFUObjectValidate', payload)
+      commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject)
+    } else if (payload.opCode === WriteTypes.CREATE && payload.responseCode === WriteResponses.SUCCESS) {
+      payload.transferObject.state = TransferObjectState.Transfering
       /** start the transfer of the object  */
-      this.toPackets(0)
-      this.transfer.addTask(this.setPacketReturnNotification())
-      this.transfer()
-    } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+      dispatch('webBluetoothDFUObjectToPackets', payload.transferObject)
+      dispatch('webBluetoothDFUObjectSetPacketReturnNotification', payload.transferObject)
+      dispatch('webBluetoothDFUObjectTransferDataPackages', payload.transferObject)
+      commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject)
+    } else if (payload.opCode === WriteTypes.SET_PRN && payload.responseCode === WriteResponses.SUCCESS) {
       //
     } else {
-      console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+      console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode)
     }
   },
 
-  async webBluetoothDFUObjectHandleEventWhileTransfering ({ dispatch, commit }, dataview) {
-    if (opCode === TaskType.CALCULATE_CHECKSUM && responseCode === TaskResult.SUCCESS) {
+  async webBluetoothDFUObjectHandleEventWhileTransfering ({ dispatch, commit }, payload) {
+    if (payload.opCode === WriteTypes.CALCULATE_CHECKSUM && payload.responseCode === WriteResponses.SUCCESS) {
       /** verify how much how the transfer that has been completed */
-      let offset = dataView.getUint32(3, true)
-      let checksum = dataView.getUint32(7, true)
-      this.validate(offset, checksum)
-    } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+      payload.offset = payload.dataView.getUint32(7, true)
+      payload.checksum = payload.dataView.getUint32(11, true)
+      dispatch('webBluetoothDFUObjectValidate', payload)
+      commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject)
+    } else if (payload.opCode === WriteTypes.SET_PRN && payload.responseCode === WriteResponses.SUCCESS) {
       //NOP
     } else {
-      console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+      console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode)
     }
   },
 
-  async webBluetoothDFUObjectHandleEventWhileStoring ({ dispatch, commit }, dataview) {
-    if (opCode === TaskType.EXECUTE && responseCode === TaskResult.SUCCESS) {
-      this.state = TransferObjectState.Completed
-      this.onCompletition()
-    } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+  async webBluetoothDFUObjectHandleEventWhileStoring ({ dispatch, commit }, payload) {
+    if (payload.opCode === WriteTypes.EXECUTE && payload.responseCode === WriteResponses.SUCCESS) {
+      payload.transferObject.state = TransferObjectState.Completed
+      commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject)
+    } else if (payload.opCode === WriteTypes.SET_PRN && payload.responseCode === WriteResponses.SUCCESS) {
       //NOP
     } else {
-      console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+      console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode)
     }
   }
 }

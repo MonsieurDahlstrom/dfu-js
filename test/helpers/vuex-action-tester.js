@@ -1,11 +1,10 @@
 import {expect} from 'chai'
 
 export default class VuexActionTester {
-  constructor(action, payload, circumstance, mutations, dispatches, done) {
+  constructor(action, payload, mutations, dispatches, done) {
     this.action = action
     this.payload = payload
-    this.state = circumstance.state
-    this.stateValidation = circumstance.validation
+    this.state = {}
     this.mutations = mutations
     this.done = done
     this.mutationsCount = 0
@@ -21,7 +20,6 @@ export default class VuexActionTester {
       await this.action({dispatch,commit}, this.payload)
       expect(this.mutationsCount).to.equal(this.mutations.length)
       expect(this.dispatchesCount).to.equal(this.dispatches.length)
-      expect(this.stateValidation()).to.equal(true)
       this.done()
     } catch (e) {
       this.done(e)

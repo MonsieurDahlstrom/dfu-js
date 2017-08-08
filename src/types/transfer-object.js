@@ -54,9 +54,7 @@ with a maximum size that the MCU reports via bluewooth
 **/
 class TransferObject {
 
-  constructor (offset, length, transfer, transferType, onCompletitionCallback) {
-    // function to call when transfer completes or fails
-    this.onCompletition = onCompletitionCallback
+  constructor (offset, length, transfer, transferType) {
     // Reference to parent transfer that stores the file data
     this.transfer = transfer
     // The offset into the file data
