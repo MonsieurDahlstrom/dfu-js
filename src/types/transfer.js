@@ -1,14 +1,9 @@
-
-const TransferState = {
-  Prepare: 0x00,
-  Transfer: 0x01,
-  Completed: 0x02,
-  Failed: 0x03
-}
+import TransmissionStatus from './transmission-types'
 
 class Transfer {
+
   constructor (fileData, controlPoint, packetPoint, objectType) {
-    this.state = TransferState.Prepare
+    this.state = TransmissionStatus.Prepare
     /** The WebBluetooth Characteristics needed to transfer a file **/
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
@@ -16,8 +11,13 @@ class Transfer {
     this.file = fileData
     /** The TransferObjectType this file represents */
     this.objectType = objectType
+    /** reference to wrapper function around control point events**/
+    this.controlPointEventHandler = undefined
+    /** reference to parent transfer**/
+    this.transfer = undefined
   }
+
 }
 
 module.exports.Transfer = Transfer
-module.exports.TransferState = TransferState
+export default Transfer

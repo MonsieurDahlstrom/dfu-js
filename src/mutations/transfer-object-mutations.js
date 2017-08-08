@@ -17,7 +17,7 @@ const TransferObjectMutations = {
     }
   },
   [MutationTypes.REMOVE_TRANSFER_OBJECT] (state, transferObject) {
-    let writesToRemove = state.writes.filter((write) => write.transferObject === transferObject && write.state !== TrannsmissionStatus.Transfering)
+    let writesToRemove = state.writes.filter((write) => write.transferObject === transferObject)
     for(var write of writesToRemove) {
       var writeIndex = state.writes.indexOf(write)
       if(writeIndex >= 0) {

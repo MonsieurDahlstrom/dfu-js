@@ -69,6 +69,13 @@ class TransferObject {
     this.chunks = []
   }
 
+  /** convinence, returns a boolean for if a specific offset represents this object **/
+  hasOffset (offset) {
+    let min = this.offset
+    let max = min + this.length
+    return offset >= min && offset <= max
+  }
+
 }
 
 module.exports.TransferObject = TransferObject
