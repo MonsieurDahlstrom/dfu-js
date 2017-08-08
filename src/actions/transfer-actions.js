@@ -1,6 +1,7 @@
 import {Verify} from '../types/write'
 import * as MutationTypes from '../mutation-types'
 import TransmissionStatus from '../types/transmission-types'
+import {TransferObject} from '../types/transfer-object'
 
 const GenerateObjects = function (dispatch, transfer) {
   let fileBegin = 0
@@ -65,7 +66,8 @@ const TransferActions = {
       transfer.currentObjectIndex = transfer.objects.indexOf(object)
     }
     transfer.state = TransmissionStatus.Transfering
-    dispatch('webBluetoothDFUObjectValidate', {checksum: currentCRC, offset: currentOffset, transferObject: transfer.objects[transfer.currentObjectIndex]})
+    let validatePayload = {checksum: currentCRC, offset: currentOffset, transferObject: transfer.objects[transfer.currentObjectIndex]}
+    dispatch('webBluetoothDFUObjectValidate', validatePayload)
     commit(MutationTypes.UPDATE_TRANSFER, transfer)
   },
 

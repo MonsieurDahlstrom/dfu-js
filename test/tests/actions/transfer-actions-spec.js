@@ -5,9 +5,10 @@ import crc from 'crc'
 import VuexActionTester from '../../helpers/vuex-action-tester'
 import factory from '../../factories'
 //
-import {Verify} from '../../../src/types/write'
+import {Verify,Validate} from '../../../src/types/write'
 import * as MutationTypes from '../../../src/mutation-types'
 import TransferActions from '../../../src/actions/transfer-actions'
+import {TransferObject} from '../../../src/types/transfer-object'
 
 describe('Transfer Actions', function () {
 
@@ -45,7 +46,7 @@ describe('Transfer Actions', function () {
   })
 
   describe('#webBluetoothDFUTransferRemove', function () {
-    it('create callback', function (done) {
+    it('removes callback', function (done) {
       let mutations = [
         {
           type: MutationTypes.REMOVE_TRANSFER,
@@ -71,12 +72,152 @@ describe('Transfer Actions', function () {
         { type: 'webBluetoothDFUExecuteWrite', validation: function(payload) { expect(payload instanceof Verify).to.equal(true); return true}}
 
       ]
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferBegin, transfer, mutations,dispatches, done)
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferBegin, transfer, mutations, dispatches, done)
       test.run()
     })
   })
 
-  describe('#webBluetoothDFUTransferPrepare', function () {})
+  describe('#webBluetoothDFUTransferPrepare', function () {
+    describe("file size smaller then maximum object size", function() {
+      let fileData
+      beforeEach(function() {
+        fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9))
+        transfer.file = fileData
+      })
+      it('has one object to transfer', function(done) {
+        let mutations = [
+          {
+            type: MutationTypes.UPDATE_TRANSFER,
+            validation: function(payload) {
+              expect(payload).to.deep.equal(transfer)
+              expect(transfer.objects.length).to.equal(1);
+              return true
+            }
+          }
+        ]
+        let dispatches = [
+          {
+            type: 'webBluetoothDFUObjectAdd',
+            validation: function(payload) {
+              expect(payload instanceof TransferObject).to.equal(true)
+              expect(payload.transfer).to.equal(transfer)
+              return true
+            }
+          },
+          {
+            type: 'webBluetoothDFUObjectValidate',
+            validation: function (payload) {
+              expect(payload.transferObject instanceof TransferObject).to.equal(true)
+              expect(payload.checksum).to.not.be.undefined
+              expect(payload.offset).to.not.be.undefined
+              return true
+            }
+          }
+        ]
+        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
+        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
+        test.run()
+      })
+    })
+    describe("content length equal to object size", function() {
+      let fileData
+      beforeEach(function() {
+        fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9))
+        transfer.file = fileData
+      })
+      it('has one object to transfer', function(done) {
+        let mutations = [
+          {
+            type: MutationTypes.UPDATE_TRANSFER,
+            validation: function(payload) {
+              expect(payload).to.deep.equal(transfer)
+              expect(transfer.objects.length).to.equal(1);
+              return true
+            }
+          }
+        ]
+        let dispatches = [
+          {
+            type: 'webBluetoothDFUObjectAdd',
+            validation: function(payload) {
+              expect(payload instanceof TransferObject).to.equal(true)
+              expect(payload.transfer).to.equal(transfer)
+              return true
+            }
+          },
+          {
+            type: 'webBluetoothDFUObjectValidate',
+            validation: function (payload) {
+              expect(payload.transferObject instanceof TransferObject).to.equal(true)
+              expect(payload.checksum).to.not.be.undefined
+              expect(payload.offset).to.not.be.undefined
+              return true
+            }
+          }
+        ]
+        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
+        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
+        test.run()
+      })
+      describe("content larger then object size", function() {
+        let fileData
+        beforeEach(function() {
+          fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9))
+          transfer.file = fileData
+        })
+        it('has one object to transfer', function(done) {
+          let mutations = [
+            {
+              type: MutationTypes.UPDATE_TRANSFER,
+              validation: function(payload) {
+                expect(payload).to.deep.equal(transfer)
+                expect(transfer.objects.length).to.equal(3);
+                return true
+              }
+            }
+          ]
+          let dispatches = [
+            {
+              type: 'webBluetoothDFUObjectAdd',
+              validation: function(payload) {
+                expect(payload instanceof TransferObject).to.equal(true)
+                expect(payload.transfer).to.equal(transfer)
+                return true
+              }
+            },
+            {
+              type: 'webBluetoothDFUObjectAdd',
+              validation: function(payload) {
+                expect(payload instanceof TransferObject).to.equal(true)
+                expect(payload.transfer).to.equal(transfer)
+                return true
+              }
+            },
+            {
+              type: 'webBluetoothDFUObjectAdd',
+              validation: function(payload) {
+                expect(payload instanceof TransferObject).to.equal(true)
+                expect(payload.transfer).to.equal(transfer)
+                return true
+              }
+            },
+            {
+              type: 'webBluetoothDFUObjectValidate',
+              validation: function (payload) {
+                expect(payload.transferObject instanceof TransferObject).to.equal(true)
+                expect(payload.checksum).to.not.be.undefined
+                expect(payload.offset).to.not.be.undefined
+                return true
+              }
+            }
+          ]
+          let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
+          var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
+          test.run()
+        })
+      })
+    })
+  })
 
   describe('#webBluetoothDFUTransferNextObject', function () {})
 
@@ -95,76 +236,6 @@ describe("#end", function() {
       done()
     })
   })
-})
-
-describe("#prepareTransferObjects", function() {
-
-  describe("file size smaller then maximum object size", function() {
-    let fileData
-    let transfer
-    beforeEach(function(done) {
-      fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9));
-      factory.buildMany('WebBluetoothCharacteristic',2)
-      .then(characteristics => {
-        transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
-        done()
-      })
-    })
-    it('does not throw error', function() {
-      expect( () => {
-        transfer.prepareTransferObjects(255,0,0);
-      }).not.toThrowError();
-    })
-    it('has one object to transfer', function() {
-      transfer.prepareTransferObjects(255,0,0);
-      expect(transfer.objects.length).toBe(1);
-    })
-  })
-
-  describe("content length equal to object size", function() {
-    let fileData
-    let transfer
-    beforeEach(function(done) {
-      fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
-      factory.buildMany('WebBluetoothCharacteristic',2)
-      .then(characteristics => {
-        transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
-        done()
-      })
-    })
-    it('does not throw error', function() {
-      expect( () => {
-        transfer.prepareTransferObjects(255,0,0);
-      }).not.toThrowError();
-    })
-    it('has one object to transfer', function() {
-      transfer.prepareTransferObjects(255,0,0);
-      expect(transfer.objects.length).toBe(1);
-    })
-  })
-
-  describe("content length larger then object size", function() {
-    let fileData
-    let transfer
-    beforeEach(function(done) {
-      fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
-      factory.buildMany('WebBluetoothCharacteristic',2)
-      .then(characteristics => {
-        transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
-        done()
-      })
-    })
-    it('does not throw error', function() {
-      expect( () => {
-        transfer.prepareTransferObjects(255,0,0);
-      }).not.toThrowError();
-    })
-    it('has one object to transfer', function() {
-      transfer.prepareTransferObjects(255,0,0);
-      expect(transfer.objects.length).toBe(3);
-    })
-  })
-
 })
 
 describe("#onEvent", function() {
