@@ -1,4 +1,4 @@
-import TransmissionStatus from './transmission-types'
+import TransmissionStatus from '../transmission-types'
 import WriteTypes from './write-types'
 
 export class Write {

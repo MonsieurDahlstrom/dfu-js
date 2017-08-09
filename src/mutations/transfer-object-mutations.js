@@ -1,5 +1,5 @@
 import * as MutationTypes from '../mutation-types'
-import TrannsmissionStatus from '../types/transmission-types'
+import TrannsmissionStatus from '../models/transmission-types'
 
 const TransferObjectMutations = {
   [MutationTypes.ADD_TRANSFER_OBJECT] (state, transferObject) {

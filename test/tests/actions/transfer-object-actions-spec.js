@@ -7,11 +7,9 @@ import VuexActionTester from '../../helpers/vuex-action-tester'
 //
 import TransferObjectActions from '../../../src/actions/transfer-object-actions'
 import * as MutationTypes from '../../../src/mutation-types'
-import {TransferObjectState} from '../../../src/types/transfer-object'
+import {TransferObjectState} from '../../../src/models/transfer-object'
 //
-import * as Writes from '../../../src/types/write'
-import WriteTypes from '../../../src/types/write-types'
-import WriteResponses from '../../../src/types/write-responses'
+import Write from '../../../src/models/write'
 
 describe('TransferObject Actions', function () {
 
@@ -89,11 +87,11 @@ describe('TransferObject Actions', function () {
           return true
       }}]
       let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) {
-        expect(payload instanceof Writes.Verify).to.be.true
+        expect(payload instanceof Write.Verify).to.be.true
         return true
       }},
       { type: 'webBluetoothDFUExecuteWrite', validation: function(payload) {
-        expect(payload instanceof Writes.Verify).to.be.true
+        expect(payload instanceof Write.Verify).to.be.true
         return true
       }}]
       var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectBegin, transferObject, mutations, dispatches, done)
@@ -129,21 +127,21 @@ describe('TransferObject Actions', function () {
       it('offset larger then content', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 35, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
       it('offset is zero', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 0, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
       it('offset set to content length', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 20, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Execute).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Execute).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
@@ -170,28 +168,28 @@ describe('TransferObject Actions', function () {
       it('offset larger then content', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 35, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
       it('offset is zero', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 0, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
       it('offset set to content length', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 20, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
       it('offset > 0 && offset < content length', function(done) {
         let payload = {checksum: transferObjectCRC, offset: 1, transferObject: transferObject}
         let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
-        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.Create).to.equal(true); return true}}]
+        let dispatches = [{ type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Create).to.equal(true); return true}}]
         var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectValidate, payload, mutations, dispatches, done)
         test.run()
       })
@@ -205,7 +203,7 @@ describe('TransferObject Actions', function () {
           return true
       }}]
       let dispatches = [
-        { type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Writes.PacketReturnNotification).to.equal(true); return true}}
+        { type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.PacketReturnNotification).to.equal(true); return true}}
       ]
       transferObject.chunks.push([1,2,3,4,5,6])
       transferObject.chunks.push([7,8,9,10])
@@ -253,12 +251,12 @@ describe('TransferObject Actions', function () {
   describe('webBluetoothDFUObjectHandleEventWhileCreating', function () {
     it('handles TaskType.SELECT repsonse', function(done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.SELECT)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.SELECT)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
       eventData.setUint32(7, 456789, true) //offset
       eventData.setUint32(11, 987654, true) // checsu
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.SELECT, responseCode: WriteResponses.SUCCESS}
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.SELECT, responseCode: Write.Responses.SUCCESS}
       let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
       let dispatches = [{ type: 'webBluetoothDFUObjectValidate', validation: function(payload) {
         expect(payload.transferObject).to.equal(transferObject)
@@ -271,10 +269,10 @@ describe('TransferObject Actions', function () {
     })
     it('handles TaskType.CREATE repsonse', function (done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.CREATE)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.CREATE, responseCode: WriteResponses.SUCCESS}
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.CREATE)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.CREATE, responseCode: Write.Responses.SUCCESS}
       let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
       let dispatches = [
         { type: 'webBluetoothDFUObjectToPackets', validation: function(payload) { expect(payload).to.equal(transferObject); return true }},
@@ -286,10 +284,10 @@ describe('TransferObject Actions', function () {
     })
     it('handles TaskType.SET_PRN repsonse', function(done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.SET_PRN)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.SET_PRN, responseCode: WriteResponses.SUCCESS}
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.SET_PRN)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.SET_PRN, responseCode: Write.Responses.SUCCESS}
       var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectHandleEventWhileCreating, payload, [], [], done)
       test.run()
     })
@@ -298,12 +296,12 @@ describe('TransferObject Actions', function () {
   describe('webBluetoothDFUObjectHandleEventWhileTransfering', function () {
     it('handles TaskType.CALCULATE_CHECKSUM repsonse', function (done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.CALCULATE_CHECKSUM)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.CALCULATE_CHECKSUM)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
       eventData.setUint32(7, 456789, true) //offset
       eventData.setUint32(11, 987654, true) // checsu
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.CALCULATE_CHECKSUM, responseCode: WriteResponses.SUCCESS}
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.CALCULATE_CHECKSUM, responseCode: Write.Responses.SUCCESS}
       let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
       let dispatches = [{ type: 'webBluetoothDFUObjectValidate', validation: function(payload) {
         expect(payload.transferObject).to.equal(transferObject)
@@ -316,10 +314,10 @@ describe('TransferObject Actions', function () {
     })
     it('handles TaskType.SET_PRN repsonse', function (done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.SET_PRN)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.SET_PRN, responseCode: WriteResponses.SUCCESS}
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.SET_PRN)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.SET_PRN, responseCode: Write.Responses.SUCCESS}
       var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectHandleEventWhileTransfering, payload, [], [], done)
       test.run()
     })
@@ -328,20 +326,20 @@ describe('TransferObject Actions', function () {
   describe('webBluetoothDFUObjectHandleEventWhileStoring', function () {
     it('handles TaskType.EXECUTE repsonse', function (done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.EXECUTE)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.EXECUTE, responseCode: WriteResponses.SUCCESS}
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.EXECUTE)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.EXECUTE, responseCode: Write.Responses.SUCCESS}
       let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) { return true}}]
       var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectHandleEventWhileStoring, payload, mutations, [], done)
       test.run()
     })
     it('handles TaskType.SET_PRN repsonse', function (done) {
       var eventData = new DataView(new ArrayBuffer(15))
-      eventData.setUint8(0,WriteTypes.RESPONSE_CODE)
-      eventData.setUint8(1,WriteTypes.SET_PRN)
-      eventData.setUint8(2,WriteResponses.SUCCESS)
-      let payload = {dataView: eventData, transferObject: transferObject, opCode: WriteTypes.SET_PRN, responseCode: WriteResponses.SUCCESS}
+      eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+      eventData.setUint8(1,Write.Actions.SET_PRN)
+      eventData.setUint8(2,Write.Responses.SUCCESS)
+      let payload = {dataView: eventData, transferObject: transferObject, opCode: Write.Actions.SET_PRN, responseCode: Write.Responses.SUCCESS}
       var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectHandleEventWhileStoring, payload, [], [], done)
       test.run()
     })

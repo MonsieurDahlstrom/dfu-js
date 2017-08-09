@@ -1,24 +1,23 @@
 import * as MutationTypes from './../mutation-types'
-import WriteTypes from './../types/write-types'
-import TransmissionStatus from './../types/transmission-types'
-import {Write} from './../types/write'
+import TransmissionStatus from './../models/transmission-types'
+import Write from '../models/write'
 
 const WriteActions = {
 
   async webBluetoothDFUScheduleWrite({ dispatch, commit }, write) {
-    if(write instanceof Write) {
+    if(write instanceof Write.Write) {
       commit(MutationTypes.ADD_WRITE, write)
     }
   },
 
   async webBluetoothDFUWriteRemove ({ dispatch, commit }, write) {
-    if(write instanceof Write) {
+    if(write instanceof Write.Write) {
       commit(MutationTypes.REMOVE_WRITE, write)
     }
   },
 
   async webBluetoothDFUExecuteWrite ({ dispatch, commit }, write) {
-    if(write instanceof Write) {
+    if(write instanceof Write.Write) {
       var attempts = 3;
       do {
         try {

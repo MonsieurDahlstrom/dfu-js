@@ -6,10 +6,10 @@ export default class VuexActionTester {
     this.payload = payload
     this.state = {}
     this.mutations = mutations
-    this.done = done
     this.mutationsCount = 0
     this.dispatchesCount = 0
     this.dispatches = dispatches
+    this.done = done
   }
 
   async run () {
@@ -35,7 +35,7 @@ export default class VuexActionTester {
       throw Error('Received more mutations then expected')
     }
     expect(mutation.type).to.equal(type)
-    expect(mutation.validation(payload)).to.equal(true)
+    expect(mutation.validation(payload)).to.not.throw
     this.mutationsCount++
   }
 
@@ -48,7 +48,7 @@ export default class VuexActionTester {
       throw Error('Received more dispatches then expected')
     }
     expect(dispatch.type).to.equal(type)
-    expect(dispatch.validation(payload)).to.equal(true)
+    expect(dispatch.validation(payload)).to.not.throw
     this.dispatchesCount++
   }
 

@@ -1,3 +1,4 @@
+/*
 import {States,StateMachine} from '../../src/state-machine'
 import {Firmware,FirmwareType} from '../../src/firmware'
 import fs from 'fs'
@@ -238,3 +239,4 @@ describe('StateMachine', function() {
 
   })
 })
+*/

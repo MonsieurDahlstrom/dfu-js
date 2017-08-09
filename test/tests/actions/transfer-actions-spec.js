@@ -5,28 +5,66 @@ import crc from 'crc'
 import VuexActionTester from '../../helpers/vuex-action-tester'
 import factory from '../../factories'
 //
-import {Verify,Validate} from '../../../src/types/write'
+import Write from '../../../src/models/write'
+
 import * as MutationTypes from '../../../src/mutation-types'
 import TransferActions from '../../../src/actions/transfer-actions'
-import {TransferObject} from '../../../src/types/transfer-object'
-import TransmissionStatus from '../../../src/types/transmission-types'
+import {TransferObject} from '../../../src/models/transfer-object'
+import TransmissionStatus from '../../../src/models/transmission-types'
+
+import {Transfer} from '../../../src/models/transfer'
+
+const SharedInvalidEventTests = function (state) {
+  it('handles none response codes', function(done) {
+    this.transfer.state = state
+    var eventData = new DataView(new ArrayBuffer(15))
+    eventData.setUint8(0,Write.Actions.EXECUTE)
+    var payload = {dataView: eventData, transfer: this.transfer}
+    var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, [], [], done)
+    test.run()
+  })
+}
+
+const SharedPassEventToTransferObject = function (state) {
+  it('passes event to transfer object', function(done) {
+    this.transfer.state = state
+    var eventData = new DataView(new ArrayBuffer(15))
+    eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+    eventData.setUint8(1, Write.Actions.SET_PRN)
+    eventData.setUint8(2, Write.Responses.SUCCESS)
+    let dispatches = [
+      {
+        type: 'webBluetoothDFUObjectHandleEvent',
+        validation: function (payload) {
+          expect(payload.dataView instanceof DataView).to.be.true
+          expect(payload.transferObject instanceof TransferObject).to.be.true
+        }
+      }
+    ]
+    factory.build('transferObject')
+    .then((object) => {
+      this.transfer.objects = [object]
+      this.transfer.currentObjectIndex = 0
+      var payload = {dataView: eventData, transfer: this.transfer}
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, [], dispatches, done)
+      test.run()
+    })
+  })
+}
 
 describe('Transfer Actions', function () {
 
-  let sandbox
-  let transfer
-  let state
   beforeEach(function (done) {
-    sandbox = sinon.sandbox.create()
-    state = {writes: [], objects: []}
+    this.sandbox = sinon.sandbox.create()
     factory.create('transfer')
     .then((newTransfer) => {
-      transfer = newTransfer
+      this.transfer = newTransfer
       done()
     })
   });
   afterEach(function () {
-    sandbox.restore()
+    this.sandbox.restore()
+    this.transfer = undefined
   });
 
   describe('#webBluetoothDFUTransferAdd', function () {
@@ -35,13 +73,12 @@ describe('Transfer Actions', function () {
         {
           type: MutationTypes.ADD_TRANSFER,
           validation: function(payload) {
-            expect(payload).to.deep.equal(transfer);
+            expect(payload).to.deep.equal(this.transfer);
             expect(payload.controlPointEventHandler).to.be.an('function')
-            return true
-          }
+          }.bind(this)
         }
       ]
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferAdd, transfer, mutations,[], done)
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferAdd, this.transfer, mutations,[], done)
       test.run()
     })
   })
@@ -52,13 +89,12 @@ describe('Transfer Actions', function () {
         {
           type: MutationTypes.REMOVE_TRANSFER,
           validation: function(payload) {
-            expect(payload).to.deep.equal(transfer);
+            expect(payload).to.deep.equal(this.transfer);
             expect(payload.controlPointEventHandler).to.be.undefined
-            return true
-          }
+          }.bind(this)
         }
       ]
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferRemove, transfer, mutations,[], done)
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferRemove, this.transfer, mutations,[], done)
       test.run()
     })
   })
@@ -66,14 +102,19 @@ describe('Transfer Actions', function () {
   describe("#webBluetoothDFUTransferBegin", function() {
     it("does not throw", function(done) {
       let mutations = [
-        { type: MutationTypes.UPDATE_TRANSFER, validation: function(payload) { expect(payload).to.deep.equal(transfer); return true}}
+        {
+          type: MutationTypes.UPDATE_TRANSFER,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(this.transfer)
+          }.bind(this)
+        }
       ]
       let dispatches = [
-        { type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Verify).to.equal(true); return true}},
-        { type: 'webBluetoothDFUExecuteWrite', validation: function(payload) { expect(payload instanceof Verify).to.equal(true); return true}}
+        { type: 'webBluetoothDFUScheduleWrite', validation: function(payload) { expect(payload instanceof Write.Verify).to.equal(true) }},
+        { type: 'webBluetoothDFUExecuteWrite', validation: function(payload) { expect(payload instanceof Write.Verify).to.equal(true) }}
 
       ]
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferBegin, transfer, mutations, dispatches, done)
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferBegin, this.transfer, mutations, dispatches, done)
       test.run()
     })
   })
@@ -83,17 +124,16 @@ describe('Transfer Actions', function () {
       let fileData
       beforeEach(function() {
         fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9))
-        transfer.file = fileData
+        this.transfer.file = fileData
       })
       it('has one object to transfer', function(done) {
         let mutations = [
           {
             type: MutationTypes.UPDATE_TRANSFER,
             validation: function(payload) {
-              expect(payload).to.deep.equal(transfer)
-              expect(transfer.objects.length).to.equal(1);
-              return true
-            }
+              expect(payload).to.deep.equal(this.transfer)
+              expect(this.transfer.objects.length).to.equal(1);
+            }.bind(this)
           }
         ]
         let dispatches = [
@@ -101,9 +141,8 @@ describe('Transfer Actions', function () {
             type: 'webBluetoothDFUObjectAdd',
             validation: function(payload) {
               expect(payload instanceof TransferObject).to.equal(true)
-              expect(payload.transfer).to.equal(transfer)
-              return true
-            }
+              expect(payload.transfer).to.equal(this.transfer)
+            }.bind(this)
           },
           {
             type: 'webBluetoothDFUObjectValidate',
@@ -111,11 +150,10 @@ describe('Transfer Actions', function () {
               expect(payload.transferObject instanceof TransferObject).to.equal(true)
               expect(payload.checksum).to.not.be.undefined
               expect(payload.offset).to.not.be.undefined
-              return true
             }
           }
         ]
-        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
+        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: this.transfer}
         var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
         test.run()
       })
@@ -124,17 +162,16 @@ describe('Transfer Actions', function () {
       let fileData
       beforeEach(function() {
         fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9))
-        transfer.file = fileData
+        this.transfer.file = fileData
       })
       it('has one object to transfer', function(done) {
         let mutations = [
           {
             type: MutationTypes.UPDATE_TRANSFER,
             validation: function(payload) {
-              expect(payload).to.deep.equal(transfer)
-              expect(transfer.objects.length).to.equal(1);
-              return true
-            }
+              expect(payload).to.deep.equal(this.transfer)
+              expect(this.transfer.objects.length).to.equal(1);
+            }.bind(this)
           }
         ]
         let dispatches = [
@@ -142,9 +179,8 @@ describe('Transfer Actions', function () {
             type: 'webBluetoothDFUObjectAdd',
             validation: function(payload) {
               expect(payload instanceof TransferObject).to.equal(true)
-              expect(payload.transfer).to.equal(transfer)
-              return true
-            }
+              expect(payload.transfer).to.equal(this.transfer)
+            }.bind(this)
           },
           {
             type: 'webBluetoothDFUObjectValidate',
@@ -152,70 +188,64 @@ describe('Transfer Actions', function () {
               expect(payload.transferObject instanceof TransferObject).to.equal(true)
               expect(payload.checksum).to.not.be.undefined
               expect(payload.offset).to.not.be.undefined
-              return true
             }
           }
         ]
-        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
+        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: this.transfer}
         var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
         test.run()
       })
-      describe("content larger then object size", function() {
-        let fileData
-        beforeEach(function() {
-          fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9))
-          transfer.file = fileData
-        })
-        it('has one object to transfer', function(done) {
-          let mutations = [
-            {
-              type: MutationTypes.UPDATE_TRANSFER,
-              validation: function(payload) {
-                expect(payload).to.deep.equal(transfer)
-                expect(transfer.objects.length).to.equal(3);
-                return true
-              }
+    })
+    describe("content larger then object size", function() {
+      let fileData
+      beforeEach(function() {
+        fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9))
+        this.transfer.file = fileData
+      })
+      it('has one object to transfer', function(done) {
+        let mutations = [
+          {
+            type: MutationTypes.UPDATE_TRANSFER,
+            validation: function(payload) {
+              expect(payload).to.deep.equal(this.transfer)
+              expect(this.transfer.objects.length).to.equal(3);
+            }.bind(this)
+          }
+        ]
+        let dispatches = [
+          {
+            type: 'webBluetoothDFUObjectAdd',
+            validation: function(payload) {
+              expect(payload instanceof TransferObject).to.equal(true)
+              expect(payload.transfer).to.equal(this.transfer)
+            }.bind(this)
+          },
+          {
+            type: 'webBluetoothDFUObjectAdd',
+            validation: function(payload) {
+              expect(payload instanceof TransferObject).to.equal(true)
+              expect(payload.transfer).to.equal(this.transfer)
+            }.bind(this)
+          },
+          {
+            type: 'webBluetoothDFUObjectAdd',
+            validation: function(payload) {
+              expect(payload instanceof TransferObject).to.equal(true)
+              expect(payload.transfer).to.equal(this.transfer)
+            }.bind(this)
+          },
+          {
+            type: 'webBluetoothDFUObjectValidate',
+            validation: function (payload) {
+              expect(payload.transferObject instanceof TransferObject).to.equal(true)
+              expect(payload.checksum).to.not.be.undefined
+              expect(payload.offset).to.not.be.undefined
             }
-          ]
-          let dispatches = [
-            {
-              type: 'webBluetoothDFUObjectAdd',
-              validation: function(payload) {
-                expect(payload instanceof TransferObject).to.equal(true)
-                expect(payload.transfer).to.equal(transfer)
-                return true
-              }
-            },
-            {
-              type: 'webBluetoothDFUObjectAdd',
-              validation: function(payload) {
-                expect(payload instanceof TransferObject).to.equal(true)
-                expect(payload.transfer).to.equal(transfer)
-                return true
-              }
-            },
-            {
-              type: 'webBluetoothDFUObjectAdd',
-              validation: function(payload) {
-                expect(payload instanceof TransferObject).to.equal(true)
-                expect(payload.transfer).to.equal(transfer)
-                return true
-              }
-            },
-            {
-              type: 'webBluetoothDFUObjectValidate',
-              validation: function (payload) {
-                expect(payload.transferObject instanceof TransferObject).to.equal(true)
-                expect(payload.checksum).to.not.be.undefined
-                expect(payload.offset).to.not.be.undefined
-                return true
-              }
-            }
-          ]
-          let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: transfer}
-          var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
-          test.run()
-        })
+          }
+        ]
+        let payload = {checksum: 0, offset: 0, maxiumSize: 255, transfer: this.transfer}
+        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferPrepare, payload, mutations, dispatches, done)
+        test.run()
       })
     })
   })
@@ -224,19 +254,18 @@ describe('Transfer Actions', function () {
     beforeEach(function(done) {
       factory.buildMany('transferObject',2)
       .then((list) => {
-        transfer.objects = list
+        this.transfer.objects = list
         done()
       })
     })
-    it('startsx next transfer object', function(done) {
+    it('starts next transfer object', function(done) {
       let mutations = [
         {
           type: MutationTypes.UPDATE_TRANSFER,
           validation: function(payload) {
-            expect(payload).to.deep.equal(transfer)
-            expect(transfer.currentObjectIndex).to.equal(1);
-            return true
-          }
+            expect(payload).to.deep.equal(this.transfer)
+            expect(this.transfer.currentObjectIndex).to.equal(1);
+          }.bind(this)
         }
       ]
       let dispatches = [
@@ -244,13 +273,12 @@ describe('Transfer Actions', function () {
           type: 'webBluetoothDFUObjectBegin',
           validation: function(payload) {
             expect(payload instanceof TransferObject).to.equal(true)
-            expect(transfer.objects.indexOf(payload)).to.equal(1)
-            return true
-          }
+            expect(this.transfer.objects.indexOf(payload)).to.equal(1)
+          }.bind(this)
         }
       ]
-      transfer.currentObjectIndex = 0
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, transfer, mutations, dispatches, done)
+      this.transfer.currentObjectIndex = 0
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, this.transfer, mutations, dispatches, done)
       test.run()
     })
     it('marks transfer complete if no more objects', function(done) {
@@ -258,167 +286,64 @@ describe('Transfer Actions', function () {
         {
           type: MutationTypes.UPDATE_TRANSFER,
           validation: function(payload) {
-            expect(payload).to.deep.equal(transfer)
-            expect(transfer.state).to.equal(TransmissionStatus.Completed);
-            return true
-          }
+            expect(payload).to.deep.equal(this.transfer)
+            expect(this.transfer.state).to.equal(TransmissionStatus.Completed);
+          }.bind(this)
         }
       ]
-      transfer.currentObjectIndex = 1
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, transfer, mutations, [], done)
+      this.transfer.currentObjectIndex = 1
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferNextObject, this.transfer, mutations, [], done)
       test.run()
     })
 
   })
 
-  describe('#webBluetoothDFUTransferEventHandler', function () {})
+  describe('#webBluetoothDFUTransferEventHandler', function () {
 
-})
-
-/*
-describe("#end", function() {
-  it("does not throw", function(done) {
-    factory.build("WebBluetoothCharacteristic")
-    .then(characteristic => {
-      let transfer = new Transfer()
-      transfer.controlPoint = characteristic
-      expect( function() { transfer.end() }).not.toThrow()
-      done()
-    })
-  })
-})
-
-describe("#onEvent", function() {
-
-  let selectSuccessResponse
-  let nonResponseResult
-  let transfer
-  beforeAll(function() {
-    nonResponseResult = new DataView(new ArrayBuffer(2));
-    nonResponseResult.setUint8(0, TaskType.SET_PRN);
-    nonResponseResult.setUint8(1, TaskResult.INVALID_OBJECT);
-    //
-    selectSuccessResponse = new DataView(new ArrayBuffer(15));
-    selectSuccessResponse.setUint8(0, TaskType.RESPONSE_CODE);
-    selectSuccessResponse.setUint8(1, TaskType.SELECT);
-    selectSuccessResponse.setUint8(2, TaskResult.SUCCESS);
-    selectSuccessResponse.setInt32(3, 0, true);
-    selectSuccessResponse.setInt32(7, 0, true);
-    selectSuccessResponse.setInt32(11, 0, true);
-
-  })
-
-  beforeEach(function() {
-    transfer = new Transfer()
-  })
-
-  describe('when state is Prepare', function() {
-    it('logs and handles none response codes', function() {
-      let event = {target: {value: nonResponseResult}}
-      let logSpy = spyOn(console,'log');
-      transfer.onEvent(event);
-      expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+    describe('when state is Prepare', function() {
+      SharedInvalidEventTests(TransmissionStatus.Prepare)
+      it('prepares transfer when success verify', function(done) {
+        let dispatches = [
+          {
+            type: 'webBluetoothDFUTransferPrepare',
+            validation: function(payload) {
+              expect(payload.transfer instanceof Transfer).to.equal(true)
+              expect(payload.transfer).to.equal(this.transfer)
+              expect(payload.checksum).to.equal(789)
+              expect(payload.offset).to.equal(123456)
+            }.bind(this)
+          }
+        ]
+        this.transfer.state = TransmissionStatus.Prepare
+        var eventData = new DataView(new ArrayBuffer(15))
+        eventData.setUint8(0,Write.Actions.RESPONSE_CODE)
+        eventData.setUint8(1,Write.Actions.SELECT)
+        eventData.setUint8(2,Write.Responses.SUCCESS)
+        eventData.setUint32(3, 4096, true)
+        eventData.setUint32(7, 123456, true)
+        eventData.setUint32(11, 789,true)
+        var payload = {dataView: eventData, transfer: this.transfer}
+        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, [], dispatches, done)
+        test.run()
+      })
     })
 
-    it('prepares transfer when success verify', function() {
-      let event = {target: {value: selectSuccessResponse}}
-      let transferSpy = spyOn(transfer,'prepareTransferObjects');
-      transfer.onEvent(event);
-      expect(transferSpy).toHaveBeenCalled();
-    })
-  })
-
-  describe('when state is Transfer', function() {
-    it('logs and handles none response codes', function() {
-      let event = {target: {value: nonResponseResult}}
-      let logSpy = spyOn(console,'log');
-      transfer.state = TransferState.Transfer
-      transfer.onEvent(event);
-      expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+    describe('when state is Transfer', function() {
+      SharedInvalidEventTests(TransmissionStatus.Transfering)
+      SharedPassEventToTransferObject(TransmissionStatus.Transfering)
     })
 
-    it('prepares transfer when success verify', function() {
-      let event = {target: {value: selectSuccessResponse}}
-      let transferSpy = spyOn(transfer,'prepareTransferObjects');
-      let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
-      transfer.objects = [eventHandlerSpy]
-      transfer.currentObjectIndex = 0
-      transfer.state = TransferState.Transfer
-      transfer.onEvent(event);
-      expect(transferSpy).not.toHaveBeenCalled();
-      expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
-    })
-  })
-
-  describe('when state is Completed', function() {
-    it('logs and handles none response codes', function() {
-      let event = {target: {value: nonResponseResult}}
-      let logSpy = spyOn(console,'log');
-      transfer.state = TransferState.Completed
-      transfer.onEvent(event);
-      expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+    describe('when state is Completed', function() {
+      SharedInvalidEventTests(TransmissionStatus.Completed)
+      SharedPassEventToTransferObject(TransmissionStatus.Completed)
     })
 
-    it('prepares transfer when success verify', function() {
-      let event = {target: {value: selectSuccessResponse}}
-      let transferSpy = spyOn(transfer,'prepareTransferObjects');
-      let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
-      transfer.objects = [eventHandlerSpy]
-      transfer.currentObjectIndex = 0
-      transfer.state = TransferState.Completed
-      transfer.onEvent(event);
-      expect(transferSpy).not.toHaveBeenCalled();
-      expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
-    })
-  })
 
-  describe('when state is Failed', function() {
-    it('logs and handles none response codes', function() {
-      let event = {target: {value: nonResponseResult}}
-      let logSpy = spyOn(console,'log');
-      transfer.state = TransferState.Failed
-      transfer.onEvent(event);
-      expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+    describe('when state is Failed', function() {
+      SharedInvalidEventTests(TransmissionStatus.Failed)
+      SharedPassEventToTransferObject(TransmissionStatus.Failed)
     })
 
-    it('prepares transfer when success verify', function() {
-      let event = {target: {value: selectSuccessResponse}}
-      let transferSpy = spyOn(transfer,'prepareTransferObjects');
-      let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
-      transfer.objects = [eventHandlerSpy]
-      transfer.currentObjectIndex = 0
-      transfer.state = TransferState.Failed
-      transfer.onEvent(event);
-      expect(transferSpy).not.toHaveBeenCalled();
-      expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
-    })
   })
 
 })
-
-describe("#nextObject", function() {
-  let transfer
-  beforeEach(function() {
-    transfer = new Transfer()
-  })
-  it('startsx next transfer object', function() {
-    let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
-    transfer.objects = [transferObjectSpy,transferObjectSpy]
-    transfer.currentObjectIndex = 0
-    expect( () => {
-      transfer.nextObject()
-    }).not.toThrow()
-    expect(transferObjectSpy.begin).toHaveBeenCalled();
-    expect(transfer.currentObjectIndex).toBe(1);
-  })
-  it('marks transfer complete if no more objects', function() {
-    let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
-    transfer.objects = [transferObjectSpy]
-    transfer.currentObjectIndex = 0
-    expect( () => {
-      transfer.nextObject()
-    }).not.toThrow()
-    expect(transfer.state).toBe(TransferState.Completed);
-  })
-})
-*/

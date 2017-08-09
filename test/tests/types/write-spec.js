@@ -1,8 +1,7 @@
 import {expect} from 'chai'
 import factory from '../../factories'
 
-import * as Write from "../../../src/types/write"
-import WriteTypes from '../../../src/types/write-types'
+import Write from "../../../src/models/write"
 
 describe("Write module", function() {
 
@@ -41,7 +40,7 @@ describe("Write module", function() {
         let characteristic = factory.build('webBluetoothCharacteristic')
         let write = new Write.Verify(characteristic,objectType)
         it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(WriteTypes.SELECT))
+        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.SELECT))
         it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(objectType))
         it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
       })
@@ -63,7 +62,7 @@ describe("Write module", function() {
         let characteristic = factory.build('webBluetoothCharacteristic')
         let write = new Write.Create(characteristic,objectType,objectLength)
         it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(WriteTypes.CREATE))
+        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.CREATE))
         it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(objectType))
         it('object length is set', () => expect(new Uint8Array(write.bytes)[2]).to.equal(objectLength))
         it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
@@ -85,7 +84,7 @@ describe("Write module", function() {
         let characteristic = factory.build('webBluetoothCharacteristic')
         let write = new Write.PacketReturnNotification(characteristic,packageCount)
         it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(WriteTypes.SET_PRN))
+        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.SET_PRN))
         it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(packageCount))
         it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
       })
@@ -126,7 +125,7 @@ describe("Write module", function() {
         let characteristic = factory.build('webBluetoothCharacteristic')
         let write = new Write.Checksum(characteristic)
         it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(WriteTypes.CALCULATE_CHECKSUM))
+        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.CALCULATE_CHECKSUM))
         it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
       })
     })
@@ -145,7 +144,7 @@ describe("Write module", function() {
         let characteristic = factory.build('webBluetoothCharacteristic')
         let write = new  Write.Execute(characteristic)
         it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(WriteTypes.EXECUTE))
+        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.EXECUTE))
         it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
       })
     })

@@ -5,7 +5,7 @@ import WriteActions from "../../../src/actions/write-actions"
 import WriteMutations from '../../../src/mutations/write-mutations'
 import * as MutationTypes from '../../../src/mutation-types'
 import VuexActionTester from '../../helpers/vuex-action-tester'
-import TransmissionStatus from '../../../src/types/transmission-types'
+import TransmissionStatus from '../../../src/models/transmission-types'
 
 describe('Write Actions', function () {
 

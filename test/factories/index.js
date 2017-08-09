@@ -1,11 +1,10 @@
 import {factory, ObjectAdapter} from 'factory-girl'
 factory.setAdapter(new ObjectAdapter());
 //
-import {Transfer} from '../../src/types/transfer'
-import {TransferObject} from '../../src/types/transfer-object'
+import {Transfer} from '../../src/models/transfer'
+import {TransferObject} from '../../src/models/transfer-object'
 import WebBluetoothCharacteristicMock from './web-bluetooth-characteristic-mock'
-import {Checksum} from '../../src/types/write'
-import WriteTypes from '../../src/types/write-types'
+import Write from '../../src/models/write'
 
 factory.define('transfer', Transfer, {
   packetPoint: factory.assoc('webBluetoothCharacteristic'),
@@ -24,11 +23,11 @@ factory.define('transferObject', TransferObject, {
 factory.define('webBluetoothCharacteristic', WebBluetoothCharacteristicMock, {
 });
 
-factory.define('writeChecksum', Checksum, {
+factory.define('writeChecksum', Write.Checksum, {
   characteristic: factory.assoc('webBluetoothCharacteristic'),
   buffer: () => {
     let dataView = new DataView(new ArrayBuffer(1))
-    dataView.setUint8(0, WriteTypes.CALCULATE_CHECKSUM)
+    dataView.setUint8(0, Write.Actions.CALCULATE_CHECKSUM)
     return dataView.buffer
   }
 });

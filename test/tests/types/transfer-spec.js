@@ -3,8 +3,8 @@ import sinon from 'sinon'
 //
 import factory from '../../factories'
 //
-import TransmissionStatus from '../../../src/types/transmission-types'
-import {Transfer} from '../../../src/types/Transfer'
+import TransmissionStatus from '../../../src/models/transmission-types'
+import {Transfer} from '../../../src/models/transfer'
 
 describe('Transfer', function() {
 
