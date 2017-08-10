@@ -20,13 +20,15 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import UpdateActions from './actions/update-actions'
 import TransferActions from './actions/transfer-actions'
-import ObjectActions from './actions/object-actions'
+import ObjectActions from './actions/transfer-object-actions'
 import WriteActions from './actions/write-actions'
 //
 import UpdateMutations from './mutations/update-mutations'
 import TransferMutations from './mutations/transfer-mutations'
-import ObjectMutations from './mutations/object-mutations'
+import ObjectMutations from './mutations/transfer-object-mutations'
 import WriteMutations from './mutations/write-mutations'
+//
+import getters from './getters'
 
 const state = {
   updates: [],
@@ -35,12 +37,7 @@ const state = {
   writes: []
 }
 
-const getters = {
-  webBluetoothRunningUpdates: state => state.updates.filter((update) => update.state === TransmissionStatus.Transfering),
-  webBluetoothTransferForUpdate: (state) => (update) => state.transfers.find((transfer) => transfer.update === update && transfer.state === TransmissionStatus.Transfering),
-  webBluetoothObjectForTransfer: (state) => (transfer) => state.objects.find((object) => object.transfer === transfer && object.state === TransmissionStatus.Transfering),
-  webBluetoothWriteForObject: (state) => (object) => state.actions.find((action) => action.object === object && action.state === TransmissionStatus.Transfering)
-}
+
 
 const actions = Object.assign({}, UpdateActions, TransferActions, ObjectActions, WriteActions)
 const mutations = Object.assign({}, UpdateMutations, TransferMutations, ObjectMutations, WriteMutations)

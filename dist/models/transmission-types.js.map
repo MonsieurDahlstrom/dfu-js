@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/models/transmission-types.js"],"names":["Prepared","Transfering","Completed","Failed"],"mappings":";;;;;kBAAe;AACbA,YAAU,IADG;AAEbC,eAAa,IAFA;AAGbC,aAAW,IAHE;AAIbC,UAAQ;AAJK,C","file":"transmission-types.js","sourcesContent":["export default {\r\n  Prepared: 0x00,\r\n  Transfering: 0x01,\r\n  Completed: 0x02,\r\n  Failed: 0x03\r\n}\r\n"]}
