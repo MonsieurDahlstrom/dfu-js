@@ -1,16 +1,17 @@
 import {factory, ObjectAdapter} from 'factory-girl'
 factory.setAdapter(new ObjectAdapter());
 //
-import {Update, UpdateStates} from '../../src/models/update'
-import {Transfer} from '../../src/models/transfer'
-import {TransferObject} from '../../src/models/transfer-object'
+import {Update, UpdateStates} from '../../../src/models/update'
+import {Transfer} from '../../../src/models/transfer'
+import {TransferObject} from '../../../src/models/transfer-object'
+import Write from '../../../src/models/write'
 
 import WebBluetoothCharacteristicMock from './web-bluetooth-characteristic-mock'
 import WebBluetoothDeviceMock from './web-bluetooth-device-mock'
 import WebBluetoothServiceMock from './web-bluetooth-service-mock'
 import WebBluetoothGattMock from './web-bluetooth-gatt-mock'
 
-import Write from '../../src/models/write'
+
 
 factory.define('update', Update, {
   state: UpdateStates.NOT_CONFIGURED

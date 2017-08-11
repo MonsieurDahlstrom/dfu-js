@@ -5,14 +5,14 @@ import crc from 'crc'
 import VuexActionTester from '../../helpers/vuex-action-tester'
 import factory from '../../factories'
 //
-import Write from '../../../src/models/write'
+import Write from '../../../../src/models/write'
 
-import * as MutationTypes from '../../../src/mutation-types'
-import TransferActions from '../../../src/actions/transfer-actions'
-import {TransferObject} from '../../../src/models/transfer-object'
-import TransmissionStatus from '../../../src/models/transmission-types'
+import * as MutationTypes from '../../../../src/mutation-types'
+import TransferActions from '../../../../src/actions/transfer-actions'
+import {TransferObject} from '../../../../src/models/transfer-object'
+import TransmissionStatus from '../../../../src/models/transmission-types'
 
-import {Transfer} from '../../../src/models/transfer'
+import {Transfer} from '../../../../src/models/transfer'
 
 const SharedInvalidEventTests = function (state) {
   it('handles none response codes', function(done) {

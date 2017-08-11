@@ -5,11 +5,11 @@ import fs from 'fs'
 import factory from '../../factories'
 import VuexActionTester from '../../helpers/vuex-action-tester'
 //
-import {Firmware} from '../../../src/models/firmware'
-import {Update, UpdateStates} from '../../../src/models/update'
-import Transfer from '../../../src/models/transfer'
-import UpdateActions from '../../../src/actions/update-actions'
-import * as MutationTypes from '../../../src/mutation-types'
+import {Firmware} from '../../../../src/models/firmware'
+import {Update, UpdateStates} from '../../../../src/models/update'
+import Transfer from '../../../../src/models/transfer'
+import UpdateActions from '../../../../src/actions/update-actions'
+import * as MutationTypes from '../../../../src/mutation-types'
 
 const SharedZipBuilder = function(context,zipPath) {
   beforeEach(function (done) {
@@ -199,11 +199,11 @@ describe('Update Actions', function () {
 
   describe("#webBluetoothDFUSendFirmware", function () {
     describe('softdevice & bootloader', function () {
-      SharedZipBuilder(this,'test/data/bl_sd.zip')
+      SharedZipBuilder(this,'test/unit/data/bl_sd.zip')
       SharedCreateUpdateForZip(this)
     })
     describe('application', function () {
-      SharedZipBuilder(this,'test/data/dfu_test_app_hrm_s130.zip')
+      SharedZipBuilder(this,'test/unit/data/dfu_test_app_hrm_s130.zip')
       SharedCreateUpdateForZip(this)
     })
   })

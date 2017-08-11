@@ -5,8 +5,8 @@ Vue.use(Vuex)
 //
 import factory from '../factories'
 //
-import DFUModule from '../../src'
-import {Update, UpdateStates} from '../../src/models/update'
+import DFUModule from '../../../src'
+import {Update, UpdateStates} from '../../../src/models/update'
 
 describe('DFU Vuex Module', function () {
   describe('default export', function () {

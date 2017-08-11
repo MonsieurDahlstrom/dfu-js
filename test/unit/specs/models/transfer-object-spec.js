@@ -1,9 +1,9 @@
 import {expect} from 'chai'
 import factory from '../../factories'
 import sinon from 'sinon'
-import {TransferObject, TransferObjectState} from '../../../src/models/transfer-object'
-import {Transfer} from '../../../src/models/Transfer'
-import TransmissionStatus from '../../../src/models/transmission-types'
+import {TransferObject, TransferObjectState} from '../../../../src/models/transfer-object'
+import {Transfer} from '../../../../src/models/Transfer'
+import TransmissionStatus from '../../../../src/models/transmission-types'
 
 // import {Task, TaskType, TaskResult} from '../../src/dfu/Task'
 //

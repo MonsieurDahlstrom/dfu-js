@@ -2,7 +2,7 @@ import {expect} from 'chai'
 //
 import factory from '../../factories'
 //
-import {Update, UpdateStates} from '../../../src/models/update'
+import {Update, UpdateStates} from '../../../../src/models/update'
 
 describe('Update', function () {
 

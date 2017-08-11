@@ -5,11 +5,11 @@ import crc from 'crc'
 //
 import VuexActionTester from '../../helpers/vuex-action-tester'
 //
-import TransferObjectActions from '../../../src/actions/transfer-object-actions'
-import * as MutationTypes from '../../../src/mutation-types'
-import {TransferObjectState} from '../../../src/models/transfer-object'
+import TransferObjectActions from '../../../../src/actions/transfer-object-actions'
+import * as MutationTypes from '../../../../src/mutation-types'
+import {TransferObjectState} from '../../../../src/models/transfer-object'
+import Write from '../../../../src/models/write'
 //
-import Write from '../../../src/models/write'
 
 describe('TransferObject Actions', function () {
 

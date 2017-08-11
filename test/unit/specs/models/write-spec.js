@@ -1,7 +1,7 @@
 import {expect} from 'chai'
 import factory from '../../factories'
 
-import Write from "../../../src/models/write"
+import Write from "../../../../src/models/write"
 
 describe("Write module", function() {
 

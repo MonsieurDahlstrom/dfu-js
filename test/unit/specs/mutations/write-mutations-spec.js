@@ -2,8 +2,8 @@ import factory from '../../factories'
 
 import { expect } from 'chai'
 import sinon from 'sinon'
-import WriteMutations from '../../../src/mutations/write-mutations'
-import * as MutationTypes from '../../../src/mutation-types'
+import WriteMutations from '../../../../src/mutations/write-mutations'
+import * as MutationTypes from '../../../../src/mutation-types'
 
 describe('WriteMutations', () => {
   let state

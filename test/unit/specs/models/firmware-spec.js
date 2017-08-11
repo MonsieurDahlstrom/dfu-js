@@ -1,5 +1,5 @@
 import {expect} from 'chai'
-import {Firmware,FirmwareType} from '../../../src/models/firmware'
+import {Firmware,FirmwareType} from '../../../../src/models/firmware'
 import JSZip from 'jszip'
 import fs from 'fs'
 
@@ -54,10 +54,10 @@ describe('Firmware', function() {
       })
     })
     describe('with application zip', function () {
-      SharedDFUParseZip(this, 'test/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1)
+      SharedDFUParseZip(this, 'test/unit/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1)
     })
     describe('with softdevice and bootloader zip', function () {
-      SharedDFUParseZip(this, 'test/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1)
+      SharedDFUParseZip(this, 'test/unit/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1)
     })
 
   })

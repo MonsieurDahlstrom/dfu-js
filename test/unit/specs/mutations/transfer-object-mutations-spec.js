@@ -4,8 +4,8 @@ import sinon from 'sinon'
 //Factories build to test this library
 import factory from '../../factories'
 //Code to test
-import TransferObjectMutations from '../../../src/mutations/transfer-object-mutations'
-import * as MutationTypes from '../../../src/mutation-types'
+import TransferObjectMutations from '../../../../src/mutations/transfer-object-mutations'
+import * as MutationTypes from '../../../../src/mutation-types'
 
 describe('TransferObject mutations', function () {
 
