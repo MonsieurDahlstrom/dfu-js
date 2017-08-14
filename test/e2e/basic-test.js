@@ -1,13 +1,24 @@
 module.exports = {
   'Demo test Google' : function (browser) {
+    console.log(browser.keys());
     browser
-      .url('http://www.google.com')
+      .url('http://localhost:3000')
       .waitForElementVisible('body', 1000)
-      .setValue('input[type=text]', 'nightwatch')
-      .waitForElementVisible('button[name=btnG]', 1000)
-      .click('button[name=btnG]')
-      .pause(1000)
-      .assert.containsText('#main', 'Night Watch')
-      .end();
+      .waitForElementVisible('button[id=connect-device]', 1000)
+      .windowHandle(function (event) {
+        return browser.windowSize(event.value,500,500)
+      })
+      .click('button[id=connect-device]')
+      .pause(2000)
+      .keys(browser.keys.ESCAPE, function () {
+        console.log('key pressed');
+        browser
+        .keys(browser.keys.ARROW_DOWN)
+        .pause(2000)
+        .getText("#device-list", function(result) {
+          console.log(result.value)
+        })
+        .end();
+      })
   }
 };
