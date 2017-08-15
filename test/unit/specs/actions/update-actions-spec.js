@@ -1,6 +1,5 @@
 import {expect} from 'chai'
 import JSZip from 'jszip'
-import fs from 'fs'
 //
 import factory from '../../factories'
 import VuexActionTester from '../../helpers/vuex-action-tester'
@@ -11,16 +10,25 @@ import Transfer from '../../../../src/models/transfer'
 import UpdateActions from '../../../../src/actions/update-actions'
 import * as MutationTypes from '../../../../src/mutation-types'
 
-const SharedZipBuilder = function(context,zipPath) {
+const SharedZipBuilder = function(context,testZipPath) {
   beforeEach(function (done) {
-    JSZip.loadAsync(fs.readFileSync(zipPath))
-    .then(zip => {
-      context.firmware = new Firmware(zip)
-      return context.firmware.parseManifest()
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", function() {
+      JSZip.loadAsync(oReq.response)
+      .then(zip => {
+        context.firmware = new Firmware(zip)
+        return context.firmware.parseManifest()
+      })
+      .then(() => {
+        done()
+      })
+      .catch(err => {
+        done(err)
+      })
     })
-    .then(() => {
-      done()
-    })
+    oReq.open('GET',testZipPath)
+    oReq.responseType = "arraybuffer";
+    oReq.send();
   })
   afterEach(function () {
     context.firmware = undefined
@@ -199,11 +207,11 @@ describe('Update Actions', function () {
 
   describe("#webBluetoothDFUSendFirmware", function () {
     describe('softdevice & bootloader', function () {
-      SharedZipBuilder(this,'test/unit/data/bl_sd.zip')
+      SharedZipBuilder(this,'/base/test/unit/data/bl_sd.zip') // < The /base/ is to indicate its been loaded and served with karma
       SharedCreateUpdateForZip(this)
     })
     describe('application', function () {
-      SharedZipBuilder(this,'test/unit/data/dfu_test_app_hrm_s130.zip')
+      SharedZipBuilder(this,'/base/test/unit/data/dfu_test_app_hrm_s130.zip') // < The /base/ is to indicate its been loaded and served with karma
       SharedCreateUpdateForZip(this)
     })
   })

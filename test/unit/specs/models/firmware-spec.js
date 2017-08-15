@@ -1,15 +1,23 @@
 import {expect} from 'chai'
 import {Firmware,FirmwareType} from '../../../../src/models/firmware'
 import JSZip from 'jszip'
-import fs from 'fs'
 
 const SharedDFUParseZip = function (context, testZipPath, expectedType, numberOfSections) {
   beforeEach(function (done) {
-    JSZip.loadAsync(fs.readFileSync(testZipPath))
-    .then(function(zip) {
-      context.firmware = new Firmware(zip)
-      done()
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", function() {
+      JSZip.loadAsync(oReq.response)
+      .then(function(zip) {
+        context.firmware = new Firmware(zip)
+        done()
+      })
+      .catch(err => {
+        done(err)
+      })
     })
+    oReq.open('GET',testZipPath)
+    oReq.responseType = "arraybuffer";
+    oReq.send();
   })
 
   afterEach(function () {
@@ -54,10 +62,10 @@ describe('Firmware', function() {
       })
     })
     describe('with application zip', function () {
-      SharedDFUParseZip(this, 'test/unit/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1)
+      SharedDFUParseZip(this, '/base/test/unit/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1) // < The /base/ is to indicate its been loaded and served with karma
     })
     describe('with softdevice and bootloader zip', function () {
-      SharedDFUParseZip(this, 'test/unit/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1)
+      SharedDFUParseZip(this, '/base/test/unit/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
     })
 
   })
