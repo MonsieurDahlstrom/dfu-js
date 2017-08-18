@@ -72,6 +72,12 @@ const SharedCreateUpdateForZip = function (context) {
         validation: function (payload) {
           expect(payload instanceof Transfer).to.be.true
         }
+      },
+      {
+        type: 'webBluetoothDFUTransferBegin',
+        validation: function (payload) {
+          expect(payload instanceof Transfer).to.be.true
+        }
       }
     ]
     var mutations = [

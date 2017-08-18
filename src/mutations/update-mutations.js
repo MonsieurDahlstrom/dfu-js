@@ -10,7 +10,7 @@ const UpdateMutations = {
       state.updates.splice(updateIndex,1,update)
     }
   },
-  [MutationTypes.MODIFY_UPDATE] (state, update) {
+  [MutationTypes.MODIFED_UPDATE] (state, update) {
     const updateIndex = state.updates.indexOf(update)
     if (updateIndex >= 0) {
       state.updates.splice(updateIndex,1,update)

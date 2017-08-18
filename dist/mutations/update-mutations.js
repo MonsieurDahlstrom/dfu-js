@@ -33,7 +33,7 @@ var UpdateMutations = (_UpdateMutations = {}, (0, _defineProperty3.default)(_Upd
   } else {
     state.updates.splice(updateIndex, 1, update);
   }
-}), (0, _defineProperty3.default)(_UpdateMutations, MutationTypes.MODIFY_UPDATE, function (state, update) {
+}), (0, _defineProperty3.default)(_UpdateMutations, MutationTypes.MODIFED_UPDATE, function (state, update) {
   var updateIndex = state.updates.indexOf(update);
   if (updateIndex >= 0) {
     state.updates.splice(updateIndex, 1, update);

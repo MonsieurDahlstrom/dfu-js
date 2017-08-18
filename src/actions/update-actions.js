@@ -54,13 +54,14 @@ const UpdateActions = {
     if (firmware instanceof Firmware && update instanceof Update) {
       if (update.state === UpdateStates.IDLE) {
         for(var section of firmware.sections) {
-          update.transfers.push(new Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Command))
+          update.transfers.push(new Transfer(section.dat, update.controlpointCharacteristic, update.packetCharacteristic, TransferObjectType.Command))
           update.transfers[update.transfers.length-1].update = update
           dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
-          update.transfers.push(new Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Data))
+          update.transfers.push(new Transfer(section.bin, update.controlpointCharacteristic, update.packetCharacteristic, TransferObjectType.Data))
           update.transfers[update.transfers.length-1].update = update
           dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
         }
+        dispatch('webBluetoothDFUTransferBegin', update.transfers[0])
         commit(MutationTypes.MODIFED_UPDATE, update)
       }
     }

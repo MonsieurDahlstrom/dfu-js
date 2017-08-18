@@ -44,6 +44,8 @@ var _getters = require('./getters');
 
 var _getters2 = _interopRequireDefault(_getters);
 
+var _firmware = require('./models/firmware');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var state = {
@@ -56,10 +58,14 @@ var state = {
 var actions = (0, _assign2.default)({}, _updateActions2.default, _transferActions2.default, _transferObjectActions2.default, _writeActions2.default);
 var mutations = (0, _assign2.default)({}, _updateMutations2.default, _transferMutations2.default, _transferObjectMutations2.default, _writeMutations2.default);
 
-exports.default = {
+var VuexModule = {
   state: state,
   getters: _getters2.default,
   actions: actions,
   mutations: mutations
 };
+module.exports.Firmware = _firmware.Firmware;
+module.exports.FirmwareType = _firmware.FirmwareType;
+module.exports.VuexModule = VuexModule;
+exports.default = VuexModule;
 //# sourceMappingURL=index.js.map

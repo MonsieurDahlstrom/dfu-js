@@ -36,7 +36,7 @@ const TransferActions = {
 
   /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
   async webBluetoothDFUTransferBegin({ dispatch, commit }, transfer) {
-    let write = new Write.Verify(this.controlPoint, this.objectType)
+    let write = new Write.Verify(transfer.controlPoint, transfer.objectType)
     dispatch('webBluetoothDFUScheduleWrite', write)
     dispatch('webBluetoothDFUExecuteWrite', write)
     commit(MutationTypes.UPDATE_TRANSFER, transfer)

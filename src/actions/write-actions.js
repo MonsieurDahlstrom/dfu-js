@@ -21,9 +21,10 @@ const WriteActions = {
       var attempts = 3;
       do {
         try {
-          await write.characteristic.writeValue(write.buffer)
-          attempts = 0
+          await write.characteristic.writeValue(write.bytes)
+          write.error = undefined
           write.state = TransmissionStatus.Completed
+          attempts = 0
         } catch (err) {
           attempts--
           write.error = err

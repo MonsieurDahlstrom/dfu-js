@@ -29,6 +29,8 @@ import ObjectMutations from './mutations/transfer-object-mutations'
 import WriteMutations from './mutations/write-mutations'
 //
 import getters from './getters'
+//
+import {Firmware, FirmwareType} from './models/firmware'
 
 const state = {
   updates: [],
@@ -37,14 +39,16 @@ const state = {
   writes: []
 }
 
-
-
 const actions = Object.assign({}, UpdateActions, TransferActions, ObjectActions, WriteActions)
 const mutations = Object.assign({}, UpdateMutations, TransferMutations, ObjectMutations, WriteMutations)
 
-export default {
+const VuexModule = {
   state,
   getters,
   actions,
   mutations
 }
+module.exports.Firmware = Firmware
+module.exports.FirmwareType = FirmwareType
+module.exports.VuexModule = VuexModule
+export default VuexModule

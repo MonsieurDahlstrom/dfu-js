@@ -91,7 +91,7 @@ var WriteActions = {
           switch (_context3.prev = _context3.next) {
             case 0:
               if (!(write instanceof _write2.default.Write)) {
-                _context3.next = 16;
+                _context3.next = 17;
                 break;
               }
 
@@ -100,37 +100,38 @@ var WriteActions = {
             case 2:
               _context3.prev = 2;
               _context3.next = 5;
-              return write.characteristic.writeValue(write.buffer);
+              return write.characteristic.writeValue(write.bytes);
 
             case 5:
-              attempts = 0;
+              write.error = undefined;
               write.state = _transmissionTypes2.default.Completed;
-              _context3.next = 14;
+              attempts = 0;
+              _context3.next = 15;
               break;
 
-            case 9:
-              _context3.prev = 9;
+            case 10:
+              _context3.prev = 10;
               _context3.t0 = _context3['catch'](2);
 
               attempts--;
               write.error = _context3.t0;
               write.state = _transmissionTypes2.default.Failed;
 
-            case 14:
+            case 15:
               if (attempts > 0) {
                 _context3.next = 2;
                 break;
               }
 
-            case 15:
+            case 16:
               commit(MutationTypes.UPDATE_WRITE, write);
 
-            case 16:
+            case 17:
             case 'end':
               return _context3.stop();
           }
         }
-      }, _callee3, this, [[2, 9]]);
+      }, _callee3, this, [[2, 10]]);
     }));
 
     function webBluetoothDFUExecuteWrite(_x5, _x6) {

@@ -209,12 +209,12 @@ var UpdateActions = {
               update = payload.update;
 
               if (!(firmware instanceof _firmware.Firmware && update instanceof _update.Update)) {
-                _context6.next = 24;
+                _context6.next = 25;
                 break;
               }
 
               if (!(update.state === _update.UpdateStates.IDLE)) {
-                _context6.next = 24;
+                _context6.next = 25;
                 break;
               }
 
@@ -226,10 +226,10 @@ var UpdateActions = {
               for (_iterator = (0, _getIterator3.default)(firmware.sections); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 section = _step.value;
 
-                update.transfers.push(new _transfer2.default(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, _transferObject.TransferObjectType.Command));
+                update.transfers.push(new _transfer2.default(section.dat, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Command));
                 update.transfers[update.transfers.length - 1].update = update;
                 dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
-                update.transfers.push(new _transfer2.default(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, _transferObject.TransferObjectType.Data));
+                update.transfers.push(new _transfer2.default(section.bin, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Data));
                 update.transfers[update.transfers.length - 1].update = update;
                 dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
               }
@@ -267,9 +267,10 @@ var UpdateActions = {
               return _context6.finish(15);
 
             case 23:
+              dispatch('webBluetoothDFUTransferBegin', update.transfers[0]);
               commit(MutationTypes.MODIFED_UPDATE, update);
 
-            case 24:
+            case 25:
             case 'end':
               return _context6.stop();
           }

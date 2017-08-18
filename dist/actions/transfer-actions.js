@@ -108,7 +108,7 @@ var TransferActions = {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
-              write = new _write2.default.Verify(this.controlPoint, this.objectType);
+              write = new _write2.default.Verify(transfer.controlPoint, transfer.objectType);
 
               dispatch('webBluetoothDFUScheduleWrite', write);
               dispatch('webBluetoothDFUExecuteWrite', write);
