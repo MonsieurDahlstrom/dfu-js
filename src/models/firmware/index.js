@@ -65,7 +65,7 @@ class Firmware {
         this.sections.push(section)
         this.type = FirmwareType.Application
       } catch (e) {
-        console.log(e)
+        console.error(e)
       }
     } else if (json.manifest.bootloader) {
       try {

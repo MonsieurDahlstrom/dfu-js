@@ -63,6 +63,7 @@ var Create = exports.Create = function (_Write2) {
   function Create(characteristic, objectType, length) {
     (0, _classCallCheck3.default)(this, Create);
 
+    console.log('EFFING CREATE CONSTRUCTOR');
     var dataView = new DataView(new ArrayBuffer(6));
     dataView.setUint8(0, _writeTypes2.default.CREATE);
     dataView.setUint8(1, objectType);

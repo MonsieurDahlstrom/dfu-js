@@ -49,6 +49,7 @@ const UpdateActions = {
     Send a firmware to a device. Throws when parameter or state is invalid for sending a firmware
   **/
   async webBluetoothDFUSendFirmware({ dispatch, commit }, payload) {
+    console.log('webBluetoothDFUSendFirmware')
     let firmware = payload.firmware
     let update = payload.update
     if (firmware instanceof Firmware && update instanceof Update) {
@@ -56,15 +57,21 @@ const UpdateActions = {
         for(var section of firmware.sections) {
           update.transfers.push(new Transfer(section.dat, update.controlpointCharacteristic, update.packetCharacteristic, TransferObjectType.Command))
           update.transfers[update.transfers.length-1].update = update
-          dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
+          await dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
           update.transfers.push(new Transfer(section.bin, update.controlpointCharacteristic, update.packetCharacteristic, TransferObjectType.Data))
           update.transfers[update.transfers.length-1].update = update
-          dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
+          await dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length-1])
         }
-        dispatch('webBluetoothDFUTransferBegin', update.transfers[0])
+        await dispatch('webBluetoothDFUpdateBegin', update)
         commit(MutationTypes.MODIFED_UPDATE, update)
       }
     }
+  },
+
+  async webBluetoothDFUpdateBegin({ dispatch, commit }, update) {
+    let transfer = update.transfers[0]
+    dispatch('webBluetoothDFUTransferBegin', transfer)
+    commit(MutationTypes.MODIFED_UPDATE, update)
   }
 }
 

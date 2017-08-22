@@ -31,6 +31,7 @@ import WriteMutations from './mutations/write-mutations'
 import getters from './getters'
 //
 import {Firmware, FirmwareType} from './models/firmware'
+import {Update, UpdateStates} from './models/update'
 
 const state = {
   updates: [],
@@ -51,4 +52,5 @@ const VuexModule = {
 module.exports.Firmware = Firmware
 module.exports.FirmwareType = FirmwareType
 module.exports.VuexModule = VuexModule
+module.exports.State = UpdateStates
 export default VuexModule

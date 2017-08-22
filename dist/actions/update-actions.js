@@ -205,77 +205,97 @@ var UpdateActions = {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
+              console.log('webBluetoothDFUSendFirmware');
               firmware = payload.firmware;
               update = payload.update;
 
               if (!(firmware instanceof _firmware.Firmware && update instanceof _update.Update)) {
-                _context6.next = 25;
+                _context6.next = 40;
                 break;
               }
 
               if (!(update.state === _update.UpdateStates.IDLE)) {
-                _context6.next = 25;
+                _context6.next = 40;
                 break;
               }
 
               _iteratorNormalCompletion = true;
               _didIteratorError = false;
               _iteratorError = undefined;
-              _context6.prev = 7;
+              _context6.prev = 8;
+              _iterator = (0, _getIterator3.default)(firmware.sections);
 
-              for (_iterator = (0, _getIterator3.default)(firmware.sections); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                section = _step.value;
-
-                update.transfers.push(new _transfer2.default(section.dat, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Command));
-                update.transfers[update.transfers.length - 1].update = update;
-                dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
-                update.transfers.push(new _transfer2.default(section.bin, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Data));
-                update.transfers[update.transfers.length - 1].update = update;
-                dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
+            case 10:
+              if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
+                _context6.next = 23;
+                break;
               }
-              _context6.next = 15;
+
+              section = _step.value;
+
+              update.transfers.push(new _transfer2.default(section.dat, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Command));
+              update.transfers[update.transfers.length - 1].update = update;
+              _context6.next = 16;
+              return dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
+
+            case 16:
+              update.transfers.push(new _transfer2.default(section.bin, update.controlpointCharacteristic, update.packetCharacteristic, _transferObject.TransferObjectType.Data));
+              update.transfers[update.transfers.length - 1].update = update;
+              _context6.next = 20;
+              return dispatch('webBluetoothDFUTransferAdd', update.transfers[update.transfers.length - 1]);
+
+            case 20:
+              _iteratorNormalCompletion = true;
+              _context6.next = 10;
               break;
 
-            case 11:
-              _context6.prev = 11;
-              _context6.t0 = _context6['catch'](7);
+            case 23:
+              _context6.next = 29;
+              break;
+
+            case 25:
+              _context6.prev = 25;
+              _context6.t0 = _context6['catch'](8);
               _didIteratorError = true;
               _iteratorError = _context6.t0;
 
-            case 15:
-              _context6.prev = 15;
-              _context6.prev = 16;
+            case 29:
+              _context6.prev = 29;
+              _context6.prev = 30;
 
               if (!_iteratorNormalCompletion && _iterator.return) {
                 _iterator.return();
               }
 
-            case 18:
-              _context6.prev = 18;
+            case 32:
+              _context6.prev = 32;
 
               if (!_didIteratorError) {
-                _context6.next = 21;
+                _context6.next = 35;
                 break;
               }
 
               throw _iteratorError;
 
-            case 21:
-              return _context6.finish(18);
+            case 35:
+              return _context6.finish(32);
 
-            case 22:
-              return _context6.finish(15);
+            case 36:
+              return _context6.finish(29);
 
-            case 23:
-              dispatch('webBluetoothDFUTransferBegin', update.transfers[0]);
+            case 37:
+              _context6.next = 39;
+              return dispatch('webBluetoothDFUpdateBegin', update);
+
+            case 39:
               commit(MutationTypes.MODIFED_UPDATE, update);
 
-            case 25:
+            case 40:
             case 'end':
               return _context6.stop();
           }
         }
-      }, _callee6, this, [[7, 11, 15, 23], [16,, 18, 22]]);
+      }, _callee6, this, [[8, 25, 29, 37], [30,, 32, 36]]);
     }));
 
     function webBluetoothDFUSendFirmware(_x10, _x11) {
@@ -283,6 +303,34 @@ var UpdateActions = {
     }
 
     return webBluetoothDFUSendFirmware;
+  }(),
+  webBluetoothDFUpdateBegin: function () {
+    var _ref13 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee7(_ref12, update) {
+      var dispatch = _ref12.dispatch,
+          commit = _ref12.commit;
+      var transfer;
+      return _regenerator2.default.wrap(function _callee7$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              transfer = update.transfers[0];
+
+              dispatch('webBluetoothDFUTransferBegin', transfer);
+              commit(MutationTypes.MODIFED_UPDATE, update);
+
+            case 3:
+            case 'end':
+              return _context7.stop();
+          }
+        }
+      }, _callee7, this);
+    }));
+
+    function webBluetoothDFUpdateBegin(_x12, _x13) {
+      return _ref13.apply(this, arguments);
+    }
+
+    return webBluetoothDFUpdateBegin;
   }()
 };
 

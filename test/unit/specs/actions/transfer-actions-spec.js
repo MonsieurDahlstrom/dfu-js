@@ -38,7 +38,16 @@ const SharedPassEventToTransferObject = function (state) {
         validation: function (payload) {
           expect(payload.dataView instanceof DataView).to.be.true
           expect(payload.transferObject instanceof TransferObject).to.be.true
-        }
+        }.bind(this)
+      }
+    ]
+    let mutations = [
+      {
+        type: MutationTypes.UPDATE_TRANSFER,
+        validation: function (payload) {
+          expect(payload instanceof Transfer).to.equal(true)
+          expect(payload).to.equal(this.transfer)
+        }.bind(this)
       }
     ]
     factory.build('transferObject')
@@ -46,7 +55,7 @@ const SharedPassEventToTransferObject = function (state) {
       this.transfer.objects = [object]
       this.transfer.currentObjectIndex = 0
       var payload = {dataView: eventData, transfer: this.transfer}
-      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, [], dispatches, done)
+      var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, mutations, dispatches, done)
       test.run()
     })
   })
@@ -300,9 +309,9 @@ describe('Transfer Actions', function () {
 
   describe('#webBluetoothDFUTransferEventHandler', function () {
 
-    describe('when state is Prepare', function() {
+    describe('state Prepare', function() {
       SharedInvalidEventTests(TransmissionStatus.Prepare)
-      it('prepares transfer when success verify', function(done) {
+      it('Successful verify', function(done) {
         let dispatches = [
           {
             type: 'webBluetoothDFUTransferPrepare',
@@ -311,6 +320,15 @@ describe('Transfer Actions', function () {
               expect(payload.transfer).to.equal(this.transfer)
               expect(payload.checksum).to.equal(789)
               expect(payload.offset).to.equal(123456)
+            }.bind(this)
+          }
+        ]
+        let mutations = [
+          {
+            type: MutationTypes.UPDATE_TRANSFER,
+            validation: function(payload) {
+              expect(payload instanceof Transfer).to.equal(true)
+              expect(payload).to.equal(this.transfer)
             }.bind(this)
           }
         ]
@@ -323,23 +341,23 @@ describe('Transfer Actions', function () {
         eventData.setUint32(7, 123456, true)
         eventData.setUint32(11, 789,true)
         var payload = {dataView: eventData, transfer: this.transfer}
-        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, [], dispatches, done)
+        var test = new VuexActionTester(TransferActions.webBluetoothDFUTransferEventHandler, payload, mutations, dispatches, done)
         test.run()
       })
     })
 
-    describe('when state is Transfer', function() {
+    describe('state Transfer', function() {
       SharedInvalidEventTests(TransmissionStatus.Transfering)
       SharedPassEventToTransferObject(TransmissionStatus.Transfering)
     })
 
-    describe('when state is Completed', function() {
+    describe('state Completed', function() {
       SharedInvalidEventTests(TransmissionStatus.Completed)
       SharedPassEventToTransferObject(TransmissionStatus.Completed)
     })
 
 
-    describe('when state is Failed', function() {
+    describe('state Failed', function() {
       SharedInvalidEventTests(TransmissionStatus.Failed)
       SharedPassEventToTransferObject(TransmissionStatus.Failed)
     })

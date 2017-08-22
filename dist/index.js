@@ -46,6 +46,8 @@ var _getters2 = _interopRequireDefault(_getters);
 
 var _firmware = require('./models/firmware');
 
+var _update = require('./models/update');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var state = {
@@ -67,5 +69,6 @@ var VuexModule = {
 module.exports.Firmware = _firmware.Firmware;
 module.exports.FirmwareType = _firmware.FirmwareType;
 module.exports.VuexModule = VuexModule;
+module.exports.State = _update.UpdateStates;
 exports.default = VuexModule;
 //# sourceMappingURL=index.js.map

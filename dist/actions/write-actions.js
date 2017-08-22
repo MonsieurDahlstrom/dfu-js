@@ -91,47 +91,49 @@ var WriteActions = {
           switch (_context3.prev = _context3.next) {
             case 0:
               if (!(write instanceof _write2.default.Write)) {
-                _context3.next = 17;
+                _context3.next = 19;
                 break;
               }
 
+              write.state = _transmissionTypes2.default.Transfering;
+              commit(MutationTypes.UPDATE_WRITE, write);
               attempts = 3;
 
-            case 2:
-              _context3.prev = 2;
-              _context3.next = 5;
+            case 4:
+              _context3.prev = 4;
+              _context3.next = 7;
               return write.characteristic.writeValue(write.bytes);
 
-            case 5:
+            case 7:
               write.error = undefined;
               write.state = _transmissionTypes2.default.Completed;
               attempts = 0;
-              _context3.next = 15;
+              _context3.next = 17;
               break;
 
-            case 10:
-              _context3.prev = 10;
-              _context3.t0 = _context3['catch'](2);
+            case 12:
+              _context3.prev = 12;
+              _context3.t0 = _context3['catch'](4);
 
               attempts--;
               write.error = _context3.t0;
               write.state = _transmissionTypes2.default.Failed;
 
-            case 15:
+            case 17:
               if (attempts > 0) {
-                _context3.next = 2;
+                _context3.next = 4;
                 break;
               }
 
-            case 16:
+            case 18:
               commit(MutationTypes.UPDATE_WRITE, write);
 
-            case 17:
+            case 19:
             case 'end':
               return _context3.stop();
           }
         }
-      }, _callee3, this, [[2, 10]]);
+      }, _callee3, this, [[4, 12]]);
     }));
 
     function webBluetoothDFUExecuteWrite(_x5, _x6) {
@@ -139,6 +141,40 @@ var WriteActions = {
     }
 
     return webBluetoothDFUExecuteWrite;
+  }(),
+  webBluetoothDFUTickWrites: function () {
+    var _ref8 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee4(_ref7, payload) {
+      var dispatch = _ref7.dispatch,
+          commit = _ref7.commit,
+          state = _ref7.state;
+      var nextWrite;
+      return _regenerator2.default.wrap(function _callee4$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              console.log('webBluetoothDFUTickWrites');
+              console.log(state);
+              nextWrite = state.writes.find(function (writeRecord) {
+                return writeRecord.state === _transmissionTypes2.default.Transfering || writeRecord.state === _transmissionTypes2.default.Prepared;
+              });
+
+              if (nextWrite && nextWrite.state === _transmissionTypes2.default.Prepared) {
+                dispatch('webBluetoothDFUExecuteWrite', nextWrite);
+              }
+
+            case 4:
+            case 'end':
+              return _context4.stop();
+          }
+        }
+      }, _callee4, this);
+    }));
+
+    function webBluetoothDFUTickWrites(_x7, _x8) {
+      return _ref8.apply(this, arguments);
+    }
+
+    return webBluetoothDFUTickWrites;
   }()
 };
 

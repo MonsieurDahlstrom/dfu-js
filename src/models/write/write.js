@@ -23,6 +23,7 @@ export class Verify extends Write {
 
 export class Create extends Write {
   constructor  (characteristic, objectType, length) {
+    console.log('EFFING CREATE CONSTRUCTOR')
     let dataView = new DataView(new ArrayBuffer(6))
     dataView.setUint8(0, WriteTypes.CREATE)
     dataView.setUint8(1, objectType)

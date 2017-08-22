@@ -7,7 +7,7 @@ import factory from '../../factories'
 import UpdateMutations from '../../../../src/mutations/update-mutations'
 import * as MutationTypes from '../../../../src/mutation-types'
 
-describe('TransferObject mutations', function () {
+describe('UpdateObject mutations', function () {
 
   beforeEach(function (done) {
     this.state = {updates: [], transfers: [], objects: [], writes: []}
@@ -36,11 +36,11 @@ describe('TransferObject mutations', function () {
     })
   })
 
-  describe('#MODIFY_UPDATE', function () {
+  describe('#MODIFED_UPDATE', function () {
     it('transfer added to queue', function () {
       var spliceSpy = this.sandbox.spy(this.state.updates, "splice")
       this.state.updates.push(this.update)
-      UpdateMutations[MutationTypes.MODIFY_UPDATE](this.state,this.update)
+      UpdateMutations[MutationTypes.MODIFED_UPDATE](this.state,this.update)
       expect(this.state.updates.length).to.equal(1)
       expect(spliceSpy.calledOnce).to.be.ok
     })

@@ -93,7 +93,7 @@ var Firmware = function () {
                 _context.prev = 20;
                 _context.t0 = _context['catch'](8);
 
-                console.log(_context.t0);
+                console.error(_context.t0);
 
               case 23:
                 _context.next = 80;

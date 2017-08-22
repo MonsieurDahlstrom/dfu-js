@@ -121,6 +121,8 @@ var TransferObjectActions = {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
+              console.log('  webBluetoothDFUObjectToPackets');
+              console.log(payload);
               transferObject = payload.transferObject;
               offset = payload.offset;
               parentFileEnd = transferObject.offset + transferObject.length;
@@ -137,7 +139,7 @@ var TransferObjectActions = {
               }
               commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject);
 
-            case 7:
+            case 9:
             case 'end':
               return _context4.stop();
           }
@@ -155,25 +157,40 @@ var TransferObjectActions = {
     var _ref10 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5(_ref9, transferObject) {
       var dispatch = _ref9.dispatch,
           commit = _ref9.commit;
-      var writes, index, buffer, write;
+      var index, buffer, write;
       return _regenerator2.default.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              writes = [];
+              console.log('  webBluetoothDFUObjectTransferDataPackages');
+              index = 0;
 
-              for (index = 0; index < transferObject.chunks.length; index++) {
-                buffer = transferObject.chunks[index];
-                write = new _write3.default.Package(buffer, transferObject.transfer.packetPoint);
-
-                write.transferObject = transferObject;
-                writes.push(write);
-                dispatch('webBluetoothDFUScheduleWrite', write);
+            case 2:
+              if (!(index < transferObject.chunks.length)) {
+                _context5.next = 13;
+                break;
               }
-              dispatch('webBluetoothDFUExecuteWrite', writes[0]);
+
+              buffer = transferObject.chunks[index];
+              write = new _write3.default.Package(transferObject.transfer.packetPoint, buffer);
+
+              write.transferObject = transferObject;
+              _context5.next = 8;
+              return dispatch('webBluetoothDFUScheduleWrite', write);
+
+            case 8:
+              _context5.next = 10;
+              return dispatch('webBluetoothDFUExecuteWrite', write);
+
+            case 10:
+              index++;
+              _context5.next = 2;
+              break;
+
+            case 13:
               commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject);
 
-            case 4:
+            case 14:
             case 'end':
               return _context5.stop();
           }
@@ -198,30 +215,39 @@ var TransferObjectActions = {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
+              console.log('  webBluetoothDFUObjectValidate');
               transferObject = payload.transferObject;
               offset = payload.offset;
               checksum = payload.checksum;
               fileCRCToOffset = _crc2.default.crc32(transferObject.transfer.file.slice(0, offset));
 
               if (offset === transferObject.offset + transferObject.length && checksum === fileCRCToOffset) {
+                console.log('    Transfer complete');
+
                 transferObject.state = _transferObject.TransferObjectState.Storing;
                 write = new _write3.default.Execute(transferObject.transfer.packetPoint);
 
+                write.transferObject = transferObject;
                 dispatch('webBluetoothDFUScheduleWrite', write);
               } else if (offset === transferObject.offset || offset > transferObject.offset + transferObject.length || checksum !== fileCRCToOffset) {
+                console.log('    Transfer needs to be created');
+
                 transferObject.state = _transferObject.TransferObjectState.Creating;
                 _write = new _write3.default.Create(transferObject.transfer.controlPoint, transferObject.type, transferObject.length);
 
+                _write.transferObject = transferObject;
                 dispatch('webBluetoothDFUScheduleWrite', _write);
               } else {
+                console.log('    Initiate package transfer');
+
                 transferObject.state = _transferObject.TransferObjectState.Transfering;
-                dispatch('webBluetoothDFUObjectToPackets', transferObject);
+                dispatch('webBluetoothDFUObjectToPackets', { transferObject: transferObject, offset: offset });
                 dispatch('webBluetoothDFUObjectSetPacketReturnNotification', transferObject);
                 dispatch('webBluetoothDFUObjectTransferDataPackages', transferObject);
               }
               commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject);
 
-            case 6:
+            case 7:
             case 'end':
               return _context6.stop();
           }
@@ -244,13 +270,14 @@ var TransferObjectActions = {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
+              console.log('  webBluetoothDFUObjectSetPacketReturnNotification');
               write = new _write3.default.PacketReturnNotification(transferObject.transfer.packetPoint, transferObject.chunks.length);
 
               write.transferObject = transferObject;
               dispatch('webBluetoothDFUScheduleWrite', write);
               commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject);
 
-            case 4:
+            case 5:
             case 'end':
               return _context7.stop();
           }
@@ -273,28 +300,29 @@ var TransferObjectActions = {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
+              console.log('  webBluetoothDFUObjectHandleEvent');
               dataView = payload.dataView;
               transferObject = payload.transferObject;
 
               payload.opCode = dataView.getInt8(1);
               payload.responseCode = dataView.getInt8(2);
               _context8.t0 = transferObject.state;
-              _context8.next = _context8.t0 === _transferObject.TransferObjectState.Creating ? 7 : _context8.t0 === _transferObject.TransferObjectState.Transfering ? 9 : _context8.t0 === _transferObject.TransferObjectState.Storing ? 11 : 13;
+              _context8.next = _context8.t0 === _transferObject.TransferObjectState.Creating ? 8 : _context8.t0 === _transferObject.TransferObjectState.Transfering ? 10 : _context8.t0 === _transferObject.TransferObjectState.Storing ? 12 : 14;
               break;
 
-            case 7:
+            case 8:
               dispatch('webBluetoothDFUObjectHandleEventWhileCreating', payload);
-              return _context8.abrupt('break', 13);
+              return _context8.abrupt('break', 14);
 
-            case 9:
+            case 10:
               dispatch('webBluetoothDFUObjectHandleEventWhileTransfering', payload);
-              return _context8.abrupt('break', 13);
+              return _context8.abrupt('break', 14);
 
-            case 11:
+            case 12:
               dispatch('webBluetoothDFUObjectHandleEventWhileStoring', payload);
-              return _context8.abrupt('break', 13);
+              return _context8.abrupt('break', 14);
 
-            case 13:
+            case 14:
             case 'end':
               return _context8.stop();
           }
@@ -316,23 +344,30 @@ var TransferObjectActions = {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
+              console.log('  webBluetoothDFUObjectHandleEventWhileCreating');
               if (payload.opCode === _write3.default.Actions.SELECT && payload.responseCode === _write3.default.Responses.SUCCESS) {
+                console.log('    SELECT SUCCESS');
+
                 payload.offset = payload.dataView.getUint32(7, true);
                 payload.checksum = payload.dataView.getUint32(11, true);
                 dispatch('webBluetoothDFUObjectValidate', payload);
                 commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject);
               } else if (payload.opCode === _write3.default.Actions.CREATE && payload.responseCode === _write3.default.Responses.SUCCESS) {
+                console.log('    CREATE SUCCESS');
                 payload.transferObject.state = _transferObject.TransferObjectState.Transfering;
 
-                dispatch('webBluetoothDFUObjectToPackets', payload.transferObject);
+                payload.offset = 0;
+                dispatch('webBluetoothDFUObjectToPackets', payload);
                 dispatch('webBluetoothDFUObjectSetPacketReturnNotification', payload.transferObject);
                 dispatch('webBluetoothDFUObjectTransferDataPackages', payload.transferObject);
                 commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject);
-              } else if (payload.opCode === _write3.default.Actions.SET_PRN && payload.responseCode === _write3.default.Responses.SUCCESS) {} else {
+              } else if (payload.opCode === _write3.default.Actions.SET_PRN && payload.responseCode === _write3.default.Responses.SUCCESS) {
+                console.log('    PRN SUCCESS');
+              } else {
                 console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode);
               }
 
-            case 1:
+            case 2:
             case 'end':
               return _context9.stop();
           }
@@ -354,6 +389,7 @@ var TransferObjectActions = {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
+              console.log('webBluetoothDFUObjectHandleEventWhileTransfering');
               if (payload.opCode === _write3.default.Actions.CALCULATE_CHECKSUM && payload.responseCode === _write3.default.Responses.SUCCESS) {
                 payload.offset = payload.dataView.getUint32(7, true);
                 payload.checksum = payload.dataView.getUint32(11, true);
@@ -363,7 +399,7 @@ var TransferObjectActions = {
                 console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode);
               }
 
-            case 1:
+            case 2:
             case 'end':
               return _context10.stop();
           }
@@ -385,6 +421,7 @@ var TransferObjectActions = {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
+              console.log('webBluetoothDFUObjectHandleEventWhileStoring');
               if (payload.opCode === _write3.default.Actions.EXECUTE && payload.responseCode === _write3.default.Responses.SUCCESS) {
                 payload.transferObject.state = _transferObject.TransferObjectState.Completed;
                 commit(MutationTypes.UPDATE_TRANSFER_OBJECT, payload.transferObject);
@@ -392,7 +429,7 @@ var TransferObjectActions = {
                 console.log('  Operation: ' + payload.opCode + ' Result: ' + payload.responseCode);
               }
 
-            case 1:
+            case 2:
             case 'end':
               return _context11.stop();
           }

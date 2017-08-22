@@ -17,6 +17,28 @@ factory.define('update', Update, {
   state: UpdateStates.NOT_CONFIGURED
 })
 
+factory.define('writeChecksum', Write.Checksum, {
+  characteristic: factory.assoc('webBluetoothCharacteristic'),
+  buffer: () => {
+    let dataView = new DataView(new ArrayBuffer(1))
+    dataView.setUint8(0, Write.Actions.CALCULATE_CHECKSUM)
+    return dataView.buffer
+  }
+});
+
+factory.define('writePackage', Write.Package, {
+  characteristic: factory.assoc('webBluetoothCharacteristic'),
+  buffer: () => {
+    let dataView = new DataView(new ArrayBuffer(20))
+    return dataView.buffer
+  }
+});
+
+factory.define('webBluetoothCharacteristic', WebBluetoothCharacteristicMock, {
+
+});
+
+/*
 factory.define('transfer', Transfer, {
   packetPoint: factory.assoc('webBluetoothCharacteristic'),
   controlPoint: factory.assoc('webBluetoothCharacteristic'),
@@ -31,14 +53,7 @@ factory.define('transferObject', TransferObject, {
   transferType: () => (Math.random() <= 0.5) === true ? 1 : 2,
 });
 
-factory.define('writeChecksum', Write.Checksum, {
-  characteristic: factory.assoc('webBluetoothCharacteristic'),
-  buffer: () => {
-    let dataView = new DataView(new ArrayBuffer(1))
-    dataView.setUint8(0, Write.Actions.CALCULATE_CHECKSUM)
-    return dataView.buffer
-  }
-});
+
 
 factory.define('webBluetoothDevice', WebBluetoothDeviceMock, {
   id: factory.chance('string'),
@@ -55,7 +70,7 @@ factory.define('webBluetoothDFU', WebBluetoothServiceMock, {
   packetCharacteristic: () =>   factory.assoc('webBluetoothCharacteristic')
 });
 
-factory.define('webBluetoothCharacteristic', WebBluetoothCharacteristicMock, {
-});
+
+*/
 
 export default factory
