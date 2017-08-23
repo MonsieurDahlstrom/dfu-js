@@ -20,12 +20,12 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import UpdateActions from './actions/update-actions'
 import TransferActions from './actions/transfer-actions'
-import ObjectActions from './actions/transfer-object-actions'
+import ObjectActions from './actions/dfu-object-actions'
 import WriteActions from './actions/write-actions'
 //
 import UpdateMutations from './mutations/update-mutations'
 import TransferMutations from './mutations/transfer-mutations'
-import ObjectMutations from './mutations/transfer-object-mutations'
+import ObjectMutations from './mutations/dfu-object-mutations'
 import WriteMutations from './mutations/write-mutations'
 //
 import getters from './getters'

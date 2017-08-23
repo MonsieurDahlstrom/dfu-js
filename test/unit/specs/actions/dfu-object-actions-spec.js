@@ -5,52 +5,72 @@ import crc from 'crc'
 //
 import VuexActionTester from '../../helpers/vuex-action-tester'
 //
-import TransferObjectActions from '../../../../src/actions/transfer-object-actions'
+import TransferObjectActions from '../../../../src/actions/dfu-object-actions'
 import * as MutationTypes from '../../../../src/mutation-types'
-import {TransferObjectState} from '../../../../src/models/transfer-object'
 import Write from '../../../../src/models/write'
 //
 
-describe('TransferObject Actions', function () {
+describe.only('DFUObject Actions', function () {
 
-  let sandbox
-  let transferObject
-  let state
+  before(function () {
+    this.sandbox = sinon.sandbox.create()
+  })
   beforeEach(function (done) {
-    sandbox = sinon.sandbox.create()
-    state = {writes: [], objects: []}
-    factory.create('transferObject')
+    factory.create('dfuObject')
     .then((newTransferObject) => {
-      transferObject = newTransferObject
+      this.dfuObject = newTransferObject
       done()
     })
   });
   afterEach(function () {
-    sandbox.restore()
+    this.sandbox.restore()
   });
 
   describe('#webBluetoothDFUObjectAdd', function () {
     it('object added', function (done) {
-      let mutations = [{ type: MutationTypes.ADD_TRANSFER_OBJECT, validation: function(payload) {
-          expect(payload).to.deep.equal(transferObject)
-          return true
-      }}]
-      var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectAdd, transferObject, mutations, [], done)
+      let mutations = [
+        {
+          type: MutationTypes.ADD_DFU_OBJECT,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(this.dfuObject)
+          }.bind(this)
+        }
+      ]
+      var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectAdd, this.dfuObject, mutations, [], done)
+      test.run()
+    })
+  })
+
+  describe('#webBluetoothDFUObjectUpdated', function () {
+    it('object updated', function (done) {
+      let mutations = [
+        {
+          type: MutationTypes.UPDATE_DFU_OBJECT,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(this.dfuObject)
+          }.bind(this)
+        }
+      ]
+      var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectUpdated, this.dfuObject, mutations, [], done)
       test.run()
     })
   })
 
   describe('#webBluetoothDFUObjectRemove', function () {
     it('object removed', function (done) {
-      let mutations = [{ type: MutationTypes.REMOVE_TRANSFER_OBJECT, validation: function(payload) {
-          expect(payload).to.deep.equal(transferObject)
-          return true
-      }}]
-      var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectRemove, transferObject, mutations, [], done)
+      let mutations = [
+        {
+          type: MutationTypes.REMOVE_DFU_OBJECT,
+          validation: function(payload) {
+            expect(payload).to.deep.equal(this.dfuObject)
+          }.bind(this)
+        }
+      ]
+      var test = new VuexActionTester(TransferObjectActions.webBluetoothDFUObjectRemove, this.dfuObject, mutations, [], done)
       test.run()
     })
   })
-
+  /*
   describe('#webBluetoothDFUObjectToPackets', function () {
     it('creates package', function(done) {
       let mutations = [{ type: MutationTypes.UPDATE_TRANSFER_OBJECT, validation: function(payload) {
@@ -344,4 +364,5 @@ describe('TransferObject Actions', function () {
       test.run()
     })
   })
+  */
 })

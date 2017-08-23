@@ -9,7 +9,7 @@ import Write from '../../../../src/models/write'
 
 import * as MutationTypes from '../../../../src/mutation-types'
 import TransferActions from '../../../../src/actions/transfer-actions'
-import {TransferObject} from '../../../../src/models/transfer-object'
+import {DFUObject} from '../../../../src/models/dfu-object'
 import TransmissionStatus from '../../../../src/models/transmission-types'
 
 import {Transfer} from '../../../../src/models/transfer'

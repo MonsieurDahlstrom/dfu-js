@@ -29,9 +29,8 @@
   },
   "scripts": {
     "build": "babel src --out-dir dist --source-maps true",
-    "unit-test": "mocha test/unit/specs",
-    "unit-test-watch": "nodemon --exec \"mocha test/unit/specs\"",
-    "karma": "karma start karma.config.js"
+    "unit-test": "karma start karma.config.js --single-run",
+    "unit-test-watch": "karma start karma.config.js"
   },
   "repository": {
     "type": "git",

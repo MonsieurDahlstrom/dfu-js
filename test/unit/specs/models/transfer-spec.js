@@ -4,9 +4,9 @@ import sinon from 'sinon'
 import factory from '../../factories'
 //
 import TransmissionStatus from '../../../../src/models/transmission-types'
-import {Transfer} from '../../../../src/models/transfer'
+import Transfer from '../../../../src/models/transfer'
 
-describe('Transfer', function() {
+describe.only('Transfer', function() {
 
   describe("#constructor", function() {
     describe('without parameters', function() {
@@ -15,36 +15,31 @@ describe('Transfer', function() {
       })
     })
     describe('with parameters', function() {
-      let dataset
-      let packetPoint
-      let controlPoint
-      let transferObjectType
-      let transfer
       beforeEach(function(done) {
-        dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
-        transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
+        this.dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
+        this.transferType = (Math.random() <= 0.5) === true ? 1 : 2;
         factory.buildMany("webBluetoothCharacteristic",2)
         .then(result => {
-          packetPoint = result[0]
-          controlPoint = result[1]
-          transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
+          this.packetPoint = result[0]
+          this.controlPoint = result[1]
+          this.transfer = new Transfer(this.dataset,this.controlPoint,this.packetPoint,this.transferType)
           done()
         })
       })
       it("no exceptions", function() {
-        expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).to.not.throw()
+        expect( ()=> new Transfer(this.dataset,this.controlPoint,this.packetPoint,this.transferType)).to.not.throw()
       })
       it('should have data', function() {
-        expect(transfer.file).to.equal(dataset)
+        expect(this.transfer.file).to.equal(this.dataset)
       })
       it('should have data characteristic', function() {
-        expect(transfer.packetPoint).to.equal(packetPoint)
+        expect(this.transfer.packetPoint).to.equal(this.packetPoint)
       })
       it('should have control point characteristic', function() {
-        expect(transfer.controlPoint).to.equal(controlPoint)
+        expect(this.transfer.controlPoint).to.equal(this.controlPoint)
       })
       it('should have object type', function() {
-        expect(transfer.objectType).to.equal(transferObjectType)
+        expect(this.transfer.objectType).to.equal(this.transferType)
       })
     })
   })

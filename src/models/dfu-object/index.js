@@ -20,39 +20,19 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import crc from 'crc'
-import * as WriteActions from './write'
-import TransmissionStatus from './transmission-types'
+import * as WriteActions from '../write'
+import TransmissionStatus from '../transmission-types'
+import DFUObjectTypes from './types'
+import DFUObjectState from './states'
 
-// import {Task, TaskType, TaskResult} from './Task'
-
-
-
-/**
-Nordic defines two different type of file transfers:
-    init package is known as Command object
-    firmware is known as Data object
-**/
-const TransferObjectType = {
-  Command: 0x01,
-  Data: 0x02
-}
-
-/** Different states a TransferObject can be in **/
-const TransferObjectState = {
-  NotStarted: 0x01,
-  Creating: 0x02,
-  Transfering: 0x03,
-  Storing: 0x04,
-  Completed: 0x05,
-  Failed: 0x06
-}
+const DATA_CHUNK_SIZE = 20
 
 /**
 NRF51/52 can not process a a whole binary file in one go,
 the transfer of a full binary file is done by creating a string of TransferObjects
 with a maximum size that the MCU reports via bluewooth
 **/
-class TransferObject {
+class DFUObject {
 
   constructor (offset, length, transfer, transferType) {
     // Reference to parent transfer that stores the file data
@@ -64,7 +44,7 @@ class TransferObject {
     // TransferObjectType for this transfer object
     this.type = transferType
     // Initial state
-    this.state = TransferObjectState.NotStarted
+    this.state = DFUObjectState.NotStarted
     //array that tracks all packages of data that needs to be transfered
     this.chunks = []
   }
@@ -78,6 +58,6 @@ class TransferObject {
 
 }
 
-module.exports.TransferObject = TransferObject
-module.exports.TransferObjectState = TransferObjectState
-module.exports.TransferObjectType = TransferObjectType
+module.exports.DFUObject = DFUObject
+module.exports.States = DFUObjectState
+module.exports.Types = DFUObjectTypes

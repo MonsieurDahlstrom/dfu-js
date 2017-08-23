@@ -1,27 +1,20 @@
-import crc from 'crc'
-//
-import Write from '../models/write'
-//
 import * as MutationTypes from '../mutation-types'
-import {TransferObjectState} from '../models/transfer-object'
-
-const DATA_CHUNK_SIZE = 20
 
 const TransferObjectActions = {
 
   /** Adding a TransferObject to the vuex state **/
-  async webBluetoothDFUObjectAdd({ dispatch, commit }, transferObject) {
-    commit(MutationTypes.ADD_TRANSFER_OBJECT, transferObject)
+  async webBluetoothDFUObjectAdd({ dispatch, commit }, dfuObject) {
+    commit(MutationTypes.ADD_DFU_OBJECT, dfuObject)
   },
 
   /* Remove a TransferObject from the vuex state */
-  async webBluetoothDFUObjectUpdated({ dispatch, commit }, transferObject) {
-    commit(MutationTypes.UPDATE_TRANSFER_OBJECT, transferObject)
+  async webBluetoothDFUObjectUpdated({ dispatch, commit }, dfuObject) {
+    commit(MutationTypes.UPDATE_DFU_OBJECT, dfuObject)
   },
 
   /* Remove a TransferObject from the vuex state */
-  async webBluetoothDFUObjectRemove({ dispatch, commit }, transferObject) {
-    commit(MutationTypes.REMOVE_TRANSFER_OBJECT, transferObject)
+  async webBluetoothDFUObjectRemove({ dispatch, commit }, dfuObject) {
+    commit(MutationTypes.REMOVE_DFU_OBJECT, dfuObject)
   }
 }
 

@@ -2,6 +2,7 @@ import {expect} from 'chai'
 import factory from '../../factories'
 
 import Write from "../../../../src/models/write"
+import {DFUObject} from '../../../../src/models/dfu-object'
 
 describe("Write module", function() {
 
@@ -26,127 +27,185 @@ describe("Write module", function() {
     })
   })
 
-  describe('Verify', function() {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
-    })
-    describe('#constructor', function () {
-      it('builds', function () {
-        expect(() => new Write.Verify(characteristic,0)).not.to.throw()
-      })
-      describe('properties set', function () {
-        let objectType = 0x01
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new Write.Verify(characteristic,objectType)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.SELECT))
-        it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(objectType))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
+  describe.only('Verify', function() {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.objectType = 0x01
+        this.write = new Write.Verify(this.transferObject, this.characteristic, this.objectType)
+        done()
       })
     })
-  })
-
-  describe('Create', function() {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
+    it('#constructor', function () {
+      expect(() => new Write.Verify(this.transferObject, this.characteristic, 0x02)).not.to.throw()
     })
-    describe('#constructor', function() {
-      it('builds', function () {
-        expect(() => new Write.Create(characteristic,0,143)).not.to.throw()
-      })
-      describe('properties set', function () {
-        let objectType = 0x01
-        let objectLength = 143
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new Write.Create(characteristic,objectType,objectLength)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.CREATE))
-        it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(objectType))
-        it('object length is set', () => expect(new Uint8Array(write.bytes)[2]).to.equal(objectLength))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
-      })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('write action is set', function () {
+       expect(new Uint8Array(this.write.bytes)[0]).to.equal(Write.Actions.SELECT)
+     })
+    it('object type is set', function() {
+      expect(new Uint8Array(this.write.bytes)[1]).to.equal(this.objectType)
+    })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of Verify', function () {
+      expect(this.write instanceof Write.Verify).to.equal(true)
+    })
+    it('transferObject set', function () {
+      expect(this.write.object).to.equal(this.transferObject)
     })
   })
 
-  describe('PacketReturnNotification', function() {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
-    })
-    describe('#constructor', function () {
-      it('builds', function () {
-        expect(() => new Write.PacketReturnNotification(characteristic,250)).not.to.throw()
-      })
-      describe('properties set', function () {
-        let packageCount = 200
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new Write.PacketReturnNotification(characteristic,packageCount)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.SET_PRN))
-        it('object type is set', () => expect(new Uint8Array(write.bytes)[1]).to.equal(packageCount))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
+  describe.only('Create', function() {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.objectType = 0x01
+        this.objectLength = 143
+        this.write = new Write.Create(this.transferObject, this.characteristic, this.objectType, this.objectLength)
+        done()
       })
     })
-  })
-
-  describe('Package', function() {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
+    it('#constructor', function () {
+      expect(() => new Write.Create(this.transferObject, this.characteristic, this.objectLength)).not.to.throw()
     })
-    describe('#constructor', function () {
-      it('builds', function () {
-        var buffer = new Uint8Array(10)
-        expect(() => new Write.Package(characteristic,buffer)).not.to.throw()
-      })
-      describe('properties set', function () {
-        let buffer = new Uint8Array([1,11,21,31,41,51])
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new Write.Package(characteristic,buffer)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)).to.deep.equal(buffer))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
-      })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('write action is set', function () {
+       expect(new Uint8Array(this.write.bytes)[0]).to.equal(Write.Actions.CREATE)
+     })
+    it('object type is set', function() {
+      expect(new Uint8Array(this.write.bytes)[1]).to.equal(this.objectType)
+    })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of Create', function () {
+      expect(this.write instanceof Write.Create).to.equal(true)
+    })
+    it('transferObject set', function () {
+      expect(this.write.object).to.equal(this.transferObject)
+    })
+    it('object length is set', function () {
+      expect(new Uint8Array(this.write.bytes)[2]).to.equal(this.objectLength)
     })
   })
 
-  describe('Checksum', function () {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
+  describe.only('PacketReturnNotification', function() {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.prnValue = 250
+        this.write = new Write.PacketReturnNotification(this.transferObject, this.characteristic, this.prnValue)
+        done()
+      })
     })
-    describe('#constructor', function () {
-      it('builds', function () {
-        expect(() => new Write.Checksum(characteristic)).not.to.throw()
-      })
-      describe('properties set', function () {
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new Write.Checksum(characteristic)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.CALCULATE_CHECKSUM))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
-      })
+    it('#constructor', function () {
+      expect(() => new Write.PacketReturnNotification(this.transferObject, this.characteristic, this.prnValue)).not.to.throw()
+    })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('write action is set', function () {
+       expect(new Uint8Array(this.write.bytes)[0]).to.equal(Write.Actions.SET_PRN)
+     })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of PacketReturnNotification', function () {
+      expect(this.write instanceof Write.PacketReturnNotification).to.equal(true)
+    })
+    it('transferObject set', function () {
+      expect(this.write.object).to.equal(this.transferObject)
+    })
+    it('PRN is set', function () {
+      expect(new Uint8Array(this.write.bytes)[1]).to.equal(this.prnValue)
     })
   })
 
-  describe('Execute', function () {
-    var characteristic
-    beforeEach(function() {
-      characteristic = factory.build('webBluetoothCharacteristic')
+  describe.only('Package', function() {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.writeBuffer = new Uint8Array(10)
+        this.write = new Write.Package(this.transferObject, this.characteristic, this.writeBuffer)
+        done()
+      })
     })
-    describe('#constructor', function () {
-      it('builds', function () {
-        expect(() => new Write.Execute(characteristic)).not.to.throw()
+    it('#constructor', function () {
+      expect(() => new Write.Package(this.transferObject, this.characteristic, this.writeBuffer)).not.to.throw()
+    })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of Package', function () {
+      expect(this.write instanceof Write.Package).to.equal(true)
+    })
+    it('data is set', function () {
+      expect(this.write.bytes).to.deep.equal(this.writeBuffer)
+    })
+  })
+
+  describe.only('Checksum', function () {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.write = new Write.Checksum(this.transferObject, this.characteristic)
+        done()
       })
-      describe('properties set', function () {
-        let characteristic = factory.build('webBluetoothCharacteristic')
-        let write = new  Write.Execute(characteristic)
-        it('characteristic is set', () => expect(write.characteristic).to.equal(characteristic))
-        it('write action is set', () => expect(new Uint8Array(write.bytes)[0]).to.equal(Write.Actions.EXECUTE))
-        it('object is instance of Write', () => expect(write instanceof Write.Write).to.equal(true))
+    })
+    it('#constructor', function () {
+      expect(() => new Write.Checksum(this.transferObject, this.characteristic)).not.to.throw()
+    })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of Checksum', function () {
+      expect(this.write instanceof Write.Checksum).to.equal(true)
+    })
+  })
+
+  describe.only('Execute', function () {
+    beforeEach(function(done) {
+      this.transferObject = new DFUObject()
+      factory.create('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.characteristic = characteristic
+        this.write = new Write.Execute(this.transferObject, this.characteristic)
+        done()
       })
+    })
+    it('#constructor', function () {
+      expect(() => new Write.Execute(this.transferObject, this.characteristic)).not.to.throw()
+    })
+    it('characteristic is set', function () {
+      expect(this.write.characteristic).to.equal(this.characteristic)
+    })
+    it('object is instance of Write', function () {
+      expect(this.write instanceof Write.Write).to.equal(true)
+    })
+    it('object is instance of Execute', function () {
+      expect(this.write instanceof Write.Execute).to.equal(true)
     })
   })
 })

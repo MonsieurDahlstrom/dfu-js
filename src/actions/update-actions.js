@@ -1,7 +1,7 @@
 import {Update, UpdateStates} from '../models/update'
 import {Firmware} from '../models/firmware'
 import Transfer from '../models/transfer'
-import {TransferObjectType} from '../models/transfer-object'
+
 import * as MutationTypes from '../mutation-types'
 
 // DFU by Nordic Semiconductor

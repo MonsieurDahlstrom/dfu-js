@@ -35,7 +35,7 @@ const SharedDFUParseZip = function (context, testZipPath, expectedType, numberOf
     })
   })
 }
-describe('Firmware', function() {
+describe.only('Firmware', function() {
 
   describe('#constructor', function () {
     describe('without zip data', function () {

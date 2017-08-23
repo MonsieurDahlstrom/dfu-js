@@ -13,7 +13,7 @@ export default class WebBluetoothCharacteristicMock {
   }
 
   async writeValue (valueArray) {
-    if (valueArray instanceof ArrayBuffer || valueArray instanceof ArrayBufferView) {
+    if (valueArray instanceof ArrayBuffer) {
       return true
     } else {
       throw new Error('Invalid Datatype ' + typeof(valueArray) + ' passed')
