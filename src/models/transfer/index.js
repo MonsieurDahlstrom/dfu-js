@@ -18,10 +18,14 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-import {Transfer, TransferWorker, TransferState, TransferObjectType} from './Transfer'
+/** internal imports */
+import {CurrentTransfer, TransferWorker} from './transfer-worker'
+import TransferStates from './states'
+import TransferTypes from './types'
+import Transfer from './transfer'
 
 module.exports.Transfer = Transfer
-module.exports.TransferState = TransferState
-module.exports.TransferObjectType = TransferObjectType
+module.exports.TransferStates = TransferStates
+module.exports.TransferTypes = TransferTypes
 module.exports.TransferWorker = TransferWorker
+module.exports.CurrentTransfer = CurrentTransfer

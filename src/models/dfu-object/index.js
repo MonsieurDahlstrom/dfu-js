@@ -20,26 +20,17 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import crc from 'crc'
-import {Task, TaskType, TaskResult} from './Task'
+import {Task, TaskTypes, TaskResults} from '../task'
+import DFUObjectStates from './states.js'
 
 const DATA_CHUNK_SIZE = 20
-
-/** Different states a TransferObject can be in **/
-const TransferObjectState = {
-  NotStarted: 0x01,
-  Creating: 0x02,
-  Transfering: 0x03,
-  Storing: 0x04,
-  Completed: 0x05,
-  Failed: 0x06
-}
 
 /**
 NRF51/52 can not process a a whole binary file in one go,
 the transfer of a full binary file is done by creating a string of TransferObjects
 with a maximum size that the MCU reports via bluewooth
 **/
-class TransferObject {
+class DFUObject {
 
   constructor (offset, length, transfer, transferType, onCompletitionCallback) {
     // function to call when transfer completes or fails
@@ -53,16 +44,16 @@ class TransferObject {
     // TransferObjectType for this transfer object
     this.objectType = transferType
     // Initial state
-    this.state = TransferObjectState.NotStarted
+    this.state = DFUObjectStates.NotStarted
   }
 
   progress () {
     switch(this.state) {
-      case TransferObjectState.NotStarted:
+      case DFUObjectStates.NotStarted:
         return 0.0
-      case TransferObjectState.Creating:
+      case DFUObjectStates.Creating:
         return 0.01
-      case TransferObjectState.Transfering:
+      case DFUObjectStates.Transfering:
         var difference = this.parentTransfer.bleTasks.length / this.chunks.length
         switch (difference) {
           case 0:
@@ -72,7 +63,7 @@ class TransferObject {
           default:
             return (1.0 - difference) - 0.02
         }
-      case TransferObjectState.Storing:
+      case DFUObjectStates.Storing:
         return 0.99
       default:
         return 1.0
@@ -102,7 +93,7 @@ class TransferObject {
 
   /** The first step in transferring this object, ask how much has already been transferred **/
   begin () {
-    this.state = TransferObjectState.Creating
+    this.state = DFUObjectStates.Creating
     this.parentTransfer.addTask(Task.verify(this.objectType, this.parentTransfer.controlPoint))
   }
 
@@ -126,17 +117,17 @@ class TransferObject {
     let fileCRCToOffset = crc.crc32(this.parentTransfer.file.slice(0, offset))
     if (offset === this.parentOffset + this.objectLength && checksum === fileCRCToOffset) {
       /** Object has been transfered and should be moved into its right place on the device **/
-      this.state = TransferObjectState.Storing
+      this.state = DFUObjectStates.Storing
       let operation = Task.execute(this.parentTransfer.controlPoint)
       this.parentTransfer.addTask(operation)
     } else if (offset === this.parentOffset || offset > this.parentOffset + this.objectLength || checksum !== fileCRCToOffset) {
       /** This object has not been trasnfered to the device or is faulty, recreate and transfer a new **/
-      this.state = TransferObjectState.Creating
+      this.state = DFUObjectStates.Creating
       let operation = Task.create(this.objectType, this.objectLength, this.parentTransfer.controlPoint)
       this.parentTransfer.addTask(operation)
     } else {
       /** its the right object on the device but it has not been transfred fully **/
-      this.state = TransferObjectState.Transfering
+      this.state = DFUObjectStates.Transfering
       this.toPackets(offset)
       this.parentTransfer.addTask(this.setPacketReturnNotification())
       this.transfer()
@@ -162,32 +153,32 @@ class TransferObject {
     let opCode = dataView.getInt8(1)
     let responseCode = dataView.getInt8(2)
     switch (this.state) {
-      case TransferObjectState.Creating: {
-        if (opCode === TaskType.SELECT && responseCode === TaskResult.SUCCESS) {
+      case DFUObjectStates.Creating: {
+        if (opCode === TaskTypes.SELECT && responseCode === TaskResults.SUCCESS) {
           this.onSelect(dataView)
-        } else if (opCode === TaskType.CREATE && responseCode === TaskResult.SUCCESS) {
+        } else if (opCode === TaskTypes.CREATE && responseCode === TaskResults.SUCCESS) {
           this.onCreate(dataView)
-        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+        } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
-      case TransferObjectState.Transfering: {
-        if (opCode === TaskType.CALCULATE_CHECKSUM && responseCode === TaskResult.SUCCESS) {
+      case DFUObjectStates.Transfering: {
+        if (opCode === TaskTypes.CALCULATE_CHECKSUM && responseCode === TaskResults.SUCCESS) {
           this.onChecksum(dataView)
-        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+        } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
-      case TransferObjectState.Storing: {
-        if (opCode === TaskType.EXECUTE && responseCode === TaskResult.SUCCESS) {
+      case DFUObjectStates.Storing: {
+        if (opCode === TaskTypes.EXECUTE && responseCode === TaskResults.SUCCESS) {
           this.onExecute()
-        } else if (opCode === TaskType.SET_PRN && responseCode === TaskResult.SUCCESS) {
+        } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
           console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
@@ -203,7 +194,7 @@ class TransferObject {
   }
 
   onCreate (dataView) {
-    this.state = TransferObjectState.Transfering
+    this.state = DFUObjectStates.Transfering
     /** start the transfer of the object  */
     this.toPackets(0)
     this.parentTransfer.addTask(this.setPacketReturnNotification())
@@ -221,10 +212,10 @@ class TransferObject {
   }
 
   onExecute (dataView) {
-    this.state = TransferObjectState.Completed
+    this.state = DFUObjectStates.Completed
     this.onCompletition()
   }
 }
 
-module.exports.TransferObject = TransferObject
-module.exports.TransferObjectState = TransferObjectState
+module.exports.DFUObject = DFUObject
+module.exports.DFUObjectStates = DFUObjectStates

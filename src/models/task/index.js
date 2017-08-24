@@ -19,26 +19,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const TaskType = {
-  CREATE: 0x01,
-  SET_PRN: 0x02,
-  CALCULATE_CHECKSUM: 0x03,
-  EXECUTE: 0x04,
-  SELECT: 0x06,
-  RESPONSE_CODE: 0x60
-}
-
-const TaskResult = {
-  INVALID_CODE: 0x00,
-  SUCCESS: 0x01,
-  OPCODE_NOT_SUPPORTED: 0x02,
-  INVALID_PARAMETER: 0x03,
-  INSUFFICIENT_RESOURCES: 0x04,
-  INVALID_OBJECT: 0x05,
-  UNSUPPORTED_TYPE: 0x07,
-  OPERATION_NOT_PERMITTED: 0x08,
-  OPERATION_FAILED: 0x0A
-}
+import TaskTypes from './types'
+import TaskResults from './results'
 
 class Task {
 
@@ -68,26 +50,26 @@ class Task {
 
   static verify (objectType, characteristic) {
     let dataView = new DataView(new ArrayBuffer(2))
-    dataView.setUint8(0, TaskType.SELECT)
+    dataView.setUint8(0, TaskTypes.SELECT)
     dataView.setUint8(1, objectType)
-    return new Task(characteristic, dataView.buffer, TaskType.SELECT)
+    return new Task(characteristic, dataView.buffer, TaskTypes.SELECT)
   }
 
   static create (objectType, length, characteristic) {
     let dataView = new DataView(new ArrayBuffer(6))
-    dataView.setUint8(0, TaskType.CREATE)
+    dataView.setUint8(0, TaskTypes.CREATE)
     dataView.setUint8(1, objectType)
     /** Data length set to little endian converstion */
     dataView.setUint32(2, length, true)
-    return new Task(characteristic, dataView.buffer, TaskType.CREATE)
+    return new Task(characteristic, dataView.buffer, TaskTypes.CREATE)
   }
 
   static setPacketReturnNotification (packageCount, characteristic) {
     let dataView = new DataView(new ArrayBuffer(3))
-    dataView.setUint8(0, TaskType.SET_PRN)
+    dataView.setUint8(0, TaskTypes.SET_PRN)
     /** Set the package received notification to the number of expected packages */
     dataView.setUint16(1, packageCount, true)
-    return new Task(characteristic, dataView.buffer, TaskType.SET_PRN)
+    return new Task(characteristic, dataView.buffer, TaskTypes.SET_PRN)
   }
 
   static writePackage (buffer, characteristic) {
@@ -96,17 +78,17 @@ class Task {
 
   static checksum (characteristic) {
     let dataView = new DataView(new ArrayBuffer(1))
-    dataView.setUint8(0, TaskType.CALCULATE_CHECKSUM)
-    return new Task(characteristic, dataView.buffer, TaskType.CALCULATE_CHECKSUM)
+    dataView.setUint8(0, TaskTypes.CALCULATE_CHECKSUM)
+    return new Task(characteristic, dataView.buffer, TaskTypes.CALCULATE_CHECKSUM)
   }
 
   static execute (characteristic) {
     let dataView = new DataView(new ArrayBuffer(1))
-    dataView.setUint8(0, TaskType.EXECUTE)
-    return new Task(characteristic, dataView.buffer, TaskType.EXECUTE)
+    dataView.setUint8(0, TaskTypes.EXECUTE)
+    return new Task(characteristic, dataView.buffer, TaskTypes.EXECUTE)
   }
 }
 
 module.exports.Task = Task
-module.exports.TaskType = TaskType
-module.exports.TaskResult = TaskResult
+module.exports.TaskTypes = TaskTypes
+module.exports.TaskResults = TaskResults

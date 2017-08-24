@@ -1,5 +1,5 @@
-import {Transfer,TransferState, TransferObjectType} from '../../src/dfu'
-import {Task,TaskType, TaskResult} from '../../src/dfu/Task'
+import {Transfer,TransferStates,TransferTypes} from '../../src/models/transfer'
+import {Task,TaskTypes,TaskResults} from '../../src/models/task'
 import WebBluetoothCharacteristic from '../factories/WebBluetoothCharacteristicFactory';
 import TransferFactory from '../factories/TransferFactory';
 import factory from 'factory-girl';
@@ -67,31 +67,31 @@ describe('Transfer', function() {
       })
     })
     it('0.0 when preparing', function () {
-      transfer.state = TransferState.Prepare
+      transfer.state = TransferStates.Prepare
       expect(transfer.progress()).toBe(0.0)
     })
     it('1.0 when completed', function () {
-      transfer.state = TransferState.Completed
+      transfer.state = TransferStates.Completed
       expect(transfer.progress()).toBe(1.0)
     })
     it('1.0 when failed', function () {
-      transfer.state = TransferState.Failed
+      transfer.state = TransferStates.Failed
       expect(transfer.progress()).toBe(1.0)
     })
     it('in middle of transfering', function () {
-      transfer.state = TransferState.Transfer
+      transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 4
       transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
       expect(transfer.progress()).toBe(0.5)
     })
     it('start of transfer', function () {
-      transfer.state = TransferState.Transfer
+      transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 0
       transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
       expect(transfer.progress()).toBe(0.10)
     })
     it('end of transfer', function () {
-      transfer.state = TransferState.Transfer
+      transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 9
       transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
       expect(transfer.progress()).toBe(0.98)
@@ -157,7 +157,7 @@ describe('Transfer', function() {
     })
   })
 
-  describe("#prepareTransferObjects", function() {
+  describe("#prepareDFUObjects", function() {
 
     describe("file size smaller then maximum object size", function() {
       let fileData
@@ -166,17 +166,17 @@ describe('Transfer', function() {
         fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9));
         factory.buildMany('WebBluetoothCharacteristic',2)
         .then(characteristics => {
-          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
+          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
         })
       })
       it('does not throw error', function() {
         expect( () => {
-          transfer.prepareTransferObjects(255,0,0);
+          transfer.prepareDFUObjects(255,0,0);
         }).not.toThrowError();
       })
       it('has one object to transfer', function() {
-        transfer.prepareTransferObjects(255,0,0);
+        transfer.prepareDFUObjects(255,0,0);
         expect(transfer.objects.length).toBe(1);
       })
     })
@@ -188,17 +188,17 @@ describe('Transfer', function() {
         fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
         factory.buildMany('WebBluetoothCharacteristic',2)
         .then(characteristics => {
-          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
+          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
         })
       })
       it('does not throw error', function() {
         expect( () => {
-          transfer.prepareTransferObjects(255,0,0);
+          transfer.prepareDFUObjects(255,0,0);
         }).not.toThrowError();
       })
       it('has one object to transfer', function() {
-        transfer.prepareTransferObjects(255,0,0);
+        transfer.prepareDFUObjects(255,0,0);
         expect(transfer.objects.length).toBe(1);
       })
     })
@@ -210,17 +210,17 @@ describe('Transfer', function() {
         fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
         factory.buildMany('WebBluetoothCharacteristic',2)
         .then(characteristics => {
-          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferObjectType.Command)
+          transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
         })
       })
       it('does not throw error', function() {
         expect( () => {
-          transfer.prepareTransferObjects(255,0,0);
+          transfer.prepareDFUObjects(255,0,0);
         }).not.toThrowError();
       })
       it('has one object to transfer', function() {
-        transfer.prepareTransferObjects(255,0,0);
+        transfer.prepareDFUObjects(255,0,0);
         expect(transfer.objects.length).toBe(3);
       })
     })
@@ -234,13 +234,13 @@ describe('Transfer', function() {
     let transfer
     beforeAll(function() {
       nonResponseResult = new DataView(new ArrayBuffer(2));
-      nonResponseResult.setUint8(0, TaskType.SET_PRN);
-      nonResponseResult.setUint8(1, TaskResult.INVALID_OBJECT);
+      nonResponseResult.setUint8(0, TaskTypes.SET_PRN);
+      nonResponseResult.setUint8(1, TaskResults.INVALID_OBJECT);
       //
       selectSuccessResponse = new DataView(new ArrayBuffer(15));
-      selectSuccessResponse.setUint8(0, TaskType.RESPONSE_CODE);
-      selectSuccessResponse.setUint8(1, TaskType.SELECT);
-      selectSuccessResponse.setUint8(2, TaskResult.SUCCESS);
+      selectSuccessResponse.setUint8(0, TaskTypes.RESPONSE_CODE);
+      selectSuccessResponse.setUint8(1, TaskTypes.SELECT);
+      selectSuccessResponse.setUint8(2, TaskResults.SUCCESS);
       selectSuccessResponse.setInt32(3, 0, true);
       selectSuccessResponse.setInt32(7, 0, true);
       selectSuccessResponse.setInt32(11, 0, true);
@@ -261,7 +261,7 @@ describe('Transfer', function() {
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let transferSpy = spyOn(transfer,'prepareDFUObjects');
         transfer.onEvent(event);
         expect(transferSpy).toHaveBeenCalled();
       })
@@ -271,18 +271,18 @@ describe('Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
         let logSpy = spyOn(console,'log');
-        transfer.state = TransferState.Transfer
+        transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
         expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
       })
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let transferSpy = spyOn(transfer,'prepareDFUObjects');
         let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
         transfer.objects = [eventHandlerSpy]
         transfer.currentObjectIndex = 0
-        transfer.state = TransferState.Transfer
+        transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
         expect(transferSpy).not.toHaveBeenCalled();
         expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
@@ -293,18 +293,18 @@ describe('Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
         let logSpy = spyOn(console,'log');
-        transfer.state = TransferState.Completed
+        transfer.state = TransferStates.Completed
         transfer.onEvent(event);
         expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
       })
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let transferSpy = spyOn(transfer,'prepareDFUObjects');
         let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
         transfer.objects = [eventHandlerSpy]
         transfer.currentObjectIndex = 0
-        transfer.state = TransferState.Completed
+        transfer.state = TransferStates.Completed
         transfer.onEvent(event);
         expect(transferSpy).not.toHaveBeenCalled();
         expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
@@ -315,18 +315,18 @@ describe('Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
         let logSpy = spyOn(console,'log');
-        transfer.state = TransferState.Failed
+        transfer.state = TransferStates.Failed
         transfer.onEvent(event);
         expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
       })
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareTransferObjects');
+        let transferSpy = spyOn(transfer,'prepareDFUObjects');
         let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
         transfer.objects = [eventHandlerSpy]
         transfer.currentObjectIndex = 0
-        transfer.state = TransferState.Failed
+        transfer.state = TransferStates.Failed
         transfer.onEvent(event);
         expect(transferSpy).not.toHaveBeenCalled();
         expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
@@ -357,7 +357,7 @@ describe('Transfer', function() {
       expect( () => {
         transfer.nextObject()
       }).not.toThrow()
-      expect(transfer.state).toBe(TransferState.Completed);
+      expect(transfer.state).toBe(TransferStates.Completed);
     })
   })
 

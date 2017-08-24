@@ -1,4 +1,4 @@
-import {Transfer,TransferWorker, TransferState, TransferObjectType} from '../../src/dfu'
+import {Transfer, TransferWorker} from '../../src/models/transfer'
 
 describe('#TransferWorker', function () {
 

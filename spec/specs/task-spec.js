@@ -1,5 +1,5 @@
 import factory from "factory-girl"
-import {Task} from "../../src/dfu/Task"
+import {Task} from "../../src/models/task"
 
 describe("Task", function() {
 

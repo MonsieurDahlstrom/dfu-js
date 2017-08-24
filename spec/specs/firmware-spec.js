@@ -1,4 +1,4 @@
-import {Firmware,FirmwareType} from '../../src/firmware'
+import {Firmware,FirmwareType} from '../../src/models/firmware'
 import JSZip from 'jszip'
 import fs from 'fs'
 

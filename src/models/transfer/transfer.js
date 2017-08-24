@@ -1,92 +1,22 @@
-// Copyright (c) 2017 Monsieur Dahlström Ltd
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 /** Library imports */
 import queue from 'async/queue'
 /** internal imports */
-import {TransferObject} from './TransferObject'
-import {Task, TaskType, TaskResult} from './Task'
-
-const TransferState = {
-  Prepare: 0x00,
-  Transfer: 0x01,
-  Completed: 0x02,
-  Failed: 0x03
-}
-
-/**
-Nordic defines two different type of file transfers:
-    init package is known as Command object
-    firmware is known as Data object
-**/
-const TransferObjectType = {
-  Command: 0x01,
-  Data: 0x02
-}
-
-/**
-Transfer class represents a binary file inside a firmware update zip.
-A firmware update consists of a init package and data file. The StateMachine
-parases the zip file and creates a transfer object for each entry in the zip
-
-The statemachine uses a queue to slot the Transfers in order
-**/
-let CurrentTransfer = undefined
-
-const TransferWorker = function (task, onCompleition) {
-  if (task instanceof Transfer === false) {
-    throw new Error('task is not of type Task')
-  }
-  if (!onCompleition) {
-    throw new Error('onCompleition is not set')
-  }
-  CurrentTransfer = task
-  task.begin()
-  const intervalTimer = setInterval(() => {
-    if (task.state === TransferState.Failed) {
-      clearInterval(intervalTimer)
-      task.end()
-      CurrentTransfer = undefined
-      onCompleition('Failed Transfer')
-    } else if (task.state === TransferState.Completed) {
-      clearInterval(intervalTimer)
-      task.end()
-      CurrentTransfer = undefined
-      onCompleition()
-    }
-  }, 1000)
-}
+import TransferStates from './states'
+import {Task, TaskTypes, TaskResults} from '../task'
+import {DFUObject} from '../dfu-object'
 
 class Transfer {
 
   constructor (fileData, controlPoint, packetPoint, objectType) {
-    this.state = TransferState.Prepare
+    this.state = TransferStates.Prepare
     /** The WebBluetooth Characteristics needed to transfer a file **/
     this.packetPoint = packetPoint
     this.controlPoint = controlPoint
     /** Data array representing the actual file to transfer **/
     this.file = fileData
-    /** The TransferObjectType this file represents */
+    /** The DFUObjectType this file represents */
     this.objectType = objectType
-    /** Create a queue to process the TransferObject's for this file in order */
+    /** Create a queue to process the DFUObject's for this file in order */
     this.bleTasks = queue(Task.Worker, 1)
     this.bleTasks.error = (error, task) => {
       console.error(error)
@@ -96,11 +26,11 @@ class Transfer {
 
   progress () {
     switch (this.state) {
-      case TransferState.Prepare:
+      case TransferStates.Prepare:
       {
         return 0.0
       }
-      case TransferState.Transfer:
+      case TransferStates.Transfer:
       {
         var difference = (this.currentObjectIndex+1) / this.objects.length
         if (difference < 1.0) {
@@ -118,13 +48,13 @@ class Transfer {
 
   /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
   addTask (dfuTask) {
-    if (dfuTask instanceof Task === false) {
+    if ((dfuTask instanceof Task) === false) {
       throw new Error('task is not of type Task')
     }
     this.bleTasks.push(dfuTask, (error) => {
       if (error) {
         this.bleTasks.kill()
-        this.state = TransferState.Failed
+        this.state = TransferStates.Failed
         console.error(error)
       }
     })
@@ -144,13 +74,13 @@ class Transfer {
 
   /**
   Given the type of device and object type, the maxium size that can be processed
-  at a time varies. This method creates a set of TransferObject with this maxium size
+  at a time varies. This method creates a set of DFUObject with this maxium size
   set.
 
   Secondly the device reports back how much of the file has been transfered and what the crc
   so far is. This method skips object that has already been completed
   **/
-  prepareTransferObjects (maxiumSize, currentOffset, currentCRC) {
+  prepareDFUObjects (maxiumSize, currentOffset, currentCRC) {
     this.maxObjectLength = maxiumSize
     this.objects = []
     this.currentObjectIndex = 0
@@ -160,7 +90,7 @@ class Transfer {
     if (object) {
       this.currentObjectIndex = this.objects.indexOf(object)
     }
-    this.state = TransferState.Transfer
+    this.state = TransferStates.Transfer
     this.objects[this.currentObjectIndex].validate(currentOffset, currentCRC)
   }
 
@@ -174,7 +104,7 @@ class Transfer {
     while (index < fileEnd) {
       let objectBegin = index
       let objectEnd = objectBegin + this.maxObjectLength < fileEnd ? this.maxObjectLength : (fileEnd - index)
-      let object = new TransferObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this))
+      let object = new DFUObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this))
       this.objects.push(object)
       index += this.maxObjectLength
     }
@@ -184,19 +114,19 @@ class Transfer {
   onEvent (event) {
     /** guard to filter events that are not response codes  */
     let dataView = event.target.value
-    if (dataView && dataView.getInt8(0) !== TaskType.RESPONSE_CODE) {
+    if (dataView && dataView.getInt8(0) !== TaskTypes.RESPONSE_CODE) {
       console.log('Transfer.onEvent() opcode was not a response code')
       return
     }
     switch (this.state) {
-      case TransferState.Prepare: {
+      case TransferStates.Prepare: {
         let opCode = dataView.getInt8(1)
         let responseCode = dataView.getInt8(2)
-        if (opCode === TaskType.SELECT && responseCode === TaskResult.SUCCESS) {
+        if (opCode === TaskTypes.SELECT && responseCode === TaskResults.SUCCESS) {
           let maxiumSize = dataView.getUint32(3, true)
           let currentOffset = dataView.getUint32(7, true)
           let currentCRC = dataView.getUint32(11, true)
-          this.prepareTransferObjects(maxiumSize, currentOffset, currentCRC)
+          this.prepareDFUObjects(maxiumSize, currentOffset, currentCRC)
         }
         break
       }
@@ -211,20 +141,16 @@ class Transfer {
     }
   }
 
-  /** Checks if Transfer is complete or starts transferring the next TransferObject **/
+  /** Checks if Transfer is complete or starts transferring the next DFUObject **/
   nextObject () {
     if (this.currentObjectIndex < this.objects.length - 1) {
       this.bleTasks.kill()
       this.currentObjectIndex++
       this.objects[this.currentObjectIndex].begin()
     } else {
-      this.state = TransferState.Completed
+      this.state = TransferStates.Completed
     }
   }
 }
 
-module.exports.Transfer = Transfer
-module.exports.TransferWorker = TransferWorker
-module.exports.CurrentTransfer = CurrentTransfer
-module.exports.TransferState = TransferState
-module.exports.TransferObjectType = TransferObjectType
+export default Transfer

@@ -19,25 +19,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import queue from 'async/queue'
-import {Firmware} from './firmware'
-import {Transfer, TransferWorker, CurrentTransfer, TransferObjectType} from './dfu'
-
-/**
-The states a DFU StateMachine can have:
-  - NOT_CONFIGURED, bluetooth characteristics have not been set
-  - IDLE, state machine is ready for use
-  - TRANSFERING, state machine is i the process of updating a device
-  - COMPLETE, indicates that a device update has been completed
-  - FAILED, device update failed
-**/
-const StateMachineStates = {
-  NOT_CONFIGURED: 0x00,
-  IDLE: 0x01,
-  TRANSFERING: 0x02,
-  COMPLETE: 0x03,
-  FAILED: 0x04
-}
-
+import {Firmware, FirmwareType} from '../firmware'
+import {Transfer, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'
+import StateMachineStates from './states'
 /**
 Main Facade class to the library
   Create StateMachine with WebBluetoothCharacteristics representing the data and control point
@@ -110,7 +94,6 @@ class StateMachine {
         if (CurrentTransfer !== undefined) {
           return CurrentTransfer.progress()
         } else {
-          console.error('DFU StateMachine is in State Transfering but no transfer is set')
           return 0.0
         }
     }
@@ -140,12 +123,12 @@ class StateMachine {
       throw new Error('Firmware needs to be of class Firmware')
     }
     for(var section of firmware.sections) {
-      this.addTransfer(new Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Command))
-      this.addTransfer(new Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferObjectType.Data))
+      this.addTransfer(new Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferTypes.Command))
+      this.addTransfer(new Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferTypes.Data))
     }
   }
 
 }
 
-module.exports.States = StateMachineStates
-module.exports.StateMachine = StateMachine
+module.exports.DFUStateMachineStates = StateMachineStates
+module.exports.DFUStateMachine = StateMachine
