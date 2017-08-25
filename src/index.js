@@ -19,8 +19,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import {StateMachine,States} from './state-machine'
-import {Firmware, FirmwareType} from './firmware'
+import {StateMachine,States} from './models/state-machine'
+import {Firmware, FirmwareType} from './models/firmware'
 //
 module.exports.States = States
 module.exports.StateMachine = StateMachine

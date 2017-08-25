@@ -9,16 +9,27 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.0",
     "babel-watch": "^2.0.7",
+    "webpack": "^3.5.5",
     "chai": "^4.1.1",
     "chance": "^1.0.10",
     "factory-girl": "^4.3.0",
     "mocha": "^3.5.0",
-    "sinon": "^3.2.1"
+    "sinon": "^3.2.1",
+    "karma": "^1.7.0",
+    "karma-babel-preprocessor": "^6.0.1",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-cli": "^1.0.1",
+    "karma-istanbul": "0.0.2",
+    "karma-mocha": "^1.3.0",
+    "karma-sinon": "^1.0.5",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^2.0.4"
   },
   "scripts": {
     "build": "babel src --out-dir dist --source-maps true",
-    "test": "mocha --compilers js:babel-core/register spec/specs",
-    "test-watch": "mocha --compilers js:babel-core/register spec/specs --watch"
+    "unit-test": "karma start karma.config.js --single-run",
+    "unit-test-watch": "karma start karma.config.js"
   },
   "repository": {
     "type": "git",
@@ -44,7 +55,7 @@
     "async": "^2.5.0",
     "babel-runtime": "^6.26.0",
     "crc": "^3.4.4",
-    "jszip": "^3.1.3"
+    "jszip": "^3.1.4"
   },
   "babel": {
     "presets": [
