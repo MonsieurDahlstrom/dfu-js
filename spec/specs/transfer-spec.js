@@ -275,7 +275,7 @@ describe('Transfer', function() {
       })
     })
 
-    describe.only('when state is Transfer', function() {
+    describe('when state is Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
         let logSpy = sandbox.spy(console,'log');
@@ -286,8 +286,7 @@ describe('Transfer', function() {
 
       it('prepares transfer when success verify', function() {
         let dfuObject = new DFUObject()
-        let dfuObjectMock = sandbox.mock(dfuObject)
-        dfuObjectMock.expects("eventHandler").once().withArgs(selectSuccessResponse)
+        let dfuObjectMock = sandbox.stub(dfuObject,'eventHandler')
         let event = {target: {value: selectSuccessResponse}}
         let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
         transfer.objects = [dfuObject]
@@ -295,52 +294,54 @@ describe('Transfer', function() {
         transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
         expect(transferSpy.calledOnce).not.be.true
-        dfuObjectMock.verify()
-        //expect(eventHandlerSpy.callOne.args).to.deep.equal(selectSuccessResponse);
+        expect(dfuObjectMock.calledOnce).to.be.true
+        expect(dfuObjectMock.firstCall.args).to.deep.equal([selectSuccessResponse]);
       })
     })
 
     describe('when state is Completed', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = spyOn(console,'log');
+        let logSpy = sandbox.spy(console,'log');
         transfer.state = TransferStates.Completed
         transfer.onEvent(event);
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
+        let dfuObject = new DFUObject()
+        let dfuObjectMock = sandbox.stub(dfuObject,'eventHandler')
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareDFUObjects');
-        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
-        transfer.objects = [eventHandlerSpy]
+        let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
+        transfer.objects = [dfuObject]
         transfer.currentObjectIndex = 0
         transfer.state = TransferStates.Completed
         transfer.onEvent(event);
-        expect(transferSpy).not.toHaveBeenCalled();
-        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+        expect(transferSpy.notCalled).to.be.true
+        expect(dfuObjectMock.firstCall.args).to.deep.equal([selectSuccessResponse]);
       })
     })
 
     describe('when state is Failed', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = spyOn(console,'log');
+        let logSpy = sandbox.spy(console,'log');
         transfer.state = TransferStates.Failed
         transfer.onEvent(event);
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
+        let dfuObject = new DFUObject()
+        let dfuObjectMock = sandbox.stub(dfuObject,'eventHandler')
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareDFUObjects');
-        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
-        transfer.objects = [eventHandlerSpy]
+        let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
+        transfer.objects = [dfuObject]
         transfer.currentObjectIndex = 0
         transfer.state = TransferStates.Failed
         transfer.onEvent(event);
-        expect(transferSpy).not.toHaveBeenCalled();
-        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+        expect(transferSpy.notCalled).to.be.true
+        expect(dfuObjectMock.firstCall.args).to.deep.equal([selectSuccessResponse]);
       })
     })
 
