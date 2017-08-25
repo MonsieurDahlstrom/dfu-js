@@ -9,14 +9,16 @@
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.0",
     "babel-watch": "^2.0.7",
+    "chai": "^4.1.1",
     "chance": "^1.0.10",
     "factory-girl": "^4.3.0",
-    "jasmine": "^2.7.0"
+    "mocha": "^3.5.0",
+    "sinon": "^3.2.1"
   },
   "scripts": {
     "build": "babel src --out-dir dist --source-maps true",
-    "test": "babel-node spec/run.js",
-    "test-watch": "babel-watch spec/run.js --watch"
+    "test": "mocha --compilers js:babel-core/register spec/specs",
+    "test-watch": "mocha --compilers js:babel-core/register spec/specs --watch"
   },
   "repository": {
     "type": "git",

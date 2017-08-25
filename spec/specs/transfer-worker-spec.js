@@ -1,3 +1,6 @@
+import {expect} from 'chai'
+import sinon from 'sinon'
+
 import {Transfer, TransferWorker} from '../../src/models/transfer'
 
 describe('#TransferWorker', function () {
@@ -5,29 +8,29 @@ describe('#TransferWorker', function () {
   it("runs with null parameters", function () {
     expect( function() {
       TransferWorker(null,null);
-    }).toThrow()
+    }).to.throw()
   })
 
   it("error with null task", function() {
-    var testCB = jasmine.createSpy('testCB')
+    var testCB = sinon.mock('testCB')
     expect( function() {
       TransferWorker(null,testCB);
-    }).toThrowError("task is not of type Task");
+    }).to.throw("task is not of type Task");
   })
 
   it("error with task not set to Task instance", function() {
-    let testCB = jasmine.createSpy('testCB')
+    var testCB = sinon.mock('testCB')
     let task = {}
     expect( function() {
       TransferWorker(task,testCB);
-    }).toThrowError("task is not of type Task");
+    }).to.throw("task is not of type Task");
   })
 
   it("error without onCompleition", function() {
     var testTask = new Transfer()
     expect( function() {
       TransferWorker(testTask,null);
-    }).toThrowError("onCompleition is not set");
+    }).to.throw("onCompleition is not set");
   })
 
 })
