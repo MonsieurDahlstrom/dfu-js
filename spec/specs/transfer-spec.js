@@ -1,8 +1,9 @@
+import {expect} from 'chai'
+import sinon from 'sinon'
+
 import {Transfer,TransferStates,TransferTypes} from '../../src/models/transfer'
 import {Task,TaskTypes,TaskResults} from '../../src/models/task'
-import WebBluetoothCharacteristic from '../factories/WebBluetoothCharacteristicFactory';
-import TransferFactory from '../factories/TransferFactory';
-import factory from 'factory-girl';
+import factory from '../factories';
 
 describe('Transfer', function() {
 
@@ -11,7 +12,7 @@ describe('Transfer', function() {
 
     describe('without parameters', function() {
       it("no exceptions", function() {
-        expect( ()=> new Transfer()).not.toThrow()
+        expect( ()=> new Transfer()).to.not.throw()
       })
     })
     describe('with parameters', function() {
@@ -32,19 +33,19 @@ describe('Transfer', function() {
         })
       })
       it("no exceptions", function() {
-        expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).not.toThrow()
+        expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).to.not.throw()
       })
       it('should have data', function() {
-        expect(transfer.file).toEqual(dataset)
+        expect(transfer.file).to.equal(dataset)
       })
       it('should have data characteristic', function() {
-        expect(transfer.packetPoint).toEqual(packetPoint)
+        expect(transfer.packetPoint).to.equal(packetPoint)
       })
       it('should have control point characteristic', function() {
-        expect(transfer.controlPoint).toEqual(controlPoint)
+        expect(transfer.controlPoint).to.equal(controlPoint)
       })
       it('should have object type', function() {
-        expect(transfer.objectType).toEqual(transferObjectType)
+        expect(transfer.objectType).to.equal(transferObjectType)
       })
     })
   })
@@ -68,33 +69,33 @@ describe('Transfer', function() {
     })
     it('0.0 when preparing', function () {
       transfer.state = TransferStates.Prepare
-      expect(transfer.progress()).toBe(0.0)
+      expect(transfer.progress()).to.equal(0.0)
     })
     it('1.0 when completed', function () {
       transfer.state = TransferStates.Completed
-      expect(transfer.progress()).toBe(1.0)
+      expect(transfer.progress()).to.equal(1.0)
     })
     it('1.0 when failed', function () {
       transfer.state = TransferStates.Failed
-      expect(transfer.progress()).toBe(1.0)
+      expect(transfer.progress()).to.equal(1.0)
     })
     it('in middle of transfering', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 4
       transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
-      expect(transfer.progress()).toBe(0.5)
+      expect(transfer.progress()).to.equal(0.5)
     })
     it('start of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 0
       transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
-      expect(transfer.progress()).toBe(0.10)
+      expect(transfer.progress()).to.equal(0.10)
     })
     it('end of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 9
       transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
-      expect(transfer.progress()).toBe(0.98)
+      expect(transfer.progress()).to.equal(0.98)
     })
   })
 
@@ -104,7 +105,7 @@ describe('Transfer', function() {
       let transfer = new Transfer()
       expect( function() {
         transfer.addTask(null);
-      }).toThrowError("task is not of type Task");
+      }).to.throw("task is not of type Task");
     })
 
     it("task addded to queue", function() {
@@ -113,8 +114,8 @@ describe('Transfer', function() {
       let task = new Task()
       expect( function() {
         transfer.addTask(task);
-      }).not.toThrow();
-      expect(transfer.bleTasks.length()).toBe(1)
+      }).to.not.throw();
+      expect(transfer.bleTasks.length()).to.equal(1)
     })
 
     it("task is executed", function(done) {
@@ -138,7 +139,7 @@ describe('Transfer', function() {
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
-        expect( function() { transfer.begin() }).not.toThrow()
+        expect( function() { transfer.begin() }).to.not.throw()
         done()
       })
     })
@@ -151,7 +152,7 @@ describe('Transfer', function() {
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
-        expect( function() { transfer.end() }).not.toThrow()
+        expect( function() { transfer.end() }).to.not.throw()
         done()
       })
     })
@@ -173,11 +174,11 @@ describe('Transfer', function() {
       it('does not throw error', function() {
         expect( () => {
           transfer.prepareDFUObjects(255,0,0);
-        }).not.toThrowError();
+        }).not.to.throw();
       })
       it('has one object to transfer', function() {
         transfer.prepareDFUObjects(255,0,0);
-        expect(transfer.objects.length).toBe(1);
+        expect(transfer.objects.length).to.equal(1);
       })
     })
 
@@ -195,11 +196,11 @@ describe('Transfer', function() {
       it('does not throw error', function() {
         expect( () => {
           transfer.prepareDFUObjects(255,0,0);
-        }).not.toThrowError();
+        }).not.to.throw();
       })
       it('has one object to transfer', function() {
         transfer.prepareDFUObjects(255,0,0);
-        expect(transfer.objects.length).toBe(1);
+        expect(transfer.objects.length).to.equal(1);
       })
     })
 
@@ -217,11 +218,11 @@ describe('Transfer', function() {
       it('does not throw error', function() {
         expect( () => {
           transfer.prepareDFUObjects(255,0,0);
-        }).not.toThrowError();
+        }).not.to.throw();
       })
       it('has one object to transfer', function() {
         transfer.prepareDFUObjects(255,0,0);
-        expect(transfer.objects.length).toBe(3);
+        expect(transfer.objects.length).to.equal(3);
       })
     })
 
@@ -232,7 +233,9 @@ describe('Transfer', function() {
     let selectSuccessResponse
     let nonResponseResult
     let transfer
-    beforeAll(function() {
+    let sandbox
+    before(function() {
+      sandbox = sinon.sandbox.create()
       nonResponseResult = new DataView(new ArrayBuffer(2));
       nonResponseResult.setUint8(0, TaskTypes.SET_PRN);
       nonResponseResult.setUint8(1, TaskResults.INVALID_OBJECT);
@@ -246,46 +249,49 @@ describe('Transfer', function() {
       selectSuccessResponse.setInt32(11, 0, true);
 
     })
-
     beforeEach(function() {
       transfer = new Transfer()
+    })
+    afterEach(function () {
+      sandbox.restore()
     })
 
     describe('when state is Prepare', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = spyOn(console,'log');
-        transfer.onEvent(event);
-        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+        let logSpy = sandbox.spy(console,'log')
+        transfer.onEvent(event)
+        sandbox.restore
+        expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareDFUObjects');
+        let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
         transfer.onEvent(event);
-        expect(transferSpy).toHaveBeenCalled();
+        expect(transferSpy.calledOnce).to.be.true;
       })
     })
 
     describe('when state is Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = spyOn(console,'log');
+        let logSpy = sandbox.spy(console,'log');
         transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
-        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+        expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = spyOn(transfer,'prepareDFUObjects');
-        let eventHandlerSpy = jasmine.createSpyObj('TransferObject',['eventHandler'])
+        let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
+        let eventHandlerSpy = sandbox.mock().spy('eventHandler')
         transfer.objects = [eventHandlerSpy]
         transfer.currentObjectIndex = 0
         transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
-        expect(transferSpy).not.toHaveBeenCalled();
-        expect(eventHandlerSpy.eventHandler).toHaveBeenCalledWith(selectSuccessResponse);
+        expect(transferSpy.calledOnce).not.be.true
+        expect(eventHandlerSpy.callOne.args).to.deep.equal(selectSuccessResponse);
       })
     })
 
@@ -295,7 +301,7 @@ describe('Transfer', function() {
         let logSpy = spyOn(console,'log');
         transfer.state = TransferStates.Completed
         transfer.onEvent(event);
-        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+        expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
@@ -317,7 +323,7 @@ describe('Transfer', function() {
         let logSpy = spyOn(console,'log');
         transfer.state = TransferStates.Failed
         transfer.onEvent(event);
-        expect(logSpy).toHaveBeenCalledWith('Transfer.onEvent() opcode was not a response code');
+        expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
       })
 
       it('prepares transfer when success verify', function() {
@@ -346,9 +352,9 @@ describe('Transfer', function() {
       transfer.currentObjectIndex = 0
       expect( () => {
         transfer.nextObject()
-      }).not.toThrow()
+      }).to.not.throw()
       expect(transferObjectSpy.begin).toHaveBeenCalled();
-      expect(transfer.currentObjectIndex).toBe(1);
+      expect(transfer.currentObjectIndex).to.equal(1);
     })
     it('marks transfer complete if no more objects', function() {
       let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
@@ -356,8 +362,8 @@ describe('Transfer', function() {
       transfer.currentObjectIndex = 0
       expect( () => {
         transfer.nextObject()
-      }).not.toThrow()
-      expect(transfer.state).toBe(TransferStates.Completed);
+      }).to.not.throw()
+      expect(transfer.state).to.equal(TransferStates.Completed);
     })
   })
 
