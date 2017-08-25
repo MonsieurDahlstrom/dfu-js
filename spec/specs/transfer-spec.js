@@ -3,6 +3,8 @@ import sinon from 'sinon'
 
 import {Transfer,TransferStates,TransferTypes} from '../../src/models/transfer'
 import {Task,TaskTypes,TaskResults} from '../../src/models/task'
+import {DFUObject} from '../../src/models/dfu-object'
+
 import factory from '../factories';
 
 describe('Transfer', function() {
@@ -267,13 +269,13 @@ describe('Transfer', function() {
 
       it('prepares transfer when success verify', function() {
         let event = {target: {value: selectSuccessResponse}}
-        let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
+        let transferSpy = sandbox.stub(transfer,'prepareDFUObjects');
         transfer.onEvent(event);
         expect(transferSpy.calledOnce).to.be.true;
       })
     })
 
-    describe('when state is Transfer', function() {
+    describe.only('when state is Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
         let logSpy = sandbox.spy(console,'log');
@@ -283,15 +285,18 @@ describe('Transfer', function() {
       })
 
       it('prepares transfer when success verify', function() {
+        let dfuObject = new DFUObject()
+        let dfuObjectMock = sandbox.mock(dfuObject)
+        dfuObjectMock.expects("eventHandler").once().withArgs(selectSuccessResponse)
         let event = {target: {value: selectSuccessResponse}}
         let transferSpy = sandbox.spy(transfer,'prepareDFUObjects');
-        let eventHandlerSpy = sandbox.mock().spy('eventHandler')
-        transfer.objects = [eventHandlerSpy]
+        transfer.objects = [dfuObject]
         transfer.currentObjectIndex = 0
         transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
         expect(transferSpy.calledOnce).not.be.true
-        expect(eventHandlerSpy.callOne.args).to.deep.equal(selectSuccessResponse);
+        dfuObjectMock.verify()
+        //expect(eventHandlerSpy.callOne.args).to.deep.equal(selectSuccessResponse);
       })
     })
 
@@ -343,22 +348,27 @@ describe('Transfer', function() {
 
   describe("#nextObject", function() {
     let transfer
+    let sandbox
     beforeEach(function() {
+      sandbox = sinon.sandbox.create()
       transfer = new Transfer()
     })
     it('startsx next transfer object', function() {
-      let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
-      transfer.objects = [transferObjectSpy,transferObjectSpy]
+      let dfuObject = new DFUObject()
+      let dfuObjectMock = sandbox.mock(dfuObject)
+      dfuObjectMock.expects("begin").once()
+      transfer.objects = [dfuObject,dfuObject]
       transfer.currentObjectIndex = 0
       expect( () => {
         transfer.nextObject()
       }).to.not.throw()
-      expect(transferObjectSpy.begin).toHaveBeenCalled();
+      dfuObjectMock.verify()
       expect(transfer.currentObjectIndex).to.equal(1);
     })
     it('marks transfer complete if no more objects', function() {
-      let transferObjectSpy = jasmine.createSpyObj('TransferObject',['begin'])
-      transfer.objects = [transferObjectSpy]
+      let dfuObject = new DFUObject()
+      let dfuObjectMock = sandbox.mock(dfuObject)
+      transfer.objects = [dfuObject]
       transfer.currentObjectIndex = 0
       expect( () => {
         transfer.nextObject()
