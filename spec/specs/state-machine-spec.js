@@ -47,13 +47,13 @@ const SharedDFUParseZip = function (testZipPath) {
 
   it('succeed when idle and firmware is valid', function() {
     this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
+    this.stateMachine.transfers.pause()
     expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
   })
 
   it("addTransfers called", function() {
     this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
+    this.stateMachine.transfers.pause()
     let spyObject = this.sandbox.spy(this.stateMachine, 'addTransfer');
     expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
     expect(spyObject.calledTwice).to.be.true
@@ -61,7 +61,7 @@ const SharedDFUParseZip = function (testZipPath) {
 
   it('progress should be incomplete', function() {
     this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
+    this.stateMachine.transfers.pause()
     this.stateMachine.sendFirmware(this.firmware);
     expect(this.stateMachine.progress).not.to.equal(1.0);
   })
