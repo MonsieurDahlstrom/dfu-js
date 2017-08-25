@@ -18,6 +18,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
+"use strict";
+
 import queue from 'async/queue'
 import {Firmware, FirmwareType} from '../firmware'
 import {Transfer, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'

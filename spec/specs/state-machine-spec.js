@@ -6,7 +6,7 @@ import {Firmware,FirmwareType} from '../../src/models/firmware'
 import fs from 'fs'
 import JSZip from 'jszip'
 
-describe.only('StateMachine', function() {
+describe('StateMachine', function() {
   let stateMachine;
 
   afterEach(function() {

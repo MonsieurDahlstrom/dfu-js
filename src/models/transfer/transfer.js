@@ -1,3 +1,5 @@
+"use strict";
+
 /** Library imports */
 import queue from 'async/queue'
 /** internal imports */

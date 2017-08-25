@@ -21,9 +21,13 @@
 
 import {StateMachine,States} from './state-machine'
 import {Firmware, FirmwareType} from './firmware'
+import DFUMixin from './vue-mixins/dfu-mixin.vue'
+
 //
-module.exports.States = States
+module.exports.StateMachineStates = States
 module.exports.StateMachine = StateMachine
 //
 module.exports.Firmware = Firmware
 module.exports.FirmwareType = FirmwareType
+//
+module.exports.DeviceFirmwareUpdateMixin = DFUMixIn
