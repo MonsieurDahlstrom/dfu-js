@@ -6,7 +6,7 @@ import {Firmware,FirmwareType} from '../../src/models/firmware'
 import fs from 'fs'
 import JSZip from 'jszip'
 
-describe('StateMachine', function() {
+describe.only('StateMachine', function() {
   let stateMachine;
 
   afterEach(function() {
@@ -28,7 +28,7 @@ describe('StateMachine', function() {
       })
       it('progress shouldnt be started', function () {
         let stateMachine = new DFUStateMachine()
-        expect(stateMachine.progress()).to.equal(0.0)
+        expect(stateMachine.progress).to.equal(0.0)
       })
     })
 
@@ -53,13 +53,13 @@ describe('StateMachine', function() {
         expect(stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
       })
       it("has control point characteristic", function() {
-        expect(stateMachine.controlpointCharacteristic).to.equal(controlPoint)
+        expect(stateMachine.controlPoint).to.equal(controlPoint)
       })
       it("has packet point characteristic", function() {
-        expect(stateMachine.packetCharacteristic).to.equal(packetPoint)
+        expect(stateMachine.packetPoint).to.equal(packetPoint)
       })
       it('progress shouldnt be started', function () {
-        expect(stateMachine.progress()).to.equal(0.0)
+        expect(stateMachine.progress).to.equal(0.0)
       })
     })
   })
@@ -77,23 +77,28 @@ describe('StateMachine', function() {
     })
     it('when not configured', function () {
       stateMachine.state = DFUStateMachineStates.NOT_CONFIGURED
-      expect(stateMachine.progress()).to.equal(0.0)
+      stateMachine.calculateProgress()
+      expect(stateMachine.progress).to.equal(0.0)
     })
     it('when idle', function () {
       stateMachine.state = DFUStateMachineStates.IDLE
-      expect(stateMachine.progress()).to.equal(0.0)
+      stateMachine.calculateProgress()
+      expect(stateMachine.progress).to.equal(0.0)
     })
     it('when transfering', function () {
       stateMachine.state = DFUStateMachineStates.TRANSFERING
-      expect(stateMachine.progress()).to.equal(0.0)
+      stateMachine.calculateProgress()
+      expect(stateMachine.progress).to.equal(0.0)
     })
     it('when completed', function () {
       stateMachine.state = DFUStateMachineStates.COMPLETE
-      expect(stateMachine.progress()).to.equal(1.0)
+      stateMachine.calculateProgress()
+      expect(stateMachine.progress).to.equal(1.0)
     })
     it('when failed', function () {
       stateMachine.state = DFUStateMachineStates.FAILED
-      expect(stateMachine.progress()).to.equal(1.0)
+      stateMachine.calculateProgress()
+      expect(stateMachine.progress).to.equal(1.0)
     })
   })
 
@@ -146,7 +151,7 @@ describe('StateMachine', function() {
 
       it('succeed when idle and firmware is valid', function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         expect( function() {
           stateMachine.sendFirmware(firmware);
         }).to.not.throw();
@@ -154,7 +159,7 @@ describe('StateMachine', function() {
 
       it("addTransfers called", function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         let spyObject = sandbox.spy(stateMachine, 'addTransfer');
         expect( function() {
           stateMachine.sendFirmware(firmware);
@@ -164,9 +169,9 @@ describe('StateMachine', function() {
 
       it('progress should be incomplete', function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         stateMachine.sendFirmware(firmware);
-        expect(stateMachine.progress()).not.to.equal(1.0);
+        expect(stateMachine.progress).not.to.equal(1.0);
       })
     })
 
@@ -219,7 +224,7 @@ describe('StateMachine', function() {
 
       it('succeed when idle and firmware is valid', function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         expect( function() {
           stateMachine.sendFirmware(firmware);
         }).to.not.throw();
@@ -227,7 +232,7 @@ describe('StateMachine', function() {
 
       it("addTransfers called", function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         let spyObject = sandbox.spy(stateMachine, 'addTransfer');
         expect( function() {
           stateMachine.sendFirmware(firmware);
@@ -237,9 +242,9 @@ describe('StateMachine', function() {
 
       it('progress should be incomplete', function() {
         stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.fileTransfers.pause()
+        stateMachine.transfers.pause()
         stateMachine.sendFirmware(firmware);
-        expect(stateMachine.progress()).not.to.equal(1.0);
+        expect(stateMachine.progress).not.to.equal(1.0);
       })
 
     })

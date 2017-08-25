@@ -21,90 +21,124 @@
 import queue from 'async/queue'
 import {Firmware, FirmwareType} from '../firmware'
 import {Transfer, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'
+import {Task} from '../task'
 import StateMachineStates from './states'
+
 /**
 Main Facade class to the library
   Create StateMachine with WebBluetoothCharacteristics representing the data and control point
   Monitor the state property and use the function sendFirmware() to send a DFU zip.
 **/
+
+let stateSymbol = Symbol()
+let controlPointSymbol = Symbol()
+let packetPointSymbol = Symbol()
+let transfersSymbol = Symbol()
+let progressSymbol = Symbol()
+
 class StateMachine {
 
   constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
-    this._state = StateMachineStates.NOT_CONFIGURED
-    Object.defineProperty(this,"state",{
-      get: function () {
-        return this._state
-      },
-      set: function (value) {
-        this._state = value
-        if (this.delegate !== undefined) {
-          this.delegate.updateStateMachine()
-        }
-      },
-      configurable: true
-    })
-    this.setControlPoint(webBluetoothControlPoint)
-    this.setPacketPoint(webBluetoothPacketPoint)
-    /** TODO: The queue should have better error reporting which are tied to state */
-    this.fileTransfers = queue(TransferWorker, 1)
-    if (this.controlpointCharacteristic && this.packetCharacteristic) {
-      this.state = StateMachineStates.IDLE
+    this[controlPointSymbol] = webBluetoothControlPoint
+    this[packetPointSymbol] = webBluetoothPacketPoint
+    if (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined) {
+      this[stateSymbol] = StateMachineStates.IDLE
+    } else {
+      this[stateSymbol] = StateMachineStates.NOT_CONFIGURED
     }
-  }
-/*
-  constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
-    this.state = StateMachineStates.NOT_CONFIGURED
-    this.setControlPoint(webBluetoothControlPoint)
-    this.setPacketPoint(webBluetoothPacketPoint)
-    this.fileTransfers = queue(TransferWorker, 1)
-    if (this.controlpointCharacteristic && this.packetCharacteristic) {
-      this.state = StateMachineStates.IDLE
-    }
-  }
-*/
-  setDelegate (delegate) {
-    this.delegate = delegate
+    this[transfersSymbol] = queue(Task.Worker, 1)
+    this[progressSymbol] = 0.0
   }
 
-  setControlPoint (webBluetoothCharacteristic) {
-    this.controlpointCharacteristic = webBluetoothCharacteristic
-    if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+  /** get/set **/
+  get state () {
+    return this[stateSymbol]
+  }
+
+  set state (value) {
+    this[stateSymbol] = value
+  }
+
+  /** get/set **/
+
+  get controlPoint () {
+    return this[controlPointSymbol]
+  }
+
+  set controlPoint (webBluetoothCharacteristic) {
+    this[controlPointSymbol] = webBluetoothCharacteristic
+    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined)) {
       this.state = StateMachineStates.IDLE
+    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] === undefined ||  this[packetPointSymbol] === undefined)) {
+      this.state = StateMachineStates.NOT_CONFIGURED
     }
   }
 
-  setPacketPoint (webBluetoothCharacteristic) {
-    this.packetCharacteristic = webBluetoothCharacteristic
-    if (this.state === StateMachineStates.NOT_CONFIGURED && this.controlpointCharacteristic !== undefined && this.packetCharacteristic !== undefined) {
+  /** get/set **/
+
+  get packetPoint () {
+    return this[packetPointSymbol]
+  }
+
+  set packetPoint (webBluetoothCharacteristic) {
+    this[packetPointSymbol] = webBluetoothCharacteristic
+    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined)) {
       this.state = StateMachineStates.IDLE
+    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] === undefined ||  this[packetPointSymbol] === undefined)) {
+      this.state = StateMachineStates.NOT_CONFIGURED
     }
   }
 
-  progress () {
+  /** get/set **/
+
+  get transfers () {
+    return this[transfersSymbol]
+  }
+
+  set transfers (value) {
+    this[transfersSymbol] = value
+  }
+
+  /** get/set **/
+
+  get progress () {
+    return this[progressSymbol]
+  }
+
+  set progress (value) {
+    this[progressSymbol] = value
+  }
+
+  calculateProgress () {
     switch (this.state) {
       case StateMachineStates.NOT_CONFIGURED:
-        return 0.0
+        this.progress = 0.0
+        break
       case StateMachineStates.IDLE:
-        return 0.0
+        this.progress = 0.0
+        break
       case StateMachineStates.COMPLETE:
-        return 1.0
+        this.progress = 1.0
+        break
       case StateMachineStates.FAILED:
-        return 1.0
+        this.progress = 1.0
+        break
       case StateMachineStates.TRANSFERING:
         if (CurrentTransfer !== undefined) {
-          return CurrentTransfer.progress()
-        } else {
-          return 0.0
+          CurrentTransfer.calculateProgress()
+          this.progress = CurrentTransfer.progress
         }
+        break
     }
   }
   /**
     Internal method used to slot each part of a dfu zip for transfer to device
   **/
   addTransfer (transfer) {
-    this.fileTransfers.push(transfer, (error) => {
+    this.transfers.push(transfer, (error) => {
+      transfer.end()
       if (error) {
-        this.fileTransfers.kill()
+        this.transfers.kill()
       }
     })
   }
@@ -123,8 +157,8 @@ class StateMachine {
       throw new Error('Firmware needs to be of class Firmware')
     }
     for(var section of firmware.sections) {
-      this.addTransfer(new Transfer(section.dat, this.controlpointCharacteristic, this.packetCharacteristic, TransferTypes.Command))
-      this.addTransfer(new Transfer(section.bin, this.controlpointCharacteristic, this.packetCharacteristic, TransferTypes.Data))
+      this.addTransfer(new Transfer(section.dat, this.controlPoint, this.packetPoint, TransferTypes.Command))
+      this.addTransfer(new Transfer(section.bin, this.controlPoint, this.packetPoint, TransferTypes.Data))
     }
   }
 

@@ -33,6 +33,9 @@ describe('Transfer', function() {
           transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
           done()
         })
+        .catch(err => {
+          done(err)
+        })
       })
       it("no exceptions", function() {
         expect( ()=> new Transfer(dataset,controlPoint,packetPoint,transferObjectType)).to.not.throw()
@@ -47,7 +50,7 @@ describe('Transfer', function() {
         expect(transfer.controlPoint).to.equal(controlPoint)
       })
       it('should have object type', function() {
-        expect(transfer.objectType).to.equal(transferObjectType)
+        expect(transfer.type).to.equal(transferObjectType)
       })
     })
   })
@@ -71,33 +74,39 @@ describe('Transfer', function() {
     })
     it('0.0 when preparing', function () {
       transfer.state = TransferStates.Prepare
-      expect(transfer.progress()).to.equal(0.0)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(0.0)
     })
     it('1.0 when completed', function () {
       transfer.state = TransferStates.Completed
-      expect(transfer.progress()).to.equal(1.0)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(1.0)
     })
     it('1.0 when failed', function () {
       transfer.state = TransferStates.Failed
-      expect(transfer.progress()).to.equal(1.0)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(1.0)
     })
     it('in middle of transfering', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 4
       transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
-      expect(transfer.progress()).to.equal(0.5)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(0.5)
     })
     it('start of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 0
       transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
-      expect(transfer.progress()).to.equal(0.10)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(0.10)
     })
     it('end of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 9
       transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
-      expect(transfer.progress()).to.equal(0.98)
+      transfer.calculateProgress()
+      expect(transfer.progress).to.equal(0.98)
     })
   })
 
@@ -112,12 +121,12 @@ describe('Transfer', function() {
 
     it("task addded to queue", function() {
       let transfer = new Transfer()
-      transfer.bleTasks.pause()
+      transfer.tasks.pause()
       let task = new Task()
       expect( function() {
         transfer.addTask(task);
       }).to.not.throw();
-      expect(transfer.bleTasks.length()).to.equal(1)
+      expect(transfer.tasks.length()).to.equal(1)
     })
 
     it("task is executed", function(done) {
@@ -125,7 +134,7 @@ describe('Transfer', function() {
       let task = new Task()
       factory.build('WebBluetoothCharacteristic').then(characteristic => {
         task.characteristic = characteristic
-        transfer.bleTasks.empty = function() {
+        transfer.tasks.empty = function() {
           done();
         }
         transfer.addTask(task);
