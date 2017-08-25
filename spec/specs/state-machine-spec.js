@@ -3,8 +3,70 @@ import sinon from 'sinon'
 
 import {DFUStateMachineStates,DFUStateMachine} from '../../src/models/state-machine'
 import {Firmware,FirmwareType} from '../../src/models/firmware'
-import fs from 'fs'
 import JSZip from 'jszip'
+
+const SharedDFUParseZip = function (testZipPath) {
+  beforeEach(function (done) {
+    var oReq = new XMLHttpRequest();
+    this.sandbox = sinon.sandbox.create()
+    this.stateMachine = new DFUStateMachine()
+    oReq.addEventListener("load", () => {
+      JSZip.loadAsync(oReq.response)
+      .then(zip => {
+        this.firmware = new Firmware(zip)
+        return this.firmware.parseManifest()
+      })
+      .then(() => {
+        done()
+      })
+      .catch(err => {
+        done(err)
+      })
+    })
+    oReq.open('GET',testZipPath)
+    oReq.responseType = "arraybuffer";
+    oReq.send();
+  })
+  afterEach(function () {
+    this.firmware = undefined
+    this.sandbox.restore()
+  })
+
+  it('fails when not configured', function() {
+    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.throw("StateMachine is not configured with bluetooth characteristics");
+  })
+  it('fails when not idle', function() {
+    this.stateMachine.state = DFUStateMachineStates.TRANSFERING
+    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.throw("Can only initate transfer when idle")
+  })
+
+  it('fails without firmware', function() {
+    this.stateMachine.state = DFUStateMachineStates.IDLE
+    expect( () => this.stateMachine.sendFirmware(null) ).to.throw("Firmware needs to be of class Firmware");
+  })
+
+  it('succeed when idle and firmware is valid', function() {
+    this.stateMachine.state = DFUStateMachineStates.IDLE
+    this.stateMachine.fileTransfers.pause()
+    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
+  })
+
+  it("addTransfers called", function() {
+    this.stateMachine.state = DFUStateMachineStates.IDLE
+    this.stateMachine.fileTransfers.pause()
+    let spyObject = this.sandbox.spy(this.stateMachine, 'addTransfer');
+    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
+    expect(spyObject.calledTwice).to.be.true
+  })
+
+  it('progress should be incomplete', function() {
+    this.stateMachine.state = DFUStateMachineStates.IDLE
+    this.stateMachine.fileTransfers.pause()
+    this.stateMachine.sendFirmware(this.firmware);
+    expect(this.stateMachine.progress).not.to.equal(1.0);
+  })
+
+}
 
 describe('StateMachine', function() {
   let stateMachine;
@@ -105,148 +167,11 @@ describe('StateMachine', function() {
   describe('#sendFirmware', function() {
 
     describe('softdevice & bootloader', function () {
-      let firmware;
-      let stateMachine;
-      let sandbox
-      before(function(done) {
-        sandbox = sinon.sandbox.create()
-        let content = fs.readFileSync('spec/data/bl_sd.zip')
-        JSZip.loadAsync(content)
-        .then(zip => {
-          firmware = new Firmware(zip)
-          return firmware.parseManifest()
-        })
-        .then(() => {
-          done();
-        })
-      })
-
-      beforeEach(function() {
-        stateMachine = new DFUStateMachine();
-      })
-
-      afterEach(function() {
-        sandbox.restore()
-        stateMachine = undefined;
-      })
-
-      it('fails when not configured', function() {
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.throw("StateMachine is not configured with bluetooth characteristics");
-      })
-      it('fails when not idle', function() {
-        stateMachine.state = DFUStateMachineStates.TRANSFERING
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.throw("Can only initate transfer when idle")
-      })
-
-      it('fails without firmware', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        expect( function() {
-          stateMachine.sendFirmware(null);
-        }).to.throw("Firmware needs to be of class Firmware");
-      })
-
-      it('succeed when idle and firmware is valid', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.not.throw();
-      })
-
-      it("addTransfers called", function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        let spyObject = sandbox.spy(stateMachine, 'addTransfer');
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.not.throw();
-        expect(spyObject.calledTwice).to.be.true
-      })
-
-      it('progress should be incomplete', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        stateMachine.sendFirmware(firmware);
-        expect(stateMachine.progress).not.to.equal(1.0);
-      })
+      SharedDFUParseZip('/base/spec/data/bl_sd.zip')
     })
 
     describe('application dfu', function() {
-      let firmware;
-      let stateMachine;
-      let sandbox
-      before(function(done) {
-        sandbox = sinon.sandbox.create()
-        let content = fs.readFileSync('spec/data/dfu_test_app_hrm_s130.zip')
-        JSZip.loadAsync(content)
-        .then(zip => {
-          firmware = new Firmware(zip)
-          return firmware.parseManifest()
-        })
-        .then(() => {
-          done();
-        })
-      })
-
-      beforeEach(function() {
-        stateMachine = new DFUStateMachine();
-      })
-
-      afterEach(function() {
-        sandbox.restore()
-        stateMachine = undefined;
-      })
-
-
-      it('fails when not configured', function() {
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.throw("StateMachine is not configured with bluetooth characteristics");
-      })
-
-      it('fails when not idle', function() {
-        stateMachine.state = DFUStateMachineStates.TRANSFERING
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.throw("Can only initate transfer when idle")
-      })
-
-      it('fails without firmware', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        expect( function() {
-          stateMachine.sendFirmware(null);
-        }).to.throw("Firmware needs to be of class Firmware");
-      })
-
-      it('succeed when idle and firmware is valid', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.not.throw();
-      })
-
-      it("addTransfers called", function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        let spyObject = sandbox.spy(stateMachine, 'addTransfer');
-        expect( function() {
-          stateMachine.sendFirmware(firmware);
-        }).to.not.throw();
-        expect(spyObject.calledTwice).to.be.true
-      })
-
-      it('progress should be incomplete', function() {
-        stateMachine.state = DFUStateMachineStates.IDLE
-        stateMachine.transfers.pause()
-        stateMachine.sendFirmware(firmware);
-        expect(stateMachine.progress).not.to.equal(1.0);
-      })
-
+      SharedDFUParseZip('/base/spec/data/dfu_test_app_hrm_s130.zip')
     })
 
   })
