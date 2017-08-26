@@ -1,4 +1,5 @@
-'use strict';
+
+"use strict";
 
 var _regenerator = require('babel-runtime/regenerator');
 

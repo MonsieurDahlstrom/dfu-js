@@ -22,7 +22,7 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      'src/**/*.js': ['webpack', 'sourcemap'],
+      'src/**/*.js': ['webpack', 'sourcemap', 'coverage'],
       'spec/specs/**/*.js': ['webpack', 'sourcemap']
     },
 
@@ -53,7 +53,16 @@ module.exports = function(config) {
       noInfo: true
     },
 
-    reporters: ['progress', 'istanbul'],
+    reporters: ['progress', 'coverage'],
+
+    coverageReporter: {
+      includeAllSources: true,
+      dir: 'coverage/',
+      reporters: [
+        { type: "html", subdir: "html" },
+        { type: 'text-summary' }
+      ]
+    },
 
     port: 9876,
     colors: true,

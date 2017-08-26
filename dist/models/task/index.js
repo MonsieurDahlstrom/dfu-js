@@ -1,4 +1,5 @@
-'use strict';
+
+"use strict";
 
 var _regenerator = require('babel-runtime/regenerator');
 
@@ -16,28 +17,15 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
+var _types = require('./types');
+
+var _types2 = _interopRequireDefault(_types);
+
+var _results = require('./results');
+
+var _results2 = _interopRequireDefault(_results);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var TaskType = {
-  CREATE: 0x01,
-  SET_PRN: 0x02,
-  CALCULATE_CHECKSUM: 0x03,
-  EXECUTE: 0x04,
-  SELECT: 0x06,
-  RESPONSE_CODE: 0x60
-};
-
-var TaskResult = {
-  INVALID_CODE: 0x00,
-  SUCCESS: 0x01,
-  OPCODE_NOT_SUPPORTED: 0x02,
-  INVALID_PARAMETER: 0x03,
-  INSUFFICIENT_RESOURCES: 0x04,
-  INVALID_OBJECT: 0x05,
-  UNSUPPORTED_TYPE: 0x07,
-  OPERATION_NOT_PERMITTED: 0x08,
-  OPERATION_FAILED: 0x0A
-};
 
 var Task = function () {
   function Task(characteristicToWriteTo, bytesToWrite, commandToExecute) {
@@ -108,28 +96,28 @@ var Task = function () {
     key: 'verify',
     value: function verify(objectType, characteristic) {
       var dataView = new DataView(new ArrayBuffer(2));
-      dataView.setUint8(0, TaskType.SELECT);
+      dataView.setUint8(0, _types2.default.SELECT);
       dataView.setUint8(1, objectType);
-      return new Task(characteristic, dataView.buffer, TaskType.SELECT);
+      return new Task(characteristic, dataView.buffer, _types2.default.SELECT);
     }
   }, {
     key: 'create',
     value: function create(objectType, length, characteristic) {
       var dataView = new DataView(new ArrayBuffer(6));
-      dataView.setUint8(0, TaskType.CREATE);
+      dataView.setUint8(0, _types2.default.CREATE);
       dataView.setUint8(1, objectType);
 
       dataView.setUint32(2, length, true);
-      return new Task(characteristic, dataView.buffer, TaskType.CREATE);
+      return new Task(characteristic, dataView.buffer, _types2.default.CREATE);
     }
   }, {
     key: 'setPacketReturnNotification',
     value: function setPacketReturnNotification(packageCount, characteristic) {
       var dataView = new DataView(new ArrayBuffer(3));
-      dataView.setUint8(0, TaskType.SET_PRN);
+      dataView.setUint8(0, _types2.default.SET_PRN);
 
       dataView.setUint16(1, packageCount, true);
-      return new Task(characteristic, dataView.buffer, TaskType.SET_PRN);
+      return new Task(characteristic, dataView.buffer, _types2.default.SET_PRN);
     }
   }, {
     key: 'writePackage',
@@ -140,21 +128,21 @@ var Task = function () {
     key: 'checksum',
     value: function checksum(characteristic) {
       var dataView = new DataView(new ArrayBuffer(1));
-      dataView.setUint8(0, TaskType.CALCULATE_CHECKSUM);
-      return new Task(characteristic, dataView.buffer, TaskType.CALCULATE_CHECKSUM);
+      dataView.setUint8(0, _types2.default.CALCULATE_CHECKSUM);
+      return new Task(characteristic, dataView.buffer, _types2.default.CALCULATE_CHECKSUM);
     }
   }, {
     key: 'execute',
     value: function execute(characteristic) {
       var dataView = new DataView(new ArrayBuffer(1));
-      dataView.setUint8(0, TaskType.EXECUTE);
-      return new Task(characteristic, dataView.buffer, TaskType.EXECUTE);
+      dataView.setUint8(0, _types2.default.EXECUTE);
+      return new Task(characteristic, dataView.buffer, _types2.default.EXECUTE);
     }
   }]);
   return Task;
 }();
 
 module.exports.Task = Task;
-module.exports.TaskType = TaskType;
-module.exports.TaskResult = TaskResult;
-//# sourceMappingURL=Task.js.map
+module.exports.TaskTypes = _types2.default;
+module.exports.TaskResults = _results2.default;
+//# sourceMappingURL=index.js.map

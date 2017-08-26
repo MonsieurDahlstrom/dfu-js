@@ -1,4 +1,5 @@
-'use strict';
+
+"use strict";
 
 var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
@@ -12,24 +13,19 @@ var _crc = require('crc');
 
 var _crc2 = _interopRequireDefault(_crc);
 
-var _Task = require('./Task');
+var _task = require('../task');
+
+var _states = require('./states.js');
+
+var _states2 = _interopRequireDefault(_states);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var DATA_CHUNK_SIZE = 20;
 
-var TransferObjectState = {
-  NotStarted: 0x01,
-  Creating: 0x02,
-  Transfering: 0x03,
-  Storing: 0x04,
-  Completed: 0x05,
-  Failed: 0x06
-};
-
-var TransferObject = function () {
-  function TransferObject(offset, length, transfer, transferType, onCompletitionCallback) {
-    (0, _classCallCheck3.default)(this, TransferObject);
+var DFUObject = function () {
+  function DFUObject(offset, length, transfer, transferType, onCompletitionCallback) {
+    (0, _classCallCheck3.default)(this, DFUObject);
 
     this.onCompletition = onCompletitionCallback;
 
@@ -41,18 +37,18 @@ var TransferObject = function () {
 
     this.objectType = transferType;
 
-    this.state = TransferObjectState.NotStarted;
+    this.state = _states2.default.NotStarted;
   }
 
-  (0, _createClass3.default)(TransferObject, [{
+  (0, _createClass3.default)(DFUObject, [{
     key: 'progress',
     value: function progress() {
       switch (this.state) {
-        case TransferObjectState.NotStarted:
+        case _states2.default.NotStarted:
           return 0.0;
-        case TransferObjectState.Creating:
+        case _states2.default.Creating:
           return 0.01;
-        case TransferObjectState.Transfering:
+        case _states2.default.Transfering:
           var difference = this.parentTransfer.bleTasks.length / this.chunks.length;
           switch (difference) {
             case 0:
@@ -62,7 +58,7 @@ var TransferObject = function () {
             default:
               return 1.0 - difference - 0.02;
           }
-        case TransferObjectState.Storing:
+        case _states2.default.Storing:
           return 0.99;
         default:
           return 1.0;
@@ -86,8 +82,8 @@ var TransferObject = function () {
   }, {
     key: 'begin',
     value: function begin() {
-      this.state = TransferObjectState.Creating;
-      this.parentTransfer.addTask(_Task.Task.verify(this.objectType, this.parentTransfer.controlPoint));
+      this.state = _states2.default.Creating;
+      this.parentTransfer.addTask(_task.Task.verify(this.objectType, this.parentTransfer.controlPoint));
     }
   }, {
     key: 'verify',
@@ -108,15 +104,15 @@ var TransferObject = function () {
     value: function validate(offset, checksum) {
       var fileCRCToOffset = _crc2.default.crc32(this.parentTransfer.file.slice(0, offset));
       if (offset === this.parentOffset + this.objectLength && checksum === fileCRCToOffset) {
-        this.state = TransferObjectState.Storing;
-        var operation = _Task.Task.execute(this.parentTransfer.controlPoint);
+        this.state = _states2.default.Storing;
+        var operation = _task.Task.execute(this.parentTransfer.controlPoint);
         this.parentTransfer.addTask(operation);
       } else if (offset === this.parentOffset || offset > this.parentOffset + this.objectLength || checksum !== fileCRCToOffset) {
-        this.state = TransferObjectState.Creating;
-        var _operation = _Task.Task.create(this.objectType, this.objectLength, this.parentTransfer.controlPoint);
+        this.state = _states2.default.Creating;
+        var _operation = _task.Task.create(this.objectType, this.objectLength, this.parentTransfer.controlPoint);
         this.parentTransfer.addTask(_operation);
       } else {
-        this.state = TransferObjectState.Transfering;
+        this.state = _states2.default.Transfering;
         this.toPackets(offset);
         this.parentTransfer.addTask(this.setPacketReturnNotification());
         this.transfer();
@@ -127,13 +123,13 @@ var TransferObject = function () {
     value: function transfer() {
       for (var index = 0; index < this.chunks.length; index++) {
         var buffer = this.chunks[index].buffer;
-        this.parentTransfer.addTask(_Task.Task.writePackage(buffer, this.parentTransfer.packetPoint));
+        this.parentTransfer.addTask(_task.Task.writePackage(buffer, this.parentTransfer.packetPoint));
       }
     }
   }, {
     key: 'setPacketReturnNotification',
     value: function setPacketReturnNotification() {
-      return _Task.Task.setPacketReturnNotification(this.chunks.length, this.parentTransfer.controlPoint);
+      return _task.Task.setPacketReturnNotification(this.chunks.length, this.parentTransfer.controlPoint);
     }
   }, {
     key: 'eventHandler',
@@ -141,35 +137,35 @@ var TransferObject = function () {
       var opCode = dataView.getInt8(1);
       var responseCode = dataView.getInt8(2);
       switch (this.state) {
-        case TransferObjectState.Creating:
+        case _states2.default.Creating:
           {
-            if (opCode === _Task.TaskType.SELECT && responseCode === _Task.TaskResult.SUCCESS) {
+            if (opCode === _task.TaskTypes.SELECT && responseCode === _task.TaskResults.SUCCESS) {
               this.onSelect(dataView);
-            } else if (opCode === _Task.TaskType.CREATE && responseCode === _Task.TaskResult.SUCCESS) {
+            } else if (opCode === _task.TaskTypes.CREATE && responseCode === _task.TaskResults.SUCCESS) {
               this.onCreate(dataView);
-            } else if (opCode === _Task.TaskType.SET_PRN && responseCode === _Task.TaskResult.SUCCESS) {
+            } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
               console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
             }
             break;
           }
-        case TransferObjectState.Transfering:
+        case _states2.default.Transfering:
           {
-            if (opCode === _Task.TaskType.CALCULATE_CHECKSUM && responseCode === _Task.TaskResult.SUCCESS) {
+            if (opCode === _task.TaskTypes.CALCULATE_CHECKSUM && responseCode === _task.TaskResults.SUCCESS) {
               this.onChecksum(dataView);
-            } else if (opCode === _Task.TaskType.SET_PRN && responseCode === _Task.TaskResult.SUCCESS) {
+            } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
               console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
             }
             break;
           }
-        case TransferObjectState.Storing:
+        case _states2.default.Storing:
           {
-            if (opCode === _Task.TaskType.EXECUTE && responseCode === _Task.TaskResult.SUCCESS) {
+            if (opCode === _task.TaskTypes.EXECUTE && responseCode === _task.TaskResults.SUCCESS) {
               this.onExecute();
-            } else if (opCode === _Task.TaskType.SET_PRN && responseCode === _Task.TaskResult.SUCCESS) {
+            } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
               console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
@@ -186,7 +182,7 @@ var TransferObject = function () {
   }, {
     key: 'onCreate',
     value: function onCreate(dataView) {
-      this.state = TransferObjectState.Transfering;
+      this.state = _states2.default.Transfering;
 
       this.toPackets(0);
       this.parentTransfer.addTask(this.setPacketReturnNotification());
@@ -205,13 +201,13 @@ var TransferObject = function () {
   }, {
     key: 'onExecute',
     value: function onExecute(dataView) {
-      this.state = TransferObjectState.Completed;
+      this.state = _states2.default.Completed;
       this.onCompletition();
     }
   }]);
-  return TransferObject;
+  return DFUObject;
 }();
 
-module.exports.TransferObject = TransferObject;
-module.exports.TransferObjectState = TransferObjectState;
-//# sourceMappingURL=TransferObject.js.map
+module.exports.DFUObject = DFUObject;
+module.exports.DFUObjectStates = _states2.default;
+//# sourceMappingURL=index.js.map
