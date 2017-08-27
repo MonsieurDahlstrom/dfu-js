@@ -4,17 +4,17 @@ var _stateMachine = require('./models/state-machine');
 
 var _firmware = require('./models/firmware');
 
-var _dfuMixin = require('./vue-mixins/dfu-mixin.vue');
+var _webBluetoothDfu = require('./vue-mixins/web-bluetooth-dfu.js');
 
-var _dfuMixin2 = _interopRequireDefault(_dfuMixin);
+var _webBluetoothDfu2 = _interopRequireDefault(_webBluetoothDfu);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-module.exports.StateMachineStates = _stateMachine.States;
-module.exports.StateMachine = _stateMachine.StateMachine;
+module.exports.StateMachineStates = _stateMachine.DFUStateMachineStates;
+module.exports.StateMachine = _stateMachine.DFUStateMachine;
 
 module.exports.Firmware = _firmware.Firmware;
-module.exports.FirmwareType = _firmware.FirmwareType;
+module.exports.FirmwareTypes = _firmware.FirmwareType;
 
-module.exports.DeviceFirmwareUpdateMixin = _dfuMixin2.default;
+module.exports.DFUMixin = _webBluetoothDfu2.default;
 //# sourceMappingURL=index.js.map

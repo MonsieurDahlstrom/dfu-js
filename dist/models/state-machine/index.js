@@ -1,9 +1,12 @@
-
-"use strict";
+'use strict';
 
 var _getIterator2 = require('babel-runtime/core-js/get-iterator');
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
+
+var _getPrototypeOf = require('babel-runtime/core-js/object/get-prototype-of');
+
+var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
 
 var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
@@ -13,6 +16,14 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
+var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = require('babel-runtime/helpers/inherits');
+
+var _inherits3 = _interopRequireDefault(_inherits2);
+
 var _symbol = require('babel-runtime/core-js/symbol');
 
 var _symbol2 = _interopRequireDefault(_symbol);
@@ -20,6 +31,10 @@ var _symbol2 = _interopRequireDefault(_symbol);
 var _queue = require('async/queue');
 
 var _queue2 = _interopRequireDefault(_queue);
+
+var _events = require('events');
+
+var _events2 = _interopRequireDefault(_events);
 
 var _firmware = require('../firmware');
 
@@ -37,21 +52,28 @@ var stateSymbol = (0, _symbol2.default)();
 var controlPointSymbol = (0, _symbol2.default)();
 var packetPointSymbol = (0, _symbol2.default)();
 var transfersSymbol = (0, _symbol2.default)();
+var queueSymbol = (0, _symbol2.default)();
 var progressSymbol = (0, _symbol2.default)();
 
-var StateMachine = function () {
+var StateMachine = function (_EventEmitter) {
+  (0, _inherits3.default)(StateMachine, _EventEmitter);
+
   function StateMachine(webBluetoothControlPoint, webBluetoothPacketPoint) {
     (0, _classCallCheck3.default)(this, StateMachine);
 
-    this[controlPointSymbol] = webBluetoothControlPoint;
-    this[packetPointSymbol] = webBluetoothPacketPoint;
-    if (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined) {
-      this[stateSymbol] = _states2.default.IDLE;
+    var _this = (0, _possibleConstructorReturn3.default)(this, (StateMachine.__proto__ || (0, _getPrototypeOf2.default)(StateMachine)).call(this));
+
+    _this[controlPointSymbol] = webBluetoothControlPoint;
+    _this[packetPointSymbol] = webBluetoothPacketPoint;
+    if (_this[controlPointSymbol] !== undefined && _this[packetPointSymbol] !== undefined) {
+      _this[stateSymbol] = _states2.default.IDLE;
     } else {
-      this[stateSymbol] = _states2.default.NOT_CONFIGURED;
+      _this[stateSymbol] = _states2.default.NOT_CONFIGURED;
     }
-    this[transfersSymbol] = (0, _queue2.default)(_task.Task.Worker, 1);
-    this[progressSymbol] = 0.0;
+    _this[transfersSymbol] = [];
+    _this[queueSymbol] = (0, _queue2.default)(_transfer.TransferWorker, 1);
+    _this[progressSymbol] = 0.0;
+    return _this;
   }
 
   (0, _createClass3.default)(StateMachine, [{
@@ -71,9 +93,16 @@ var StateMachine = function () {
           this.progress = 1.0;
           break;
         case _states2.default.TRANSFERING:
-          if (_transfer.CurrentTransfer !== undefined) {
-            _transfer.CurrentTransfer.calculateProgress();
-            this.progress = _transfer.CurrentTransfer.progress;
+          if (this.transfers.length > 0) {
+            var completedTransfersCount = this.transfers.reduce(function (sum, value) {
+              return value.state === _transfer.TransferStates.Failed || value.state === _transfer.TransferStates.Completed ? sum + 1 : sum;
+            }, 0);
+            var percentageValue = 1.0 / this.transfers.length;
+            var newProgress = percentageValue * completedTransfersCount;
+            if ((0, _transfer.CurrentTransfer)().state === _transfer.TransferStates.Transfer) {
+              newProgress += percentageValue * (0, _transfer.CurrentTransfer)().progress;
+            }
+            this.progress = newProgress;
           }
           break;
       }
@@ -81,18 +110,23 @@ var StateMachine = function () {
   }, {
     key: 'addTransfer',
     value: function addTransfer(transfer) {
-      var _this = this;
+      var _this2 = this;
 
-      this.transfers.push(transfer, function (error) {
-        transfer.end();
+      this.transfers.push(transfer);
+      this.queue.push(transfer, function (error) {
         if (error) {
-          _this.transfers.kill();
+          _this2.queue.kill();
+          _this2.state = _states2.default.FAILED;
+        } else if (_this2.queue.length() === 0) {
+          _this2.state = _states2.default.COMPLETE;
         }
       });
     }
   }, {
     key: 'sendFirmware',
     value: function sendFirmware(firmware) {
+      var _this3 = this;
+
       if (this.state === _states2.default.NOT_CONFIGURED) {
         throw new Error('StateMachine is not configured with bluetooth characteristics');
       }
@@ -110,8 +144,15 @@ var StateMachine = function () {
         for (var _iterator = (0, _getIterator3.default)(firmware.sections), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var section = _step.value;
 
-          this.addTransfer(new _transfer.Transfer(section.dat, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Command));
-          this.addTransfer(new _transfer.Transfer(section.bin, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Data));
+          var updateFunc = function updateFunc(event) {
+            _this3.calculateProgress();
+          };
+          var datTransfer = new _transfer.Transfer(section.dat, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Command);
+          datTransfer.on('progressChanged', updateFunc);
+          var binTransfer = new _transfer.Transfer(section.bin, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Data);
+          binTransfer.on('progressChanged', updateFunc);
+          this.addTransfer(datTransfer);
+          this.addTransfer(binTransfer);
         }
       } catch (err) {
         _didIteratorError = true;
@@ -127,6 +168,8 @@ var StateMachine = function () {
           }
         }
       }
+
+      this.state = _states2.default.TRANSFERING;
     }
   }, {
     key: 'state',
@@ -134,7 +177,10 @@ var StateMachine = function () {
       return this[stateSymbol];
     },
     set: function set(value) {
-      this[stateSymbol] = value;
+      if (value !== this[stateSymbol]) {
+        this[stateSymbol] = value;
+        this.emit('stateChanged', { dfuStateMachine: this, state: value });
+      }
     }
   }, {
     key: 'controlPoint',
@@ -166,9 +212,6 @@ var StateMachine = function () {
     key: 'transfers',
     get: function get() {
       return this[transfersSymbol];
-    },
-    set: function set(value) {
-      this[transfersSymbol] = value;
     }
   }, {
     key: 'progress',
@@ -176,11 +219,19 @@ var StateMachine = function () {
       return this[progressSymbol];
     },
     set: function set(value) {
-      this[progressSymbol] = value;
+      if (value !== this[progressSymbol]) {
+        this[progressSymbol] = value;
+        this.emit('progressChanged', { dfuStateMachine: this, progress: value });
+      }
+    }
+  }, {
+    key: 'queue',
+    get: function get() {
+      return this[queueSymbol];
     }
   }]);
   return StateMachine;
-}();
+}(_events2.default);
 
 module.exports.DFUStateMachineStates = _states2.default;
 module.exports.DFUStateMachine = StateMachine;

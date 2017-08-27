@@ -9,6 +9,10 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
+var _symbol = require('babel-runtime/core-js/symbol');
+
+var _symbol2 = _interopRequireDefault(_symbol);
+
 var _crc = require('crc');
 
 var _crc2 = _interopRequireDefault(_crc);
@@ -23,58 +27,41 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var DATA_CHUNK_SIZE = 20;
 
+var lengthSymbol = (0, _symbol2.default)();
+var typeSymbol = (0, _symbol2.default)();
+var offsetSymbol = (0, _symbol2.default)();
+var transferSymbol = (0, _symbol2.default)();
+var onCompletitionSymbol = (0, _symbol2.default)();
+var stateSymbol = (0, _symbol2.default)();
+
 var DFUObject = function () {
   function DFUObject(offset, length, transfer, transferType, onCompletitionCallback) {
     (0, _classCallCheck3.default)(this, DFUObject);
 
-    this.onCompletition = onCompletitionCallback;
+    this[onCompletitionSymbol] = onCompletitionCallback;
 
-    this.parentTransfer = transfer;
+    this[transferSymbol] = transfer;
 
-    this.parentOffset = offset;
+    this[offsetSymbol] = offset;
 
-    this.objectLength = length;
+    this[lengthSymbol] = length;
 
-    this.objectType = transferType;
+    this[typeSymbol] = transferType;
 
-    this.state = _states2.default.NotStarted;
+    this[stateSymbol] = _states2.default.NotStarted;
   }
 
   (0, _createClass3.default)(DFUObject, [{
-    key: 'progress',
-    value: function progress() {
-      switch (this.state) {
-        case _states2.default.NotStarted:
-          return 0.0;
-        case _states2.default.Creating:
-          return 0.01;
-        case _states2.default.Transfering:
-          var difference = this.parentTransfer.bleTasks.length / this.chunks.length;
-          switch (difference) {
-            case 0:
-              return 0.98;
-            case 1:
-              return 0.02;
-            default:
-              return 1.0 - difference - 0.02;
-          }
-        case _states2.default.Storing:
-          return 0.99;
-        default:
-          return 1.0;
-      }
-    }
-  }, {
     key: 'toPackets',
     value: function toPackets(offset) {
       this.chunks = [];
-      var parentFileEnd = this.parentOffset + this.objectLength;
-      var parentFileBegin = this.parentOffset + offset;
+      var parentFileEnd = this.offset + this.length;
+      var parentFileBegin = this.offset + offset;
       var index = parentFileBegin;
       while (index < parentFileEnd) {
         var chunkBegin = index;
         var chunkEnd = chunkBegin + DATA_CHUNK_SIZE < parentFileEnd ? chunkBegin + DATA_CHUNK_SIZE : chunkBegin + (parentFileEnd - index);
-        var chunk = this.parentTransfer.file.slice(chunkBegin, chunkEnd);
+        var chunk = this.transfer.file.slice(chunkBegin, chunkEnd);
         this.chunks.push(chunk);
         index += DATA_CHUNK_SIZE;
       }
@@ -83,7 +70,7 @@ var DFUObject = function () {
     key: 'begin',
     value: function begin() {
       this.state = _states2.default.Creating;
-      this.parentTransfer.addTask(_task.Task.verify(this.objectType, this.parentTransfer.controlPoint));
+      this.transfer.addTask(_task.Task.verify(this.type, this.transfer.controlPoint));
     }
   }, {
     key: 'verify',
@@ -95,41 +82,41 @@ var DFUObject = function () {
   }, {
     key: 'hasOffset',
     value: function hasOffset(offset) {
-      var min = this.parentOffset;
-      var max = min + this.objectLength;
+      var min = this.offset;
+      var max = min + this.length;
       return offset >= min && offset <= max;
     }
   }, {
     key: 'validate',
     value: function validate(offset, checksum) {
-      var fileCRCToOffset = _crc2.default.crc32(this.parentTransfer.file.slice(0, offset));
-      if (offset === this.parentOffset + this.objectLength && checksum === fileCRCToOffset) {
+      var fileCRCToOffset = _crc2.default.crc32(this.transfer.file.slice(0, offset));
+      if (offset === this.offset + this.length && checksum === fileCRCToOffset) {
         this.state = _states2.default.Storing;
-        var operation = _task.Task.execute(this.parentTransfer.controlPoint);
-        this.parentTransfer.addTask(operation);
-      } else if (offset === this.parentOffset || offset > this.parentOffset + this.objectLength || checksum !== fileCRCToOffset) {
+        var operation = _task.Task.execute(this.transfer.controlPoint);
+        this.transfer.addTask(operation);
+      } else if (offset === this.offset || offset > this.offset + this.length || checksum !== fileCRCToOffset) {
         this.state = _states2.default.Creating;
-        var _operation = _task.Task.create(this.objectType, this.objectLength, this.parentTransfer.controlPoint);
-        this.parentTransfer.addTask(_operation);
+        var _operation = _task.Task.create(this.type, this.length, this.transfer.controlPoint);
+        this.transfer.addTask(_operation);
       } else {
         this.state = _states2.default.Transfering;
         this.toPackets(offset);
-        this.parentTransfer.addTask(this.setPacketReturnNotification());
-        this.transfer();
+        this.transfer.addTask(this.setPacketReturnNotification());
+        this.sendChuncks();
       }
     }
   }, {
-    key: 'transfer',
-    value: function transfer() {
+    key: 'sendChuncks',
+    value: function sendChuncks() {
       for (var index = 0; index < this.chunks.length; index++) {
         var buffer = this.chunks[index].buffer;
-        this.parentTransfer.addTask(_task.Task.writePackage(buffer, this.parentTransfer.packetPoint));
+        this.transfer.addTask(_task.Task.writePackage(buffer, this.transfer.packetPoint));
       }
     }
   }, {
     key: 'setPacketReturnNotification',
     value: function setPacketReturnNotification() {
-      return _task.Task.setPacketReturnNotification(this.chunks.length, this.parentTransfer.controlPoint);
+      return _task.Task.setPacketReturnNotification(this.chunks.length, this.transfer.controlPoint);
     }
   }, {
     key: 'eventHandler',
@@ -185,8 +172,8 @@ var DFUObject = function () {
       this.state = _states2.default.Transfering;
 
       this.toPackets(0);
-      this.parentTransfer.addTask(this.setPacketReturnNotification());
-      this.transfer();
+      this.transfer.addTask(this.setPacketReturnNotification());
+      this.sendChuncks();
     }
   }, {
     key: 'onChecksum',
@@ -203,6 +190,54 @@ var DFUObject = function () {
     value: function onExecute(dataView) {
       this.state = _states2.default.Completed;
       this.onCompletition();
+    }
+  }, {
+    key: 'length',
+    get: function get() {
+      return this[lengthSymbol];
+    },
+    set: function set(value) {
+      this[lengthSymbol] = value;
+    }
+  }, {
+    key: 'type',
+    get: function get() {
+      return this[typeSymbol];
+    },
+    set: function set(value) {
+      this[typeSymbol] = value;
+    }
+  }, {
+    key: 'offset',
+    get: function get() {
+      return this[offsetSymbol];
+    },
+    set: function set(value) {
+      this[offsetSymbol] = value;
+    }
+  }, {
+    key: 'transfer',
+    get: function get() {
+      return this[transferSymbol];
+    },
+    set: function set(value) {
+      this[transferSymbol] = value;
+    }
+  }, {
+    key: 'onCompletition',
+    get: function get() {
+      return this[onCompletitionSymbol];
+    },
+    set: function set(value) {
+      this[onCompletitionSymbol] = value;
+    }
+  }, {
+    key: 'state',
+    get: function get() {
+      return this[stateSymbol];
+    },
+    set: function set(value) {
+      this[stateSymbol] = value;
     }
   }]);
   return DFUObject;

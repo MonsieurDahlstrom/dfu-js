@@ -18,11 +18,12 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-"use strict";
 
 import queue from 'async/queue'
+import EventEmitter from 'events'
+
 import {Firmware, FirmwareType} from '../firmware'
-import {Transfer, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'
+import {Transfer, TransferStates, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'
 import {Task} from '../task'
 import StateMachineStates from './states'
 
@@ -36,11 +37,13 @@ let stateSymbol = Symbol()
 let controlPointSymbol = Symbol()
 let packetPointSymbol = Symbol()
 let transfersSymbol = Symbol()
+let queueSymbol = Symbol()
 let progressSymbol = Symbol()
 
-class StateMachine {
+class StateMachine extends EventEmitter {
 
   constructor (webBluetoothControlPoint, webBluetoothPacketPoint) {
+    super()
     this[controlPointSymbol] = webBluetoothControlPoint
     this[packetPointSymbol] = webBluetoothPacketPoint
     if (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined) {
@@ -48,7 +51,8 @@ class StateMachine {
     } else {
       this[stateSymbol] = StateMachineStates.NOT_CONFIGURED
     }
-    this[transfersSymbol] = queue(Task.Worker, 1)
+    this[transfersSymbol] = []
+    this[queueSymbol] = queue(TransferWorker, 1)
     this[progressSymbol] = 0.0
   }
 
@@ -58,9 +62,11 @@ class StateMachine {
   }
 
   set state (value) {
-    this[stateSymbol] = value
+    if (value !== this[stateSymbol]) {
+      this[stateSymbol] = value
+      this.emit('stateChanged',{dfuStateMachine: this, state: value})
+    }
   }
-
   /** get/set **/
 
   get controlPoint () {
@@ -97,9 +103,6 @@ class StateMachine {
     return this[transfersSymbol]
   }
 
-  set transfers (value) {
-    this[transfersSymbol] = value
-  }
 
   /** get/set **/
 
@@ -108,8 +111,17 @@ class StateMachine {
   }
 
   set progress (value) {
-    this[progressSymbol] = value
+    if (value !== this[progressSymbol]) {
+      this[progressSymbol] = value
+      this.emit('progressChanged',{dfuStateMachine: this, progress: value})
+    }
   }
+  /** get/set **/
+
+  get queue () {
+    return this[queueSymbol]
+  }
+
 
   calculateProgress () {
     switch (this.state) {
@@ -126,9 +138,16 @@ class StateMachine {
         this.progress = 1.0
         break
       case StateMachineStates.TRANSFERING:
-        if (CurrentTransfer !== undefined) {
-          CurrentTransfer.calculateProgress()
-          this.progress = CurrentTransfer.progress
+        if (this.transfers.length > 0) {
+          let completedTransfersCount = this.transfers.reduce((sum,value) => {
+            return (value.state === TransferStates.Failed || value.state === TransferStates.Completed) ? sum + 1 : sum
+          }, 0)
+          let percentageValue = 1.0 / this.transfers.length
+          let newProgress = percentageValue * completedTransfersCount
+          if(CurrentTransfer().state === TransferStates.Transfer) {
+            newProgress += percentageValue * CurrentTransfer().progress
+          }
+          this.progress = newProgress
         }
         break
     }
@@ -137,10 +156,13 @@ class StateMachine {
     Internal method used to slot each part of a dfu zip for transfer to device
   **/
   addTransfer (transfer) {
-    this.transfers.push(transfer, (error) => {
-      transfer.end()
+    this.transfers.push(transfer)
+    this.queue.push(transfer, (error) => {
       if (error) {
-        this.transfers.kill()
+        this.queue.kill()
+        this.state = StateMachineStates.FAILED
+      } else if(this.queue.length() === 0) {
+        this.state = StateMachineStates.COMPLETE
       }
     })
   }
@@ -159,9 +181,17 @@ class StateMachine {
       throw new Error('Firmware needs to be of class Firmware')
     }
     for(var section of firmware.sections) {
-      this.addTransfer(new Transfer(section.dat, this.controlPoint, this.packetPoint, TransferTypes.Command))
-      this.addTransfer(new Transfer(section.bin, this.controlPoint, this.packetPoint, TransferTypes.Data))
+      var updateFunc = (event) => {
+        this.calculateProgress()
+      }
+      let datTransfer = new Transfer(section.dat, this.controlPoint, this.packetPoint, TransferTypes.Command)
+      datTransfer.on('progressChanged', updateFunc)
+      let binTransfer = new Transfer(section.bin, this.controlPoint, this.packetPoint, TransferTypes.Data)
+      binTransfer.on('progressChanged', updateFunc)
+      this.addTransfer(datTransfer)
+      this.addTransfer(binTransfer)
     }
+    this.state = StateMachineStates.TRANSFERING
   }
 
 }

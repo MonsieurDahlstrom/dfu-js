@@ -19,15 +19,14 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import {StateMachine,States} from './models/state-machine'
+import {DFUStateMachine,DFUStateMachineStates} from './models/state-machine'
 import {Firmware, FirmwareType} from './models/firmware'
-import DFUMixIn from './vue-mixins/dfu-mixin.vue'
-
+import WebBluetoothDFU from './vue-mixins/web-bluetooth-dfu.js'
 //
-module.exports.StateMachineStates = States
-module.exports.StateMachine = StateMachine
+module.exports.StateMachineStates = DFUStateMachineStates
+module.exports.StateMachine = DFUStateMachine
 //
 module.exports.Firmware = Firmware
-module.exports.FirmwareType = FirmwareType
+module.exports.FirmwareTypes = FirmwareType
 //
-module.exports.DeviceFirmwareUpdateMixin = DFUMixIn
+module.exports.DFUMixin = WebBluetoothDFU

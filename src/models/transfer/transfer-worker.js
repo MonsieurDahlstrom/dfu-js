@@ -6,9 +6,13 @@ parases the zip file and creates a transfer object for each entry in the zip
 The statemachine uses a queue to slot the Transfers in order
 **/
 import Transfer from './transfer'
+import TransferStates from './states'
 
-let CurrentTransfer = undefined
+let currentTransfer = undefined
 
+const CurrentTransfer = function() {
+  return currentTransfer
+}
 const TransferWorker = function (task, onCompleition) {
   if (task instanceof Transfer === false) {
     throw new Error('task is not of type Task')
@@ -16,21 +20,21 @@ const TransferWorker = function (task, onCompleition) {
   if (!onCompleition) {
     throw new Error('onCompleition is not set')
   }
-  CurrentTransfer = task
+  currentTransfer = task
   task.begin()
   const intervalTimer = setInterval(() => {
-    if (task.state === TransferState.Failed) {
+    if (task.state === TransferStates.Failed) {
       clearInterval(intervalTimer)
       task.end()
-      CurrentTransfer = undefined
+      currentTransfer = undefined
       onCompleition('Failed Transfer')
-    } else if (task.state === TransferState.Completed) {
+    } else if (task.state === TransferStates.Completed) {
       clearInterval(intervalTimer)
       task.end()
-      CurrentTransfer = undefined
+      currentTransfer = undefined
       onCompleition()
     }
-  }, 1000)
+  }, 500)
 }
 
 module.exports.CurrentTransfer = CurrentTransfer

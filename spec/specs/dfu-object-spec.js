@@ -38,15 +38,15 @@ describe("DFUObject", function() {
       })
       it('has offset', function() {
         let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.parentOffset).to.equal(offset)
+        expect(dfuObject.offset).to.equal(offset)
       })
       it('has a length', function() {
         let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.objectLength).to.equal(length)
+        expect(dfuObject.length).to.equal(length)
       })
       it('belongs to a Transfer', function(){
         let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.parentTransfer).to.equal(transfer)
+        expect(dfuObject.transfer).to.equal(transfer)
       })
       it('has completition callback', function() {
         let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
@@ -105,19 +105,19 @@ describe("DFUObject", function() {
     })
     it('in middle of transfering', function () {
       dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 2}}
+      dfuObject.transfer = {tasks: {length: 2}}
       dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
       expect(dfuObject.progress()).to.equal(0.78)
     })
     it('start of transfer', function () {
       dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 10}}
+      dfuObject.transfer = {tasks: {length: 10}}
       dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
       expect(dfuObject.progress()).to.equal(0.02)
     })
     it('end of transfer', function () {
       dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 0}}
+      dfuObject.transfer = {tasks: {length: 0}}
       dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
       expect(dfuObject.progress()).to.equal(0.98)
     })
@@ -130,7 +130,7 @@ describe("DFUObject", function() {
       dfuObject = new DFUObject()
       let transfer = new Transfer()
       transferMock = this.sandbox.stub(transfer)
-      dfuObject.parentTransfer = transferMock
+      dfuObject.transfer = transferMock
       dfuObject.begin()
     })
     it('sets state', function() {
@@ -169,10 +169,10 @@ describe("DFUObject", function() {
     describe('with valid crc', function() {
       beforeEach(function() {
         this.transfer = new Transfer()
-        this.transferMock = this.sandbox.stub(this.transfer)
         this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-        this.dfuObject = new DFUObject(0,20,this.transferMock,1, function() {})
-        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'transfer')
+        this.transferMock = this.sandbox.stub(this.transfer)
+        this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
+        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
       })
       it('offset larger then content', function() {
         let dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,20))
@@ -211,7 +211,7 @@ describe("DFUObject", function() {
         this.transferMock = this.sandbox.stub(this.transfer)
         this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
         this.dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,85))
-        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'transfer')
+        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
       })
       it('offset larger then content', function() {
         this.dfuObject.validate(35,this.dfuObjectCRC)
@@ -240,7 +240,7 @@ describe("DFUObject", function() {
     })
   })
 
-  describe("#transfer", function() {
+  describe("#sendChuncks", function() {
     beforeEach(function() {
       this.transfer = new Transfer()
       this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
@@ -249,7 +249,7 @@ describe("DFUObject", function() {
       this.dfuObject.toPackets()
     })
     it('slots a task for each data chunck in the transfer', function() {
-      expect( () => this.dfuObject.transfer(0)).to.not.throw()
+      expect( () => this.dfuObject.sendChuncks(0)).to.not.throw()
       //maximum ble transmission size is 20. 25 fits in two chunks.
       expect(this.transferMock.addTask.callCount).to.equal(this.dfuObject.chunks.length)
     })

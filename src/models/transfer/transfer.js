@@ -2,10 +2,11 @@
 
 /** Library imports */
 import queue from 'async/queue'
+import EventEmitter from 'events'
 /** internal imports */
 import TransferStates from './states'
 import {Task, TaskTypes, TaskResults} from '../task'
-import {DFUObject} from '../dfu-object'
+import {DFUObject, DFUObjectStates} from '../dfu-object'
 
 var fileSymbol = Symbol();
 var stateSymbol = Symbol();
@@ -17,7 +18,7 @@ var maximumObjectLengthSymbol = Symbol()
 var typeSymbol = Symbol()
 var progressSymbol = Symbol()
 
-class Transfer {
+class Transfer extends EventEmitter {
   /** Get/Set pair **/
   get file() {
     return this[fileSymbol]
@@ -96,10 +97,14 @@ class Transfer {
   }
 
   set progress(value) {
-    this[progressSymbol] = value
+    if(value !== this[progressSymbol]) {
+      this[progressSymbol] = value
+      this.emit('progressChanged', {transfer: this, progress: value})
+    }
   }
 
   constructor (fileData, controlPoint, packetPoint, objectType) {
+    super()
     this[stateSymbol] = TransferStates.Prepare
     /** The WebBluetooth Characteristics needed to transfer a file **/
     this[packetPointSymbol] = packetPoint
@@ -116,33 +121,21 @@ class Transfer {
     }
     /** empty list of DFUObject */
     this[objectsSymbol] = []
+    this[progressSymbol] = 0
   }
 
-  calculateProgress () {
-    switch (this.state) {
-      case TransferStates.Prepare:
-      {
-        this.progress = 0.0
-        break
-      }
-      case TransferStates.Transfer:
-      {
-        var difference = (this.currentObjectIndex+1) / this.objects.length
-        if (difference < 1.0) {
-          this.progress = difference - this.objects[this.currentObjectIndex].progress()
+  checkProgress () {
+    if(this.objects.length > 0) {
+      let completedObjects = this.objects.reduce((sum,value) => {
+        if (value.state === DFUObjectStates.Completed || value.state === DFUObjectStates.Failed) {
+          return sum += 1
         } else {
-          this.progress =  difference - 0.02
+          return sum
         }
-        break
-      }
-      default:
-      {
-        this.progress =  1.0
-        break
-      }
+      }, 0)
+      this.progress = completedObjects / this.objects.length
     }
   }
-
   /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
   addTask (dfuTask) {
     if ((dfuTask instanceof Task) === false) {
@@ -160,7 +153,7 @@ class Transfer {
   /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
   begin () {
     this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this))
-    let operation = Task.verify(this.objectType, this.controlPoint)
+    let operation = Task.verify(this.type, this.controlPoint)
     this.addTask(operation)
   }
 
@@ -200,7 +193,7 @@ class Transfer {
     while (index < fileEnd) {
       let objectBegin = index
       let objectEnd = objectBegin + this.maximumObjectLength < fileEnd ? this.maximumObjectLength : (fileEnd - index)
-      let object = new DFUObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this))
+      let object = new DFUObject(objectBegin, objectEnd, this, this.type, this.nextObject.bind(this))
       this.objects.push(object)
       index += this.maximumObjectLength
     }
@@ -235,7 +228,7 @@ class Transfer {
         break
       }
     }
-    this.calculateProgress()
+    this.checkProgress()
   }
 
   /** Checks if Transfer is complete or starts transferring the next DFUObject **/

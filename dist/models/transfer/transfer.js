@@ -4,13 +4,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _getPrototypeOf = require('babel-runtime/core-js/object/get-prototype-of');
+
+var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
+
 var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
 var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
+var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
 var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
+
+var _inherits2 = require('babel-runtime/helpers/inherits');
+
+var _inherits3 = _interopRequireDefault(_inherits2);
 
 var _symbol = require('babel-runtime/core-js/symbol');
 
@@ -19,6 +31,10 @@ var _symbol2 = _interopRequireDefault(_symbol);
 var _queue = require('async/queue');
 
 var _queue2 = _interopRequireDefault(_queue);
+
+var _events = require('events');
+
+var _events2 = _interopRequireDefault(_events);
 
 var _states = require('./states');
 
@@ -40,7 +56,8 @@ var maximumObjectLengthSymbol = (0, _symbol2.default)();
 var typeSymbol = (0, _symbol2.default)();
 var progressSymbol = (0, _symbol2.default)();
 
-var Transfer = function () {
+var Transfer = function (_EventEmitter) {
+  (0, _inherits3.default)(Transfer, _EventEmitter);
   (0, _createClass3.default)(Transfer, [{
     key: 'file',
     get: function get() {
@@ -111,69 +128,64 @@ var Transfer = function () {
       return this[progressSymbol];
     },
     set: function set(value) {
-      this[progressSymbol] = value;
+      if (value !== this[progressSymbol]) {
+        this[progressSymbol] = value;
+        this.emit('progressChanged', { transfer: this, progress: value });
+      }
     }
   }]);
 
   function Transfer(fileData, controlPoint, packetPoint, objectType) {
     (0, _classCallCheck3.default)(this, Transfer);
 
-    this[stateSymbol] = _states2.default.Prepare;
+    var _this = (0, _possibleConstructorReturn3.default)(this, (Transfer.__proto__ || (0, _getPrototypeOf2.default)(Transfer)).call(this));
 
-    this[packetPointSymbol] = packetPoint;
-    this[controlPointSymbol] = controlPoint;
+    _this[stateSymbol] = _states2.default.Prepare;
 
-    this[fileSymbol] = fileData;
+    _this[packetPointSymbol] = packetPoint;
+    _this[controlPointSymbol] = controlPoint;
 
-    this[typeSymbol] = objectType;
+    _this[fileSymbol] = fileData;
 
-    this[tasksSymbol] = (0, _queue2.default)(_task.Task.Worker, 1);
-    this[tasksSymbol].error = function (error, task) {
+    _this[typeSymbol] = objectType;
+
+    _this[tasksSymbol] = (0, _queue2.default)(_task.Task.Worker, 1);
+    _this[tasksSymbol].error = function (error, task) {
       console.error(error);
       console.error(task);
     };
 
-    this[objectsSymbol] = [];
+    _this[objectsSymbol] = [];
+    _this[progressSymbol] = 0;
+    return _this;
   }
 
   (0, _createClass3.default)(Transfer, [{
-    key: 'calculateProgress',
-    value: function calculateProgress() {
-      switch (this.state) {
-        case _states2.default.Prepare:
-          {
-            this.progress = 0.0;
-            break;
+    key: 'checkProgress',
+    value: function checkProgress() {
+      if (this.objects.length > 0) {
+        var completedObjects = this.objects.reduce(function (sum, value) {
+          if (value.state === _dfuObject.DFUObjectStates.Completed || value.state === _dfuObject.DFUObjectStates.Failed) {
+            return sum += 1;
+          } else {
+            return sum;
           }
-        case _states2.default.Transfer:
-          {
-            var difference = (this.currentObjectIndex + 1) / this.objects.length;
-            if (difference < 1.0) {
-              this.progress = difference - this.objects[this.currentObjectIndex].progress();
-            } else {
-              this.progress = difference - 0.02;
-            }
-            break;
-          }
-        default:
-          {
-            this.progress = 1.0;
-            break;
-          }
+        }, 0);
+        this.progress = completedObjects / this.objects.length;
       }
     }
   }, {
     key: 'addTask',
     value: function addTask(dfuTask) {
-      var _this = this;
+      var _this2 = this;
 
       if (dfuTask instanceof _task.Task === false) {
         throw new Error('task is not of type Task');
       }
       this.tasks.push(dfuTask, function (error) {
         if (error) {
-          _this.tasks.kill();
-          _this.state = _states2.default.Failed;
+          _this2.tasks.kill();
+          _this2.state = _states2.default.Failed;
           console.error(error);
         }
       });
@@ -182,7 +194,7 @@ var Transfer = function () {
     key: 'begin',
     value: function begin() {
       this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this));
-      var operation = _task.Task.verify(this.objectType, this.controlPoint);
+      var operation = _task.Task.verify(this.type, this.controlPoint);
       this.addTask(operation);
     }
   }, {
@@ -215,7 +227,7 @@ var Transfer = function () {
       while (index < fileEnd) {
         var objectBegin = index;
         var objectEnd = objectBegin + this.maximumObjectLength < fileEnd ? this.maximumObjectLength : fileEnd - index;
-        var object = new _dfuObject.DFUObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this));
+        var object = new _dfuObject.DFUObject(objectBegin, objectEnd, this, this.type, this.nextObject.bind(this));
         this.objects.push(object);
         index += this.maximumObjectLength;
       }
@@ -251,7 +263,7 @@ var Transfer = function () {
             break;
           }
       }
-      this.calculateProgress();
+      this.checkProgress();
     }
   }, {
     key: 'nextObject',
@@ -266,7 +278,7 @@ var Transfer = function () {
     }
   }]);
   return Transfer;
-}();
+}(_events2.default);
 
 exports.default = Transfer;
 //# sourceMappingURL=transfer.js.map
