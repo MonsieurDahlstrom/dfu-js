@@ -2,7 +2,6 @@ import {Firmware, FirmwareType} from '../models/firmware'
 import {DFUStateMachine, DFUStateMachineStates} from '../models/state-machine'
 
 const WebBluetoothDFU = {
-  props: ['webBluetoothControlPoint', 'webBluetoothPacketPoint'],
 	data: function() { return { dfuFirmware: undefined, dfuStateMachine: new DFUStateMachine(), dfuState: DFUStateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0} },
   created: function () {
     this.dfuStateMachine.on('progressChanged', this.updateDFUProgress)
@@ -12,6 +11,12 @@ const WebBluetoothDFU = {
     this.dfuStateMachine.packetPoint = this.webBluetoothPacketPoint
   },
   computed: {
+    webBluetoothControlPoint: function () {
+      throw new Error('DFUMixin expects component to provide computed property webBluetoothControlPoint')
+    },
+    webBluetoothPacketPoint: function () {
+      throw new Error('DFUMixin expects component to provide computed property webBluetoothPacketPoint')
+    },
     dfuIdle: function () {
       return this.dfuState === DFUStateMachineStates.IDLE
     },

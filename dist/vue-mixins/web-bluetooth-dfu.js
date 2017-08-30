@@ -19,7 +19,6 @@ var _stateMachine = require('../models/state-machine');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var WebBluetoothDFU = {
-  props: ['webBluetoothControlPoint', 'webBluetoothPacketPoint'],
   data: function data() {
     return { dfuFirmware: undefined, dfuStateMachine: new _stateMachine.DFUStateMachine(), dfuState: _stateMachine.DFUStateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0 };
   },
@@ -31,6 +30,12 @@ var WebBluetoothDFU = {
     this.dfuStateMachine.packetPoint = this.webBluetoothPacketPoint;
   },
   computed: {
+    webBluetoothControlPoint: function webBluetoothControlPoint() {
+      throw new Error('DFUMixin expects component to provide computed property webBluetoothControlPoint');
+    },
+    webBluetoothPacketPoint: function webBluetoothPacketPoint() {
+      throw new Error('DFUMixin expects component to provide computed property webBluetoothPacketPoint');
+    },
     dfuIdle: function dfuIdle() {
       return this.dfuState === _stateMachine.DFUStateMachineStates.IDLE;
     },
@@ -75,11 +80,9 @@ var WebBluetoothDFU = {
     },
     updateDFUState: function updateDFUState(payload) {
       this.dfuState = payload.state;
-      console.log('State changed: ' + payload.state);
     },
     updateDFUProgress: function updateDFUProgress(payload) {
       this.dfuProgress = payload.progress;
-      console.log('Progress chanaged: ' + payload.progress);
     }
   }
 };
