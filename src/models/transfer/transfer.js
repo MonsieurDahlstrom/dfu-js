@@ -1,5 +1,3 @@
-"use strict";
-
 /** Library imports */
 import queue from 'async/queue'
 import EventEmitter from 'events'
@@ -34,7 +32,10 @@ class Transfer extends EventEmitter {
   }
 
   set state(value) {
-    this[stateSymbol] = value
+    if(this[stateSymbol] !== value) {
+      this[stateSymbol] = value
+      this.emit('stateChanged', {transfer:this, state:this[stateSymbol]})
+    }
   }
 
   /** Get/Set pair **/
@@ -193,7 +194,14 @@ class Transfer extends EventEmitter {
     while (index < fileEnd) {
       let objectBegin = index
       let objectEnd = objectBegin + this.maximumObjectLength < fileEnd ? this.maximumObjectLength : (fileEnd - index)
-      let object = new DFUObject(objectBegin, objectEnd, this, this.type, this.nextObject.bind(this))
+      let object = new DFUObject(objectBegin, objectEnd, this, this.type)
+      object.on('stateChanged', (event) => {
+        if(event.state === DFUObjectStates.Failed) {
+          this.state = TransferStates.Failed
+        } else if ( event.state === DFUObjectStates.Completed) {
+          this.nextObject()
+        }
+      })
       this.objects.push(object)
       index += this.maximumObjectLength
     }
@@ -222,8 +230,11 @@ class Transfer extends EventEmitter {
       default: {
         if (this.objects !== undefined && this.objects[this.currentObjectIndex] !== undefined) {
           this.objects[this.currentObjectIndex].eventHandler(dataView)
+          if (this.objects[this.currentObjectIndex].state === DFUObjectStates.Failed) {
+            this.state == TransferStates.Failed
+          }
         } else {
-          console.error('Transfer.onEvent called with no objects or no current object')
+          this.state = TransferStates.Failed
         }
         break
       }

@@ -29,11 +29,12 @@ const WebBluetoothDFU = {
   },
   methods: {
     firmwareFromZip: async function (zip) {
-      console.log(zip)
       this.dfuFirmware = new Firmware(zip)
       await this.dfuFirmware.parseManifest()
-      console.log(this.dfuFirmware)
     },
+		resetDFU: function() {
+			this.dfuStateMachine.reset()
+		},
     performDFU: function() {
       this.dfuStateMachine.sendFirmware(this.dfuFirmware)
     },

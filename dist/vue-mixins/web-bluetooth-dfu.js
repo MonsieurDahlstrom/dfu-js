@@ -22,7 +22,7 @@ var WebBluetoothDFU = {
   data: function data() {
     return { dfuFirmware: undefined, dfuStateMachine: new _stateMachine.DFUStateMachine(), dfuState: _stateMachine.DFUStateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0 };
   },
-  created: function created() {
+  beforeMount: function beforeMount() {
     this.dfuStateMachine.on('progressChanged', this.updateDFUProgress);
     this.dfuStateMachine.on('stateChanged', this.updateDFUState);
 
@@ -53,15 +53,11 @@ var WebBluetoothDFU = {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                console.log(zip);
                 this.dfuFirmware = new _firmware.Firmware(zip);
-                _context.next = 4;
+                _context.next = 3;
                 return this.dfuFirmware.parseManifest();
 
-              case 4:
-                console.log(this.dfuFirmware);
-
-              case 5:
+              case 3:
               case 'end':
                 return _context.stop();
             }
@@ -75,6 +71,9 @@ var WebBluetoothDFU = {
 
       return firmwareFromZip;
     }(),
+    resetDFU: function resetDFU() {
+      this.dfuStateMachine.reset();
+    },
     performDFU: function performDFU() {
       this.dfuStateMachine.sendFirmware(this.dfuFirmware);
     },

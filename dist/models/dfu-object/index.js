@@ -1,5 +1,8 @@
+'use strict';
 
-"use strict";
+var _getPrototypeOf = require('babel-runtime/core-js/object/get-prototype-of');
+
+var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
 
 var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
@@ -9,6 +12,14 @@ var _createClass2 = require('babel-runtime/helpers/createClass');
 
 var _createClass3 = _interopRequireDefault(_createClass2);
 
+var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = require('babel-runtime/helpers/inherits');
+
+var _inherits3 = _interopRequireDefault(_inherits2);
+
 var _symbol = require('babel-runtime/core-js/symbol');
 
 var _symbol2 = _interopRequireDefault(_symbol);
@@ -16,6 +27,10 @@ var _symbol2 = _interopRequireDefault(_symbol);
 var _crc = require('crc');
 
 var _crc2 = _interopRequireDefault(_crc);
+
+var _events = require('events');
+
+var _events2 = _interopRequireDefault(_events);
 
 var _task = require('../task');
 
@@ -31,24 +46,26 @@ var lengthSymbol = (0, _symbol2.default)();
 var typeSymbol = (0, _symbol2.default)();
 var offsetSymbol = (0, _symbol2.default)();
 var transferSymbol = (0, _symbol2.default)();
-var onCompletitionSymbol = (0, _symbol2.default)();
 var stateSymbol = (0, _symbol2.default)();
 
-var DFUObject = function () {
-  function DFUObject(offset, length, transfer, transferType, onCompletitionCallback) {
+var DFUObject = function (_EventEmitter) {
+  (0, _inherits3.default)(DFUObject, _EventEmitter);
+
+  function DFUObject(offset, length, transfer, transferType) {
     (0, _classCallCheck3.default)(this, DFUObject);
 
-    this[onCompletitionSymbol] = onCompletitionCallback;
+    var _this = (0, _possibleConstructorReturn3.default)(this, (DFUObject.__proto__ || (0, _getPrototypeOf2.default)(DFUObject)).call(this));
 
-    this[transferSymbol] = transfer;
+    _this[transferSymbol] = transfer;
 
-    this[offsetSymbol] = offset;
+    _this[offsetSymbol] = offset;
 
-    this[lengthSymbol] = length;
+    _this[lengthSymbol] = length;
 
-    this[typeSymbol] = transferType;
+    _this[typeSymbol] = transferType;
 
-    this[stateSymbol] = _states2.default.NotStarted;
+    _this[stateSymbol] = _states2.default.NotStarted;
+    return _this;
   }
 
   (0, _createClass3.default)(DFUObject, [{
@@ -133,7 +150,8 @@ var DFUObject = function () {
             } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
-              console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
+              this.state = _states2.default.Failed;
+              console.log('DFUObjectStates.Creating  Operation: ' + opCode + ' Result: ' + responseCode);
             }
             break;
           }
@@ -144,7 +162,8 @@ var DFUObject = function () {
             } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
-              console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
+              this.state = _states2.default.Failed;
+              console.log('DFUObjectStates.Transfering  Operation: ' + opCode + ' Result: ' + responseCode);
             }
             break;
           }
@@ -155,7 +174,8 @@ var DFUObject = function () {
             } else if (opCode === _task.TaskTypes.SET_PRN && responseCode === _task.TaskResults.SUCCESS) {
               this.onPacketNotification(dataView);
             } else {
-              console.log('  Operation: ' + opCode + ' Result: ' + responseCode);
+              this.state = _states2.default.Failed;
+              console.log('DFUObjectStates.Storing  Operation: ' + opCode + ' Result: ' + responseCode);
             }
             break;
           }
@@ -189,7 +209,6 @@ var DFUObject = function () {
     key: 'onExecute',
     value: function onExecute(dataView) {
       this.state = _states2.default.Completed;
-      this.onCompletition();
     }
   }, {
     key: 'length',
@@ -224,24 +243,19 @@ var DFUObject = function () {
       this[transferSymbol] = value;
     }
   }, {
-    key: 'onCompletition',
-    get: function get() {
-      return this[onCompletitionSymbol];
-    },
-    set: function set(value) {
-      this[onCompletitionSymbol] = value;
-    }
-  }, {
     key: 'state',
     get: function get() {
       return this[stateSymbol];
     },
     set: function set(value) {
-      this[stateSymbol] = value;
+      if (this[stateSymbol] !== value) {
+        this[stateSymbol] = value;
+        this.emit('stateChanged', { object: this, state: this[stateSymbol] });
+      }
     }
   }]);
   return DFUObject;
-}();
+}(_events2.default);
 
 module.exports.DFUObject = DFUObject;
 module.exports.DFUObjectStates = _states2.default;

@@ -18,9 +18,8 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-"use strict";
-
 import crc from 'crc'
+import EventEmitter from 'events'
 //
 import {Task, TaskTypes, TaskResults} from '../task'
 import DFUObjectStates from './states.js'
@@ -37,14 +36,12 @@ let lengthSymbol = Symbol()
 let typeSymbol = Symbol()
 let offsetSymbol = Symbol()
 let transferSymbol = Symbol()
-let onCompletitionSymbol = Symbol()
 let stateSymbol = Symbol()
 
-class DFUObject  {
+class DFUObject extends EventEmitter {
 
-  constructor (offset, length, transfer, transferType, onCompletitionCallback) {
-    // function to call when transfer completes or fails
-    this[onCompletitionSymbol] = onCompletitionCallback
+  constructor (offset, length, transfer, transferType) {
+    super()
     // Reference to parent transfer that stores the file data
     this[transferSymbol] = transfer
     // The offset into the file data
@@ -100,22 +97,15 @@ class DFUObject  {
 
   /** get/set pair **/
 
-  get onCompletition () {
-    return this[onCompletitionSymbol]
-  }
-
-  set onCompletition (value) {
-    this[onCompletitionSymbol] = value
-  }
-
-  /** get/set pair **/
-
   get state () {
     return this[stateSymbol]
   }
 
   set state (value) {
-    this[stateSymbol] = value
+    if(this[stateSymbol] !== value) {
+      this[stateSymbol] = value
+      this.emit('stateChanged', {object:this, state:this[stateSymbol]})
+    }
   }
 
   /**
@@ -209,7 +199,8 @@ class DFUObject  {
         } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
-          console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+          this.state = DFUObjectStates.Failed
+          console.log('DFUObjectStates.Creating  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -219,7 +210,8 @@ class DFUObject  {
         } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
-          console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+          this.state = DFUObjectStates.Failed
+          console.log('DFUObjectStates.Transfering  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -229,7 +221,8 @@ class DFUObject  {
         } else if (opCode === TaskTypes.SET_PRN && responseCode === TaskResults.SUCCESS) {
           this.onPacketNotification(dataView)
         } else {
-          console.log('  Operation: ' + opCode + ' Result: ' + responseCode)
+          this.state = DFUObjectStates.Failed
+          console.log('DFUObjectStates.Storing  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -261,7 +254,6 @@ class DFUObject  {
 
   onExecute (dataView) {
     this.state = DFUObjectStates.Completed
-    this.onCompletition()
   }
 }
 

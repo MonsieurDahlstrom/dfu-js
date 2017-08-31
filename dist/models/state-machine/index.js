@@ -117,6 +117,9 @@ var StateMachine = function (_EventEmitter) {
         if (error) {
           _this2.queue.kill();
           _this2.state = _states2.default.FAILED;
+        } else if (transfer.state === _states2.default.FAILED) {
+          _this2.queue.kill();
+          _this2.state = _states2.default.FAILED;
         } else if (_this2.queue.length() === 0) {
           _this2.state = _states2.default.COMPLETE;
         }
@@ -170,6 +173,12 @@ var StateMachine = function (_EventEmitter) {
       }
 
       this.state = _states2.default.TRANSFERING;
+    }
+  }, {
+    key: 'reset',
+    value: function reset() {
+      this.queue.kill();
+      this.state = _states2.default.IDLE;
     }
   }, {
     key: 'state',

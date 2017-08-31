@@ -161,6 +161,9 @@ class StateMachine extends EventEmitter {
       if (error) {
         this.queue.kill()
         this.state = StateMachineStates.FAILED
+      } else if (transfer.state === StateMachineStates.FAILED) {
+        this.queue.kill()
+        this.state = StateMachineStates.FAILED
       } else if(this.queue.length() === 0) {
         this.state = StateMachineStates.COMPLETE
       }
@@ -194,6 +197,10 @@ class StateMachine extends EventEmitter {
     this.state = StateMachineStates.TRANSFERING
   }
 
+  reset () {
+    this.queue.kill()
+    this.state = StateMachineStates.IDLE
+  }
 }
 
 module.exports.DFUStateMachineStates = StateMachineStates

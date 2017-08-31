@@ -23,20 +23,19 @@ var TransferWorker = function TransferWorker(task, onCompleition) {
     throw new Error('onCompleition is not set');
   }
   currentTransfer = task;
-  task.begin();
-  var intervalTimer = setInterval(function () {
-    if (task.state === _states2.default.Failed) {
-      clearInterval(intervalTimer);
+  var stateUpdateFunction = function stateUpdateFunction(event) {
+    if (event.state === _states2.default.Failed) {
+      onCompleition('transfer failed');
       task.end();
       currentTransfer = undefined;
-      onCompleition('Failed Transfer');
-    } else if (task.state === _states2.default.Completed) {
-      clearInterval(intervalTimer);
+    } else if (event.state === _states2.default.Completed) {
       task.end();
       currentTransfer = undefined;
       onCompleition();
     }
-  }, 500);
+  };
+  currentTransfer.on('stateChanged', stateUpdateFunction);
+  currentTransfer.begin();
 };
 
 module.exports.CurrentTransfer = CurrentTransfer;

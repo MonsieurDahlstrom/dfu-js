@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -72,7 +72,10 @@ var Transfer = function (_EventEmitter) {
       return this[stateSymbol];
     },
     set: function set(value) {
-      this[stateSymbol] = value;
+      if (this[stateSymbol] !== value) {
+        this[stateSymbol] = value;
+        this.emit('stateChanged', { transfer: this, state: this[stateSymbol] });
+      }
     }
   }, {
     key: 'packetPoint',
@@ -221,13 +224,22 @@ var Transfer = function (_EventEmitter) {
   }, {
     key: 'generateObjects',
     value: function generateObjects() {
+      var _this3 = this;
+
       var fileBegin = 0;
       var fileEnd = this.file.length;
       var index = fileBegin;
       while (index < fileEnd) {
         var objectBegin = index;
         var objectEnd = objectBegin + this.maximumObjectLength < fileEnd ? this.maximumObjectLength : fileEnd - index;
-        var object = new _dfuObject.DFUObject(objectBegin, objectEnd, this, this.type, this.nextObject.bind(this));
+        var object = new _dfuObject.DFUObject(objectBegin, objectEnd, this, this.type);
+        object.on('stateChanged', function (event) {
+          if (event.state === _dfuObject.DFUObjectStates.Failed) {
+            _this3.state = _states2.default.Failed;
+          } else if (event.state === _dfuObject.DFUObjectStates.Completed) {
+            _this3.nextObject();
+          }
+        });
         this.objects.push(object);
         index += this.maximumObjectLength;
       }
@@ -257,8 +269,11 @@ var Transfer = function (_EventEmitter) {
           {
             if (this.objects !== undefined && this.objects[this.currentObjectIndex] !== undefined) {
               this.objects[this.currentObjectIndex].eventHandler(dataView);
+              if (this.objects[this.currentObjectIndex].state === _dfuObject.DFUObjectStates.Failed) {
+                this.state == _states2.default.Failed;
+              }
             } else {
-              console.error('Transfer.onEvent called with no objects or no current object');
+              this.state = _states2.default.Failed;
             }
             break;
           }
