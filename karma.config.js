@@ -22,7 +22,7 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      'src/**/*.js': ['webpack', 'sourcemap', 'coverage'],
+      'src/**/*.js': ['webpack', 'sourcemap'],
       'spec/specs/**/*.js': ['webpack', 'sourcemap']
     },
 
