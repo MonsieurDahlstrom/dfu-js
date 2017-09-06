@@ -22,7 +22,7 @@ var WebBluetoothDFU = {
   data: function data() {
     return { dfuFirmware: undefined, dfuStateMachine: new _stateMachine.DFUStateMachine(), dfuState: _stateMachine.DFUStateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0 };
   },
-  beforeMount: function beforeMount() {
+  created: function created() {
     this.dfuStateMachine.on('progressChanged', this.updateDFUProgress);
     this.dfuStateMachine.on('stateChanged', this.updateDFUState);
 
@@ -81,7 +81,7 @@ var WebBluetoothDFU = {
       this.dfuState = payload.state;
     },
     updateDFUProgress: function updateDFUProgress(payload) {
-      this.dfuProgress = payload.progress;
+      this.dfuProgress = (this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size).toFixed(2);
     }
   }
 };

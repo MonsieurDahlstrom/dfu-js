@@ -140,27 +140,27 @@ describe('StateMachine', function() {
     it('when not configured', function () {
       stateMachine.state = DFUStateMachineStates.NOT_CONFIGURED
       stateMachine.calculateProgress()
-      expect(stateMachine.progress).to.equal(0.0)
+      expect(stateMachine.progress.completed).to.equal(0.0)
     })
     it('when idle', function () {
       stateMachine.state = DFUStateMachineStates.IDLE
       stateMachine.calculateProgress()
-      expect(stateMachine.progress).to.equal(0.0)
+      expect(stateMachine.progress.completed).to.equal(0.0)
     })
     it('when transfering', function () {
       stateMachine.state = DFUStateMachineStates.TRANSFERING
       stateMachine.calculateProgress()
-      expect(stateMachine.progress).to.equal(0.0)
+      expect(stateMachine.progress.completed).to.equal(0.0)
     })
     it('when completed', function () {
       stateMachine.state = DFUStateMachineStates.COMPLETE
       stateMachine.calculateProgress()
-      expect(stateMachine.progress).to.equal(1.0)
+      expect(stateMachine.progress.completed).to.equal(1.0)
     })
     it('when failed', function () {
       stateMachine.state = DFUStateMachineStates.FAILED
       stateMachine.calculateProgress()
-      expect(stateMachine.progress).to.equal(1.0)
+      expect(stateMachine.progress.completed).to.equal(1.0)
     })
   })
 

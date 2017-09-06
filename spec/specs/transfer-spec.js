@@ -74,38 +74,38 @@ describe('Transfer', function() {
     })
     it('0.0 when preparing', function () {
       transfer.state = TransferStates.Prepare
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(0.0)
     })
     it('1.0 when completed', function () {
       transfer.state = TransferStates.Completed
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(1.0)
     })
     it('1.0 when failed', function () {
       transfer.state = TransferStates.Failed
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(1.0)
     })
     it('in middle of transfering', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 4
       transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(0.5)
     })
     it('start of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 0
       transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(0.10)
     })
     it('end of transfer', function () {
       transfer.state = TransferStates.Transfer
       transfer.currentObjectIndex = 9
       transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
-      transfer.calculateProgress()
+      transfer.checkProgress()
       expect(transfer.progress).to.equal(0.98)
     })
   })

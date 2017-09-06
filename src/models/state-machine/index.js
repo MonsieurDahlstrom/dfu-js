@@ -53,7 +53,7 @@ class StateMachine extends EventEmitter {
     }
     this[transfersSymbol] = []
     this[queueSymbol] = queue(TransferWorker, 1)
-    this[progressSymbol] = 0.0
+    this[progressSymbol] = {completed: 0.0, size: 1.0}
   }
 
   /** get/set **/
@@ -110,12 +110,6 @@ class StateMachine extends EventEmitter {
     return this[progressSymbol]
   }
 
-  set progress (value) {
-    if (value !== this[progressSymbol]) {
-      this[progressSymbol] = value
-      this.emit('progressChanged',{dfuStateMachine: this, progress: value})
-    }
-  }
   /** get/set **/
 
   get queue () {
@@ -126,18 +120,19 @@ class StateMachine extends EventEmitter {
   calculateProgress () {
     switch (this.state) {
       case StateMachineStates.NOT_CONFIGURED:
-        this.progress = 0.0
+        this[progressSymbol].completed  = 0.0
         break
       case StateMachineStates.IDLE:
-        this.progress = 0.0
+        this[progressSymbol].completed = 0.0
         break
       case StateMachineStates.COMPLETE:
-        this.progress = 1.0
+        this[progressSymbol].completed = this[progressSymbol].size
         break
       case StateMachineStates.FAILED:
-        this.progress = 1.0
+        this[progressSymbol].completed = this[progressSymbol].size
         break
       case StateMachineStates.TRANSFERING:
+        /*
         if (this.transfers.length > 0) {
           let completedTransfersCount = this.transfers.reduce((sum,value) => {
             return (value.state === TransferStates.Failed || value.state === TransferStates.Completed) ? sum + 1 : sum
@@ -149,8 +144,23 @@ class StateMachine extends EventEmitter {
           }
           this.progress = newProgress
         }
+        */
+        var progress = 0
+        for (let transfer of this.transfers) {
+          switch (transfer.state) {
+            case TransferStates.Completed:
+              progress += transfer.file.length
+            case TransferStates.Transfer:
+              progress += transfer.file.length * transfer.progress
+            default:
+              progress += 0
+              break;
+          }
+        }
+        this[progressSymbol].completed = progress
         break
     }
+    this.emit('progressChanged',{dfuStateMachine: this, progress: this[progressSymbol]})
   }
   /**
     Internal method used to slot each part of a dfu zip for transfer to device
@@ -183,17 +193,22 @@ class StateMachine extends EventEmitter {
     if (firmware instanceof Firmware === false) {
       throw new Error('Firmware needs to be of class Firmware')
     }
+    var updateFunc = (event) => {
+      this.calculateProgress()
+    }
+    var firmwareSize = 0
     for(var section of firmware.sections) {
-      var updateFunc = (event) => {
-        this.calculateProgress()
-      }
       let datTransfer = new Transfer(section.dat, this.controlPoint, this.packetPoint, TransferTypes.Command)
       datTransfer.on('progressChanged', updateFunc)
       let binTransfer = new Transfer(section.bin, this.controlPoint, this.packetPoint, TransferTypes.Data)
       binTransfer.on('progressChanged', updateFunc)
       this.addTransfer(datTransfer)
       this.addTransfer(binTransfer)
+      firmwareSize += section.dat.length
+      firmwareSize += section.bin.length
     }
+    this[progressSymbol].completed = 0
+    this[progressSymbol].size = firmwareSize
     this.state = StateMachineStates.TRANSFERING
   }
 

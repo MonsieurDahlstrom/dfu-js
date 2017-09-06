@@ -72,7 +72,7 @@ var StateMachine = function (_EventEmitter) {
     }
     _this[transfersSymbol] = [];
     _this[queueSymbol] = (0, _queue2.default)(_transfer.TransferWorker, 1);
-    _this[progressSymbol] = 0.0;
+    _this[progressSymbol] = { completed: 0.0, size: 1.0 };
     return _this;
   }
 
@@ -81,31 +81,56 @@ var StateMachine = function (_EventEmitter) {
     value: function calculateProgress() {
       switch (this.state) {
         case _states2.default.NOT_CONFIGURED:
-          this.progress = 0.0;
+          this[progressSymbol].completed = 0.0;
           break;
         case _states2.default.IDLE:
-          this.progress = 0.0;
+          this[progressSymbol].completed = 0.0;
           break;
         case _states2.default.COMPLETE:
-          this.progress = 1.0;
+          this[progressSymbol].completed = this[progressSymbol].size;
           break;
         case _states2.default.FAILED:
-          this.progress = 1.0;
+          this[progressSymbol].completed = this[progressSymbol].size;
           break;
         case _states2.default.TRANSFERING:
-          if (this.transfers.length > 0) {
-            var completedTransfersCount = this.transfers.reduce(function (sum, value) {
-              return value.state === _transfer.TransferStates.Failed || value.state === _transfer.TransferStates.Completed ? sum + 1 : sum;
-            }, 0);
-            var percentageValue = 1.0 / this.transfers.length;
-            var newProgress = percentageValue * completedTransfersCount;
-            if ((0, _transfer.CurrentTransfer)().state === _transfer.TransferStates.Transfer) {
-              newProgress += percentageValue * (0, _transfer.CurrentTransfer)().progress;
+          var progress = 0;
+          var _iteratorNormalCompletion = true;
+          var _didIteratorError = false;
+          var _iteratorError = undefined;
+
+          try {
+            for (var _iterator = (0, _getIterator3.default)(this.transfers), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+              var transfer = _step.value;
+
+              switch (transfer.state) {
+                case _transfer.TransferStates.Completed:
+                  progress += transfer.file.length;
+                case _transfer.TransferStates.Transfer:
+                  progress += transfer.file.length * transfer.progress;
+                default:
+                  progress += 0;
+                  break;
+              }
             }
-            this.progress = newProgress;
+          } catch (err) {
+            _didIteratorError = true;
+            _iteratorError = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+              }
+            } finally {
+              if (_didIteratorError) {
+                throw _iteratorError;
+              }
+            }
           }
+
+          this[progressSymbol].completed = progress;
           break;
       }
+      this.emit('progressChanged', { dfuStateMachine: this, progress: this[progressSymbol] });
     }
   }, {
     key: 'addTransfer',
@@ -139,39 +164,44 @@ var StateMachine = function (_EventEmitter) {
       if (firmware instanceof _firmware.Firmware === false) {
         throw new Error('Firmware needs to be of class Firmware');
       }
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var updateFunc = function updateFunc(event) {
+        _this3.calculateProgress();
+      };
+      var firmwareSize = 0;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
 
       try {
-        for (var _iterator = (0, _getIterator3.default)(firmware.sections), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var section = _step.value;
+        for (var _iterator2 = (0, _getIterator3.default)(firmware.sections), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var section = _step2.value;
 
-          var updateFunc = function updateFunc(event) {
-            _this3.calculateProgress();
-          };
           var datTransfer = new _transfer.Transfer(section.dat, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Command);
           datTransfer.on('progressChanged', updateFunc);
           var binTransfer = new _transfer.Transfer(section.bin, this.controlPoint, this.packetPoint, _transfer.TransferTypes.Data);
           binTransfer.on('progressChanged', updateFunc);
           this.addTransfer(datTransfer);
           this.addTransfer(binTransfer);
+          firmwareSize += section.dat.length;
+          firmwareSize += section.bin.length;
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
           }
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          if (_didIteratorError2) {
+            throw _iteratorError2;
           }
         }
       }
 
+      this[progressSymbol].completed = 0;
+      this[progressSymbol].size = firmwareSize;
       this.state = _states2.default.TRANSFERING;
     }
   }, {
@@ -226,12 +256,6 @@ var StateMachine = function (_EventEmitter) {
     key: 'progress',
     get: function get() {
       return this[progressSymbol];
-    },
-    set: function set(value) {
-      if (value !== this[progressSymbol]) {
-        this[progressSymbol] = value;
-        this.emit('progressChanged', { dfuStateMachine: this, progress: value });
-      }
     }
   }, {
     key: 'queue',
