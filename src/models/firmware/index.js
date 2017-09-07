@@ -18,8 +18,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-"use strict";
-
+import JSZip from 'jszip'
 import {Section} from './Section'
 
 /**
@@ -45,6 +44,9 @@ class Firmware {
 
   /** Create a new instance based on zip file and set inital state **/
   constructor (zipFile) {
+    if (zipFile == null || (zipFile instanceof JSZip) === false) {
+      throw new Error('Firmware zip is invalid')
+    }
     this.type = FirmwareType.NotConfigured
     this.zip = zipFile
     this.sections = []
@@ -52,10 +54,6 @@ class Firmware {
 
   /** parses the manifest and unpack the binaries **/
   async parseManifest () {
-    if (!this.zip) {
-      this.type = FirmwareType.Invalid
-      return
-    }
     let content = await this.zip.file('manifest.json').async('string')
     let json = JSON.parse(content)
     if (json.manifest.application) {

@@ -11,7 +11,7 @@ import testFirmwareAtPath from '../shared/statemachine-firmware-specs.js'
 //import {Firmware,FirmwareType} from '../../src/models/firmware'
 
 
-describe.only('StateMachine', function() {
+describe('StateMachine', function() {
 
   before(function () {
     this.sandbox = sinon.sandbox.create()
