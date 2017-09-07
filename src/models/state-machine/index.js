@@ -23,7 +23,7 @@ import queue from 'async/queue'
 import EventEmitter from 'events'
 
 import {Firmware, FirmwareType} from '../firmware'
-import {Transfer, TransferStates, TransferWorker, CurrentTransfer, TransferTypes} from '../transfer'
+import {Transfer, TransferStates, TransferWorker, TransferTypes} from '../transfer'
 import {Task} from '../task'
 import StateMachineStates from './states'
 
@@ -53,7 +53,12 @@ class StateMachine extends EventEmitter {
     }
     this[transfersSymbol] = []
     this[queueSymbol] = queue(TransferWorker, 1)
+    this[queueSymbol].error(this.onTransferError)
     this[progressSymbol] = {completed: 0.0, size: 1.0}
+  }
+
+  onTransferError(error, transfer) {
+    console.log(onTransferError)
   }
 
   /** get/set **/
@@ -75,9 +80,9 @@ class StateMachine extends EventEmitter {
 
   set controlPoint (webBluetoothCharacteristic) {
     this[controlPointSymbol] = webBluetoothCharacteristic
-    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined)) {
+    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] != null && this[packetPointSymbol] != null)) {
       this.state = StateMachineStates.IDLE
-    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] === undefined ||  this[packetPointSymbol] === undefined)) {
+    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] == null || this[packetPointSymbol] == null )) {
       this.state = StateMachineStates.NOT_CONFIGURED
     }
   }
@@ -90,9 +95,9 @@ class StateMachine extends EventEmitter {
 
   set packetPoint (webBluetoothCharacteristic) {
     this[packetPointSymbol] = webBluetoothCharacteristic
-    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] !== undefined && this[packetPointSymbol] !== undefined)) {
+    if (this.state === StateMachineStates.NOT_CONFIGURED && (this[controlPointSymbol] != null&& this[packetPointSymbol] != null)) {
       this.state = StateMachineStates.IDLE
-    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] === undefined ||  this[packetPointSymbol] === undefined)) {
+    } else if(this.state === StateMachineStates.IDLE && (this[controlPointSymbol] == null  ||  this[packetPointSymbol] == null)) {
       this.state = StateMachineStates.NOT_CONFIGURED
     }
   }
@@ -132,19 +137,6 @@ class StateMachine extends EventEmitter {
         this[progressSymbol].completed = this[progressSymbol].size
         break
       case StateMachineStates.TRANSFERING:
-        /*
-        if (this.transfers.length > 0) {
-          let completedTransfersCount = this.transfers.reduce((sum,value) => {
-            return (value.state === TransferStates.Failed || value.state === TransferStates.Completed) ? sum + 1 : sum
-          }, 0)
-          let percentageValue = 1.0 / this.transfers.length
-          let newProgress = percentageValue * completedTransfersCount
-          if(CurrentTransfer().state === TransferStates.Transfer) {
-            newProgress += percentageValue * CurrentTransfer().progress
-          }
-          this.progress = newProgress
-        }
-        */
         var progress = 0
         for (let transfer of this.transfers) {
           switch (transfer.state) {
@@ -168,10 +160,7 @@ class StateMachine extends EventEmitter {
   addTransfer (transfer) {
     this.transfers.push(transfer)
     this.queue.push(transfer, (error) => {
-      if (error) {
-        this.queue.kill()
-        this.state = StateMachineStates.FAILED
-      } else if (transfer.state === StateMachineStates.FAILED) {
+      if (error || transfer.state === StateMachineStates.FAILED) {
         this.queue.kill()
         this.state = StateMachineStates.FAILED
       } else if(this.queue.length() === 0) {
@@ -179,7 +168,6 @@ class StateMachine extends EventEmitter {
       }
     })
   }
-
   /**
     Send a firmware to a device. Throws when parameter or state is invalid for sending a firmware
   **/

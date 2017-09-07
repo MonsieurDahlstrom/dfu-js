@@ -102,6 +102,7 @@ class Firmware {
     } else {
       this.type = FirmwareType.Invalid
     }
+    return this
   }
 }
 

@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 /** internal imports */
-import {CurrentTransfer, TransferWorker} from './transfer-worker'
+import TransferWorker from './transfer-worker'
 import TransferStates from './states'
 import TransferTypes from './types'
 import Transfer from './transfer'
@@ -28,4 +28,3 @@ module.exports.Transfer = Transfer
 module.exports.TransferStates = TransferStates
 module.exports.TransferTypes = TransferTypes
 module.exports.TransferWorker = TransferWorker
-module.exports.CurrentTransfer = CurrentTransfer

@@ -122,7 +122,7 @@ class Transfer extends EventEmitter {
     }
     /** empty list of DFUObject */
     this[objectsSymbol] = []
-    this[progressSymbol] = 0
+    this[progressSymbol] = 0.0
   }
 
   checkProgress () {

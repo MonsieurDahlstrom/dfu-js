@@ -8,11 +8,6 @@ The statemachine uses a queue to slot the Transfers in order
 import Transfer from './transfer'
 import TransferStates from './states'
 
-let currentTransfer = undefined
-
-const CurrentTransfer = function() {
-  return currentTransfer
-}
 const TransferWorker = function (task, onCompleition) {
   if (task instanceof Transfer === false) {
     throw new Error('task is not of type Task')
@@ -20,21 +15,18 @@ const TransferWorker = function (task, onCompleition) {
   if (!onCompleition) {
     throw new Error('onCompleition is not set')
   }
-  currentTransfer = task
   let stateUpdateFunction = (event) => {
     if(event.state === TransferStates.Failed) {
-      onCompleition('transfer failed')
       task.end()
-      currentTransfer = undefined
+      onCompleition('transfer failed')
     } else if (event.state === TransferStates.Completed) {
       task.end()
-      currentTransfer = undefined
       onCompleition()
     }
   }
-  currentTransfer.on('stateChanged', stateUpdateFunction)
-  currentTransfer.begin()
+  task.on('stateChanged', stateUpdateFunction)
+  task.begin()
 }
 
-module.exports.CurrentTransfer = CurrentTransfer
 module.exports.TransferWorker = TransferWorker
+export default TransferWorker

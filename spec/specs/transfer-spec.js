@@ -26,7 +26,7 @@ describe('Transfer', function() {
       beforeEach(function(done) {
         dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
         transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
-        factory.buildMany("WebBluetoothCharacteristic",2)
+        factory.buildMany("webBluetoothCharacteristic",2)
         .then(result => {
           packetPoint = result[0]
           controlPoint = result[1]
@@ -64,7 +64,7 @@ describe('Transfer', function() {
     beforeEach(function(done) {
       dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
       transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
-      factory.buildMany("WebBluetoothCharacteristic",2)
+      factory.buildMany("webBluetoothCharacteristic",2)
       .then(result => {
         packetPoint = result[0]
         controlPoint = result[1]
@@ -132,7 +132,7 @@ describe('Transfer', function() {
     it("task is executed", function(done) {
       let transfer = new Transfer()
       let task = new Task()
-      factory.build('WebBluetoothCharacteristic').then(characteristic => {
+      factory.build('webBluetoothCharacteristic').then(characteristic => {
         task.characteristic = characteristic
         transfer.tasks.empty = function() {
           done();
@@ -146,7 +146,7 @@ describe('Transfer', function() {
   describe("#begin", function() {
 
     it("does not throw", function(done) {
-      factory.build("WebBluetoothCharacteristic")
+      factory.build("webBluetoothCharacteristic")
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
@@ -159,7 +159,7 @@ describe('Transfer', function() {
 
   describe("#end", function() {
     it("does not throw", function(done) {
-      factory.build("WebBluetoothCharacteristic")
+      factory.build("webBluetoothCharacteristic")
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
@@ -176,7 +176,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
@@ -198,7 +198,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
@@ -220,7 +220,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
