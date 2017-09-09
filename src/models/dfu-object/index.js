@@ -19,6 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import crc from 'crc'
+import queue from 'async/queue'
 import EventEmitter from 'events'
 //
 import {Task, TaskTypes, TaskResults} from '../task'
@@ -37,6 +38,8 @@ let typeSymbol = Symbol()
 let offsetSymbol = Symbol()
 let transferSymbol = Symbol()
 let stateSymbol = Symbol()
+let taskQueueSymbol = Symbol()
+let progressSymbol = Symbol()
 
 class DFUObject extends EventEmitter {
 
@@ -52,7 +55,10 @@ class DFUObject extends EventEmitter {
     this[typeSymbol] = transferType
     // Initial state
     this[stateSymbol] = DFUObjectStates.NotStarted
-    //
+    //create a queue to enmsure the order of ble write objects
+    this[taskQueueSymbol] = queue(Task.Worker, 1)
+    //reports the progress
+    this[progressSymbol] = {completed: 0, size: this[lengthSymbol]}
   }
 
   /** get/set pair **/
@@ -63,6 +69,7 @@ class DFUObject extends EventEmitter {
 
   set length (value) {
     this[lengthSymbol] = value
+    this[progressSymbol].size = value
   }
 
   /** get/set pair **/
@@ -107,7 +114,41 @@ class DFUObject extends EventEmitter {
       this.emit('stateChanged', {object:this, state:this[stateSymbol]})
     }
   }
+  /** get/set pair **/
 
+  get progress () {
+    return this[progressSymbol]
+  }
+
+  set progress (value) {
+    if(this[progressSymbol] !== value) {
+      this[progressSymbol] = value
+      this.emit('progressChanged', {object:this, state:this[stateSymbol]})
+    }
+  }
+
+  /** get/set pair **/
+
+  get taskQueue () {
+    return this[taskQueueSymbol]
+  }
+
+  /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
+  addTask (dfuTask) {
+    if ((dfuTask instanceof Task) === false) {
+      throw new Error('task is not of type Task')
+    }
+    this.taskQueue.push(dfuTask, error => this.onTaskComplete(error,dfuTask))
+  }
+
+  onTaskComplete(error, task) {
+    if (error) {
+      this.taskQueue.kill()
+      this.state = TransferStates.Failed
+    } else if(task.opCode == null) {
+      this.progress = {completed: this.progress.completed+task.buffer.length, size: this.length}
+    }
+  }
   /**
     Internal convinence methods, a transfer object might have been partially
     transfered already, if so the offset passed in is none zero.
@@ -132,7 +173,7 @@ class DFUObject extends EventEmitter {
   /** The first step in transferring this object, ask how much has already been transferred **/
   begin () {
     this.state = DFUObjectStates.Creating
-    this.transfer.addTask(Task.verify(this.type, this.transfer.controlPoint))
+    this.addTask(Task.verify(this.type, this.transfer.controlPoint))
   }
 
   /** internal convinence method, extract how much of an object that has already been transfered **/
@@ -157,17 +198,17 @@ class DFUObject extends EventEmitter {
       /** Object has been transfered and should be moved into its right place on the device **/
       this.state = DFUObjectStates.Storing
       let operation = Task.execute(this.transfer.controlPoint)
-      this.transfer.addTask(operation)
+      this.addTask(operation)
     } else if (offset === this.offset || offset > this.offset + this.length || checksum !== fileCRCToOffset) {
-      /** This object has not been trasnfered to the device or is faulty, recreate and transfer a new **/
+      /** This object has not been transfered to the device or is faulty, recreate and transfer a new **/
       this.state = DFUObjectStates.Creating
       let operation = Task.create(this.type, this.length, this.transfer.controlPoint)
-      this.transfer.addTask(operation)
+      this.addTask(operation)
     } else {
       /** its the right object on the device but it has not been transfred fully **/
       this.state = DFUObjectStates.Transfering
       this.toPackets(offset)
-      this.transfer.addTask(this.setPacketReturnNotification())
+      this.addTask(this.setPacketReturnNotification())
       this.sendChuncks()
     }
   }
@@ -176,7 +217,7 @@ class DFUObject extends EventEmitter {
   sendChuncks () {
     for (let index = 0; index < this.chunks.length; index++) {
       let buffer = this.chunks[index].buffer
-      this.transfer.addTask(Task.writePackage(buffer, this.transfer.packetPoint))
+      this.addTask(Task.writePackage(buffer, this.transfer.packetPoint))
     }
   }
 
@@ -200,7 +241,7 @@ class DFUObject extends EventEmitter {
           this.onPacketNotification(dataView)
         } else {
           this.state = DFUObjectStates.Failed
-          console.log('DFUObjectStates.Creating  Operation: ' + opCode + ' Result: ' + responseCode)
+          console.warn('DFUObjectStates.Creating  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -211,7 +252,7 @@ class DFUObject extends EventEmitter {
           this.onPacketNotification(dataView)
         } else {
           this.state = DFUObjectStates.Failed
-          console.log('DFUObjectStates.Transfering  Operation: ' + opCode + ' Result: ' + responseCode)
+          console.warn('DFUObjectStates.Transfering  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -222,7 +263,7 @@ class DFUObject extends EventEmitter {
           this.onPacketNotification(dataView)
         } else {
           this.state = DFUObjectStates.Failed
-          console.log('DFUObjectStates.Storing  Operation: ' + opCode + ' Result: ' + responseCode)
+          console.warn('DFUObjectStates.Storing  Operation: ' + opCode + ' Result: ' + responseCode)
         }
         break
       }
@@ -238,7 +279,7 @@ class DFUObject extends EventEmitter {
     this.state = DFUObjectStates.Transfering
     /** start the transfer of the object  */
     this.toPackets(0)
-    this.transfer.addTask(this.setPacketReturnNotification())
+    this.addTask(this.setPacketReturnNotification())
     this.sendChuncks()
   }
 
@@ -253,6 +294,7 @@ class DFUObject extends EventEmitter {
   }
 
   onExecute (dataView) {
+    this.taskQueue.kill()
     this.state = DFUObjectStates.Completed
   }
 }

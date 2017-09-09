@@ -1,5 +1,4 @@
 /** Library imports */
-import queue from 'async/queue'
 import EventEmitter from 'events'
 /** internal imports */
 import TransferStates from './states'
@@ -10,7 +9,6 @@ var fileSymbol = Symbol();
 var stateSymbol = Symbol();
 var packetPointSymbol = Symbol();
 var controlPointSymbol = Symbol();
-var tasksSymbol = Symbol();
 var objectsSymbol = Symbol();
 var maximumObjectLengthSymbol = Symbol()
 var typeSymbol = Symbol()
@@ -54,15 +52,6 @@ class Transfer extends EventEmitter {
 
   set controlPoint(value) {
     this[controlPointSymbol] = value
-  }
-
-  /** Get/Set pair **/
-  get tasks() {
-    return this[tasksSymbol]
-  }
-
-  set tasks(value) {
-    this[tasksSymbol] = value
   }
 
   /** Get/Set pair **/
@@ -114,48 +103,45 @@ class Transfer extends EventEmitter {
     this[fileSymbol] = fileData
     /** The DFUObjectType this file represents */
     this[typeSymbol] = objectType
-    /** Create a queue to process the DFUObject's for this file in order */
-    this[tasksSymbol] = queue(Task.Worker, 1)
-    this[tasksSymbol].error = (error, task) => {
-      console.error(error)
-      console.error(task)
-    }
     /** empty list of DFUObject */
     this[objectsSymbol] = []
     this[progressSymbol] = 0.0
   }
 
   checkProgress () {
-    if(this.objects.length > 0) {
-      let completedObjects = this.objects.reduce((sum,value) => {
-        if (value.state === DFUObjectStates.Completed || value.state === DFUObjectStates.Failed) {
-          return sum += 1
-        } else {
-          return sum
-        }
-      }, 0)
-      this.progress = completedObjects / this.objects.length
+    switch (this.state) {
+      case TransferStates.Completed:
+        this.progress = 1.0
+        break
+      case TransferStates.Failed:
+        this.progress = 1.0
+        break
+      case TransferStates.Transfer:
+        let percentagePerObject = 1.0/this.objects.length
+        this.progress = this.objects.reduce((sum,dfuObject) => {
+          switch (dfuObject.state) {
+            case DFUObjectStates.Completed:
+              return sum + percentagePerObject
+            case DFUObjectStates.Failed:
+              return sum + percentagePerObject
+            case DFUObjectStates.Transfering:
+              let percentageCompleted = dfuObject.progress.completed / dfuObject.progress.size
+              return sum + (percentagePerObject * percentageCompleted)
+            default:
+              return sum
+          }
+        }, 0.0)
+        break;
+      default:
+        this.progress = 0.0
     }
-  }
-  /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
-  addTask (dfuTask) {
-    if ((dfuTask instanceof Task) === false) {
-      throw new Error('task is not of type Task')
-    }
-    this.tasks.push(dfuTask, (error) => {
-      if (error) {
-        this.tasks.kill()
-        this.state = TransferStates.Failed
-        console.error(error)
-      }
-    })
   }
 
   /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
   begin () {
     this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this))
     let operation = Task.verify(this.type, this.controlPoint)
-    this.addTask(operation)
+    Task.Worker(operation,() => {})
   }
 
   /** Clean up event registrations when transfer is completed **/
@@ -202,6 +188,7 @@ class Transfer extends EventEmitter {
           this.nextObject()
         }
       })
+      object.on('progressChanged', (event) => this.checkProgress())
       this.objects.push(object)
       index += this.maximumObjectLength
     }
@@ -212,7 +199,7 @@ class Transfer extends EventEmitter {
     /** guard to filter events that are not response codes  */
     let dataView = event.target.value
     if (dataView && dataView.getInt8(0) !== TaskTypes.RESPONSE_CODE) {
-      console.log('Transfer.onEvent() opcode was not a response code')
+      console.warn('Transfer.onEvent() opcode was not a response code')
       return
     }
     switch (this.state) {
@@ -239,13 +226,11 @@ class Transfer extends EventEmitter {
         break
       }
     }
-    this.checkProgress()
   }
 
   /** Checks if Transfer is complete or starts transferring the next DFUObject **/
   nextObject () {
     if (this.currentObjectIndex < this.objects.length - 1) {
-      this.tasks.kill()
       this.currentObjectIndex++
       this.objects[this.currentObjectIndex].begin()
     } else {

@@ -58,7 +58,7 @@ class StateMachine extends EventEmitter {
   }
 
   onTransferError(error, transfer) {
-    console.log(onTransferError)
+    console.error(error)
   }
 
   /** get/set **/
