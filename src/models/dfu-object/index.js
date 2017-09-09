@@ -58,7 +58,7 @@ class DFUObject extends EventEmitter {
     //create a queue to enmsure the order of ble write objects
     this[taskQueueSymbol] = queue(Task.Worker, 1)
     //reports the progress
-    this[progressSymbol] = {completed: 0, size: this[lengthSymbol]}
+    this[progressSymbol] = {completed: 0, size: length}
   }
 
   /** get/set pair **/
@@ -138,15 +138,16 @@ class DFUObject extends EventEmitter {
     if ((dfuTask instanceof Task) === false) {
       throw new Error('task is not of type Task')
     }
-    this.taskQueue.push(dfuTask, error => this.onTaskComplete(error,dfuTask))
+    this.taskQueue.push(dfuTask, (error) => this.onTaskComplete(error,dfuTask))
   }
 
-  onTaskComplete(error, task) {
+  onTaskComplete (error, dfuTask) {
     if (error) {
       this.taskQueue.kill()
       this.state = TransferStates.Failed
-    } else if(task.opCode == null) {
-      this.progress = {completed: this.progress.completed+task.buffer.length, size: this.length}
+    } else if (dfuTask.opcode == undefined) {
+      let newCompleted = this.progress.completed + dfuTask.buffer.byteLength
+      this.progress = {completed: newCompleted, size: this.length}
     }
   }
   /**

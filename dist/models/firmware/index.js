@@ -1,5 +1,4 @@
-
-"use strict";
+'use strict';
 
 var _regenerator = require('babel-runtime/regenerator');
 
@@ -19,7 +18,7 @@ var _createClass3 = _interopRequireDefault(_createClass2);
 
 var cov_2474ejyef9 = function () {
   var path = '/Users/mdahlstrom/Documents/GitHub/web-bluetooth-dfu/src/models/firmware/index.js',
-      hash = '596aadca9943902c4cdfe5c8e6c38b0c1ef635b7',
+      hash = 'e15bc7a42c781940e8baf8de781a94c268f5e14c',
       global = new Function('return this')(),
       gcv = '__coverage__',
       coverageData = {
@@ -27,32 +26,32 @@ var cov_2474ejyef9 = function () {
     statementMap: {
       '0': {
         start: {
-          line: 30,
+          line: 29,
           column: 21
         },
         end: {
-          line: 39,
+          line: 38,
           column: 1
         }
       },
       '1': {
         start: {
-          line: 48,
+          line: 47,
           column: 4
         },
         end: {
-          line: 48,
-          column: 42
+          line: 49,
+          column: 5
         }
       },
       '2': {
         start: {
-          line: 49,
-          column: 4
+          line: 48,
+          column: 6
         },
         end: {
-          line: 49,
-          column: 22
+          line: 48,
+          column: 48
         }
       },
       '3': {
@@ -62,117 +61,117 @@ var cov_2474ejyef9 = function () {
         },
         end: {
           line: 50,
-          column: 22
+          column: 42
         }
       },
       '4': {
         start: {
-          line: 55,
+          line: 51,
           column: 4
         },
         end: {
-          line: 58,
-          column: 5
+          line: 51,
+          column: 22
         }
       },
       '5': {
         start: {
-          line: 56,
-          column: 6
+          line: 52,
+          column: 4
         },
         end: {
-          line: 56,
-          column: 38
+          line: 52,
+          column: 22
         }
       },
       '6': {
         start: {
           line: 57,
-          column: 6
+          column: 18
         },
         end: {
           line: 57,
-          column: 12
+          column: 70
         }
       },
       '7': {
         start: {
-          line: 59,
-          column: 18
+          line: 58,
+          column: 15
         },
         end: {
-          line: 59,
-          column: 70
+          line: 58,
+          column: 34
         }
       },
       '8': {
         start: {
-          line: 60,
-          column: 15
+          line: 59,
+          column: 4
         },
         end: {
-          line: 60,
-          column: 34
+          line: 102,
+          column: 5
         }
       },
       '9': {
         start: {
-          line: 61,
-          column: 4
+          line: 60,
+          column: 6
         },
         end: {
-          line: 104,
-          column: 5
+          line: 68,
+          column: 7
         }
       },
       '10': {
         start: {
-          line: 62,
-          column: 6
+          line: 61,
+          column: 18
         },
         end: {
-          line: 70,
-          column: 7
+          line: 61,
+          column: 93
         }
       },
       '11': {
         start: {
-          line: 63,
+          line: 62,
           column: 18
         },
         end: {
-          line: 63,
+          line: 62,
           column: 93
         }
       },
       '12': {
         start: {
-          line: 64,
-          column: 18
+          line: 63,
+          column: 22
         },
         end: {
-          line: 64,
-          column: 93
+          line: 63,
+          column: 69
         }
       },
       '13': {
         start: {
-          line: 65,
-          column: 22
+          line: 64,
+          column: 8
         },
         end: {
-          line: 65,
-          column: 69
+          line: 64,
+          column: 35
         }
       },
       '14': {
         start: {
-          line: 66,
+          line: 65,
           column: 8
         },
         end: {
-          line: 66,
-          column: 35
+          line: 65,
+          column: 44
         }
       },
       '15': {
@@ -182,77 +181,77 @@ var cov_2474ejyef9 = function () {
         },
         end: {
           line: 67,
-          column: 44
+          column: 22
         }
       },
       '16': {
         start: {
           line: 69,
-          column: 8
+          column: 11
         },
         end: {
-          line: 69,
-          column: 22
+          line: 102,
+          column: 5
         }
       },
       '17': {
         start: {
-          line: 71,
-          column: 11
+          line: 70,
+          column: 6
         },
         end: {
-          line: 104,
-          column: 5
+          line: 78,
+          column: 7
         }
       },
       '18': {
         start: {
-          line: 72,
-          column: 6
+          line: 71,
+          column: 18
         },
         end: {
-          line: 80,
-          column: 7
+          line: 71,
+          column: 92
         }
       },
       '19': {
         start: {
-          line: 73,
+          line: 72,
           column: 18
         },
         end: {
-          line: 73,
+          line: 72,
           column: 92
         }
       },
       '20': {
         start: {
-          line: 74,
-          column: 18
+          line: 73,
+          column: 22
         },
         end: {
-          line: 74,
-          column: 92
+          line: 73,
+          column: 68
         }
       },
       '21': {
         start: {
-          line: 75,
-          column: 22
+          line: 74,
+          column: 8
         },
         end: {
-          line: 75,
-          column: 68
+          line: 74,
+          column: 35
         }
       },
       '22': {
         start: {
-          line: 76,
+          line: 75,
           column: 8
         },
         end: {
-          line: 76,
-          column: 35
+          line: 75,
+          column: 43
         }
       },
       '23': {
@@ -262,77 +261,77 @@ var cov_2474ejyef9 = function () {
         },
         end: {
           line: 77,
-          column: 43
+          column: 69
         }
       },
       '24': {
         start: {
           line: 79,
-          column: 8
+          column: 11
         },
         end: {
-          line: 79,
-          column: 69
+          line: 102,
+          column: 5
         }
       },
       '25': {
         start: {
-          line: 81,
-          column: 11
+          line: 80,
+          column: 6
         },
         end: {
-          line: 104,
-          column: 5
+          line: 88,
+          column: 7
         }
       },
       '26': {
         start: {
-          line: 82,
-          column: 6
+          line: 81,
+          column: 18
         },
         end: {
-          line: 90,
-          column: 7
+          line: 81,
+          column: 92
         }
       },
       '27': {
         start: {
-          line: 83,
+          line: 82,
           column: 18
         },
         end: {
-          line: 83,
+          line: 82,
           column: 92
         }
       },
       '28': {
         start: {
-          line: 84,
-          column: 18
+          line: 83,
+          column: 22
         },
         end: {
-          line: 84,
-          column: 92
+          line: 83,
+          column: 69
         }
       },
       '29': {
         start: {
-          line: 85,
-          column: 22
+          line: 84,
+          column: 8
         },
         end: {
-          line: 85,
-          column: 69
+          line: 84,
+          column: 35
         }
       },
       '30': {
         start: {
-          line: 86,
+          line: 85,
           column: 8
         },
         end: {
-          line: 86,
-          column: 35
+          line: 85,
+          column: 43
         }
       },
       '31': {
@@ -342,77 +341,77 @@ var cov_2474ejyef9 = function () {
         },
         end: {
           line: 87,
-          column: 43
+          column: 69
         }
       },
       '32': {
         start: {
           line: 89,
-          column: 8
+          column: 11
         },
         end: {
-          line: 89,
-          column: 69
+          line: 102,
+          column: 5
         }
       },
       '33': {
         start: {
-          line: 91,
-          column: 11
+          line: 90,
+          column: 6
         },
         end: {
-          line: 104,
-          column: 5
+          line: 98,
+          column: 7
         }
       },
       '34': {
         start: {
-          line: 92,
-          column: 6
+          line: 91,
+          column: 18
         },
         end: {
-          line: 100,
-          column: 7
+          line: 91,
+          column: 103
         }
       },
       '35': {
         start: {
-          line: 93,
+          line: 92,
           column: 18
         },
         end: {
-          line: 93,
+          line: 92,
           column: 103
         }
       },
       '36': {
         start: {
-          line: 94,
-          column: 18
+          line: 93,
+          column: 22
         },
         end: {
-          line: 94,
-          column: 103
+          line: 93,
+          column: 78
         }
       },
       '37': {
         start: {
-          line: 95,
-          column: 22
+          line: 94,
+          column: 8
         },
         end: {
-          line: 95,
-          column: 78
+          line: 94,
+          column: 35
         }
       },
       '38': {
         start: {
-          line: 96,
+          line: 95,
           column: 8
         },
         end: {
-          line: 96,
-          column: 35
+          line: 95,
+          column: 53
         }
       },
       '39': {
@@ -422,66 +421,56 @@ var cov_2474ejyef9 = function () {
         },
         end: {
           line: 97,
-          column: 53
+          column: 82
         }
       },
       '40': {
         start: {
-          line: 99,
-          column: 8
+          line: 101,
+          column: 6
         },
         end: {
-          line: 99,
-          column: 82
+          line: 101,
+          column: 38
         }
       },
       '41': {
         start: {
           line: 103,
-          column: 6
+          column: 4
         },
         end: {
           line: 103,
-          column: 38
+          column: 15
         }
       },
       '42': {
         start: {
-          line: 105,
-          column: 4
+          line: 107,
+          column: 0
         },
         end: {
-          line: 105,
-          column: 15
+          line: 107,
+          column: 34
         }
       },
       '43': {
         start: {
-          line: 109,
+          line: 108,
           column: 0
         },
         end: {
-          line: 109,
-          column: 34
+          line: 108,
+          column: 42
         }
       },
       '44': {
         start: {
-          line: 110,
+          line: 109,
           column: 0
         },
         end: {
-          line: 110,
-          column: 42
-        }
-      },
-      '45': {
-        start: {
-          line: 111,
-          column: 0
-        },
-        end: {
-          line: 111,
+          line: 109,
           column: 40
         }
       }
@@ -491,216 +480,216 @@ var cov_2474ejyef9 = function () {
         name: '(anonymous_0)',
         decl: {
           start: {
-            line: 47,
+            line: 46,
             column: 2
           },
           end: {
-            line: 47,
+            line: 46,
             column: 3
           }
         },
         loc: {
           start: {
-            line: 47,
+            line: 46,
             column: 24
           },
           end: {
-            line: 51,
+            line: 53,
             column: 3
           }
         },
-        line: 47
+        line: 46
       },
       '1': {
         name: '(anonymous_1)',
         decl: {
           start: {
-            line: 54,
+            line: 56,
             column: 2
           },
           end: {
-            line: 54,
+            line: 56,
             column: 3
           }
         },
         loc: {
           start: {
-            line: 54,
+            line: 56,
             column: 25
           },
           end: {
-            line: 106,
+            line: 104,
             column: 3
           }
         },
-        line: 54
+        line: 56
       }
     },
     branchMap: {
       '0': {
         loc: {
           start: {
-            line: 55,
+            line: 47,
             column: 4
           },
           end: {
-            line: 58,
+            line: 49,
             column: 5
           }
         },
         type: 'if',
         locations: [{
           start: {
-            line: 55,
+            line: 47,
             column: 4
           },
           end: {
-            line: 58,
+            line: 49,
             column: 5
           }
         }, {
           start: {
-            line: 55,
+            line: 47,
             column: 4
           },
           end: {
-            line: 58,
+            line: 49,
             column: 5
           }
         }],
-        line: 55
+        line: 47
       },
       '1': {
         loc: {
           start: {
-            line: 61,
+            line: 59,
             column: 4
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         },
         type: 'if',
         locations: [{
           start: {
-            line: 61,
+            line: 59,
             column: 4
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }, {
           start: {
-            line: 61,
+            line: 59,
             column: 4
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }],
-        line: 61
+        line: 59
       },
       '2': {
         loc: {
           start: {
-            line: 71,
+            line: 69,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         },
         type: 'if',
         locations: [{
           start: {
-            line: 71,
+            line: 69,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }, {
           start: {
-            line: 71,
+            line: 69,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }],
-        line: 71
+        line: 69
       },
       '3': {
         loc: {
           start: {
-            line: 81,
+            line: 79,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         },
         type: 'if',
         locations: [{
           start: {
-            line: 81,
+            line: 79,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }, {
           start: {
-            line: 81,
+            line: 79,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }],
-        line: 81
+        line: 79
       },
       '4': {
         loc: {
           start: {
-            line: 91,
+            line: 89,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         },
         type: 'if',
         locations: [{
           start: {
-            line: 91,
+            line: 89,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }, {
           start: {
-            line: 91,
+            line: 89,
             column: 11
           },
           end: {
-            line: 104,
+            line: 102,
             column: 5
           }
         }],
-        line: 91
+        line: 89
       }
     },
     s: {
@@ -748,8 +737,7 @@ var cov_2474ejyef9 = function () {
       '41': 0,
       '42': 0,
       '43': 0,
-      '44': 0,
-      '45': 0
+      '44': 0
     },
     f: {
       '0': 0,
@@ -774,6 +762,10 @@ var cov_2474ejyef9 = function () {
   return coverage[path] = coverageData;
 }();
 
+var _jszip = require('jszip');
+
+var _jszip2 = _interopRequireDefault(_jszip);
+
 var _Section = require('./Section');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -795,10 +787,19 @@ var Firmware = function () {
     cov_2474ejyef9.f[0]++;
     cov_2474ejyef9.s[1]++;
 
-    this.type = FirmwareType.NotConfigured;
-    cov_2474ejyef9.s[2]++;
-    this.zip = zipFile;
+    if (zipFile == null) {
+      cov_2474ejyef9.b[0][0]++;
+      cov_2474ejyef9.s[2]++;
+
+      throw new Error('Firmware zip is invalid');
+    } else {
+      cov_2474ejyef9.b[0][1]++;
+    }
     cov_2474ejyef9.s[3]++;
+    this.type = FirmwareType.NotConfigured;
+    cov_2474ejyef9.s[4]++;
+    this.zip = zipFile;
+    cov_2474ejyef9.s[5]++;
     this.sections = [];
   }
 
@@ -813,221 +814,203 @@ var Firmware = function () {
             switch (_context.prev = _context.next) {
               case 0:
                 cov_2474ejyef9.f[1]++;
-                cov_2474ejyef9.s[4]++;
-
-                if (this.zip) {
-                  _context.next = 10;
-                  break;
-                }
-
-                cov_2474ejyef9.b[0][0]++;
-                cov_2474ejyef9.s[5]++;
-
-                this.type = FirmwareType.Invalid;
                 cov_2474ejyef9.s[6]++;
-                return _context.abrupt('return');
-
-              case 10:
-                cov_2474ejyef9.b[0][1]++;
-
-              case 11:
-                cov_2474ejyef9.s[7]++;
-                _context.next = 14;
+                _context.next = 4;
                 return this.zip.file('manifest.json').async('string');
 
-              case 14:
+              case 4:
                 content = _context.sent;
-                json = (cov_2474ejyef9.s[8]++, JSON.parse(content));
-                cov_2474ejyef9.s[9]++;
+                json = (cov_2474ejyef9.s[7]++, JSON.parse(content));
+                cov_2474ejyef9.s[8]++;
 
                 if (!json.manifest.application) {
-                  _context.next = 42;
+                  _context.next = 32;
                   break;
                 }
 
                 cov_2474ejyef9.b[1][0]++;
+                cov_2474ejyef9.s[9]++;
+                _context.prev = 10;
                 cov_2474ejyef9.s[10]++;
-                _context.prev = 20;
-                cov_2474ejyef9.s[11]++;
-                _context.next = 24;
+                _context.next = 14;
                 return this.zip.file(json.manifest.application.bin_file).async('uint8Array');
 
-              case 24:
+              case 14:
                 bin = _context.sent;
-                cov_2474ejyef9.s[12]++;
-                _context.next = 28;
+                cov_2474ejyef9.s[11]++;
+                _context.next = 18;
                 return this.zip.file(json.manifest.application.dat_file).async('uint8Array');
 
-              case 28:
+              case 18:
                 dat = _context.sent;
-                section = (cov_2474ejyef9.s[13]++, new _Section.Section(bin, dat, FirmwareType.Application));
-                cov_2474ejyef9.s[14]++;
+                section = (cov_2474ejyef9.s[12]++, new _Section.Section(bin, dat, FirmwareType.Application));
+                cov_2474ejyef9.s[13]++;
 
                 this.sections.push(section);
-                cov_2474ejyef9.s[15]++;
+                cov_2474ejyef9.s[14]++;
                 this.type = FirmwareType.Application;
-                _context.next = 40;
+                _context.next = 30;
                 break;
 
-              case 36:
-                _context.prev = 36;
-                _context.t0 = _context['catch'](20);
-                cov_2474ejyef9.s[16]++;
+              case 26:
+                _context.prev = 26;
+                _context.t0 = _context['catch'](10);
+                cov_2474ejyef9.s[15]++;
 
                 console.log(_context.t0);
 
-              case 40:
-                _context.next = 126;
+              case 30:
+                _context.next = 116;
                 break;
 
-              case 42:
+              case 32:
                 cov_2474ejyef9.b[1][1]++;
-                cov_2474ejyef9.s[17]++;
+                cov_2474ejyef9.s[16]++;
 
                 if (!json.manifest.bootloader) {
-                  _context.next = 69;
+                  _context.next = 59;
                   break;
                 }
 
                 cov_2474ejyef9.b[2][0]++;
+                cov_2474ejyef9.s[17]++;
+                _context.prev = 37;
                 cov_2474ejyef9.s[18]++;
-                _context.prev = 47;
-                cov_2474ejyef9.s[19]++;
-                _context.next = 51;
+                _context.next = 41;
                 return this.zip.file(json.manifest.bootloader.bin_file).async("uint8array");
 
-              case 51:
+              case 41:
                 _bin = _context.sent;
-                cov_2474ejyef9.s[20]++;
-                _context.next = 55;
+                cov_2474ejyef9.s[19]++;
+                _context.next = 45;
                 return this.zip.file(json.manifest.bootloader.dat_file).async("uint8array");
 
-              case 55:
+              case 45:
                 _dat = _context.sent;
-                _section = (cov_2474ejyef9.s[21]++, new _Section.Section(_bin, _dat, FirmwareType.Bootloader));
-                cov_2474ejyef9.s[22]++;
+                _section = (cov_2474ejyef9.s[20]++, new _Section.Section(_bin, _dat, FirmwareType.Bootloader));
+                cov_2474ejyef9.s[21]++;
 
                 this.sections.push(_section);
-                cov_2474ejyef9.s[23]++;
+                cov_2474ejyef9.s[22]++;
                 this.type = FirmwareType.Bootloader;
-                _context.next = 67;
+                _context.next = 57;
                 break;
 
-              case 63:
-                _context.prev = 63;
-                _context.t1 = _context['catch'](47);
-                cov_2474ejyef9.s[24]++;
+              case 53:
+                _context.prev = 53;
+                _context.t1 = _context['catch'](37);
+                cov_2474ejyef9.s[23]++;
 
                 console.log('WWFirmwareUpdate.parseManifest bootloader ' + _context.t1);
 
-              case 67:
-                _context.next = 126;
+              case 57:
+                _context.next = 116;
                 break;
 
-              case 69:
+              case 59:
                 cov_2474ejyef9.b[2][1]++;
-                cov_2474ejyef9.s[25]++;
+                cov_2474ejyef9.s[24]++;
 
                 if (!json.manifest.softdevice) {
-                  _context.next = 96;
+                  _context.next = 86;
                   break;
                 }
 
                 cov_2474ejyef9.b[3][0]++;
+                cov_2474ejyef9.s[25]++;
+                _context.prev = 64;
                 cov_2474ejyef9.s[26]++;
-                _context.prev = 74;
-                cov_2474ejyef9.s[27]++;
-                _context.next = 78;
+                _context.next = 68;
                 return this.zip.file(json.manifest.softdevice.bin_file).async("uint8array");
 
-              case 78:
+              case 68:
                 _bin2 = _context.sent;
-                cov_2474ejyef9.s[28]++;
-                _context.next = 82;
+                cov_2474ejyef9.s[27]++;
+                _context.next = 72;
                 return this.zip.file(json.manifest.softdevice.dat_file).async("uint8array");
 
-              case 82:
+              case 72:
                 _dat2 = _context.sent;
-                _section2 = (cov_2474ejyef9.s[29]++, new _Section.Section(_bin2, _dat2, FirmwareType.Application));
-                cov_2474ejyef9.s[30]++;
+                _section2 = (cov_2474ejyef9.s[28]++, new _Section.Section(_bin2, _dat2, FirmwareType.Application));
+                cov_2474ejyef9.s[29]++;
 
                 this.sections.push(_section2);
-                cov_2474ejyef9.s[31]++;
+                cov_2474ejyef9.s[30]++;
                 this.type = FirmwareType.Softdevice;
-                _context.next = 94;
+                _context.next = 84;
                 break;
 
-              case 90:
-                _context.prev = 90;
-                _context.t2 = _context['catch'](74);
-                cov_2474ejyef9.s[32]++;
+              case 80:
+                _context.prev = 80;
+                _context.t2 = _context['catch'](64);
+                cov_2474ejyef9.s[31]++;
 
                 console.log('WWFirmwareUpdate.parseManifest softdevice ' + _context.t2);
 
-              case 94:
-                _context.next = 126;
+              case 84:
+                _context.next = 116;
                 break;
 
-              case 96:
+              case 86:
                 cov_2474ejyef9.b[3][1]++;
-                cov_2474ejyef9.s[33]++;
+                cov_2474ejyef9.s[32]++;
 
                 if (!json.manifest.softdevice_bootloader) {
-                  _context.next = 123;
+                  _context.next = 113;
                   break;
                 }
 
                 cov_2474ejyef9.b[4][0]++;
+                cov_2474ejyef9.s[33]++;
+                _context.prev = 91;
                 cov_2474ejyef9.s[34]++;
-                _context.prev = 101;
-                cov_2474ejyef9.s[35]++;
-                _context.next = 105;
+                _context.next = 95;
                 return this.zip.file(json.manifest.softdevice_bootloader.bin_file).async("uint8array");
 
-              case 105:
+              case 95:
                 _bin3 = _context.sent;
-                cov_2474ejyef9.s[36]++;
-                _context.next = 109;
+                cov_2474ejyef9.s[35]++;
+                _context.next = 99;
                 return this.zip.file(json.manifest.softdevice_bootloader.dat_file).async("uint8array");
 
-              case 109:
+              case 99:
                 _dat3 = _context.sent;
-                _section3 = (cov_2474ejyef9.s[37]++, new _Section.Section(_bin3, _dat3, FirmwareType.SoftdeviceBootloader));
-                cov_2474ejyef9.s[38]++;
+                _section3 = (cov_2474ejyef9.s[36]++, new _Section.Section(_bin3, _dat3, FirmwareType.SoftdeviceBootloader));
+                cov_2474ejyef9.s[37]++;
 
                 this.sections.push(_section3);
-                cov_2474ejyef9.s[39]++;
+                cov_2474ejyef9.s[38]++;
                 this.type = FirmwareType.SoftdeviceBootloader;
-                _context.next = 121;
+                _context.next = 111;
                 break;
 
-              case 117:
-                _context.prev = 117;
-                _context.t3 = _context['catch'](101);
-                cov_2474ejyef9.s[40]++;
+              case 107:
+                _context.prev = 107;
+                _context.t3 = _context['catch'](91);
+                cov_2474ejyef9.s[39]++;
 
                 console.log('WWFirmwareUpdate.parseManifest softdevice & bootloader ' + _context.t3);
 
-              case 121:
-                _context.next = 126;
+              case 111:
+                _context.next = 116;
                 break;
 
-              case 123:
+              case 113:
                 cov_2474ejyef9.b[4][1]++;
-                cov_2474ejyef9.s[41]++;
+                cov_2474ejyef9.s[40]++;
 
                 this.type = FirmwareType.Invalid;
 
-              case 126:
-                cov_2474ejyef9.s[42]++;
+              case 116:
+                cov_2474ejyef9.s[41]++;
                 return _context.abrupt('return', this);
 
-              case 128:
+              case 118:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this, [[20, 36], [47, 63], [74, 90], [101, 117]]);
+        }, _callee, this, [[10, 26], [37, 53], [64, 80], [91, 107]]);
       }));
 
       function parseManifest() {
@@ -1040,12 +1023,12 @@ var Firmware = function () {
   return Firmware;
 }();
 
-cov_2474ejyef9.s[43]++;
+cov_2474ejyef9.s[42]++;
 
 
 module.exports.Firmware = Firmware;
-cov_2474ejyef9.s[44]++;
+cov_2474ejyef9.s[43]++;
 module.exports.FirmwareType = FirmwareType;
-cov_2474ejyef9.s[45]++;
+cov_2474ejyef9.s[44]++;
 module.exports.FirmwareSection = _Section.Section;
 //# sourceMappingURL=index.js.map

@@ -14,7 +14,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 var cov_1optzosf0 = function () {
   var path = '/Users/mdahlstrom/Documents/GitHub/web-bluetooth-dfu/src/vue-mixins/web-bluetooth-dfu.js',
-      hash = '872eff730759da4ee54969af77ae1727857b79c7',
+      hash = '3c6408a86e9272c08331ad6a58a805491be6e03c',
       global = new Function('return this')(),
       gcv = '__coverage__',
       coverageData = {
@@ -26,7 +26,7 @@ var cov_1optzosf0 = function () {
           column: 24
         },
         end: {
-          line: 48,
+          line: 49,
           column: 1
         }
       },
@@ -183,11 +183,21 @@ var cov_1optzosf0 = function () {
       '16': {
         start: {
           line: 45,
-          column: 3
+          column: 13
         },
         end: {
           line: 45,
-          column: 111
+          column: 101
+        }
+      },
+      '17': {
+        start: {
+          line: 46,
+          column: 3
+        },
+        end: {
+          line: 46,
+          column: 36
         }
       }
     },
@@ -474,7 +484,7 @@ var cov_1optzosf0 = function () {
             column: 42
           },
           end: {
-            line: 46,
+            line: 47,
             column: 5
           }
         },
@@ -533,7 +543,8 @@ var cov_1optzosf0 = function () {
       '13': 0,
       '14': 0,
       '15': 0,
-      '16': 0
+      '16': 0,
+      '17': 0
     },
     f: {
       '0': 0,
@@ -670,9 +681,10 @@ var WebBluetoothDFU = (cov_1optzosf0.s[0]++, {
     },
     updateDFUProgress: function updateDFUProgress(payload) {
       cov_1optzosf0.f[11]++;
-      cov_1optzosf0.s[16]++;
 
-      this.dfuProgress = (this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size).toFixed(2);
+      var num = (cov_1optzosf0.s[16]++, new Number(this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size));
+      cov_1optzosf0.s[17]++;
+      this.dfuProgress = num.toFixed(2);
     }
   }
 });

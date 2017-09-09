@@ -49,9 +49,6 @@ describe('Firmware', function() {
     it('empty should be invalid', function () {
       expect(() => new Firmware()).to.throw();
     })
-    it('with an object should be invalid', function () {
-      expect(() => new Firmware({})).to.throw();
-    })
     it('with jszip archive it should be valid', function () {
       var zip = new JSZip()
       var firmware

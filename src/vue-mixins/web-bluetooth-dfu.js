@@ -42,7 +42,8 @@ const WebBluetoothDFU = {
       this.dfuState = payload.state
     },
     updateDFUProgress: function (payload) {
-			this.dfuProgress = (this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size).toFixed(2)
+			var num = new Number(this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size);
+			this.dfuProgress = num.toFixed(2)
     }
   }
 }

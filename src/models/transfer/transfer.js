@@ -124,6 +124,8 @@ class Transfer extends EventEmitter {
               return sum + percentagePerObject
             case DFUObjectStates.Failed:
               return sum + percentagePerObject
+            case DFUObjectStates.Storing:
+              return sum + percentagePerObject
             case DFUObjectStates.Transfering:
               let percentageCompleted = dfuObject.progress.completed / dfuObject.progress.size
               return sum + (percentagePerObject * percentageCompleted)

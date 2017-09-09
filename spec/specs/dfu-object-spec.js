@@ -90,19 +90,22 @@ describe("DFUObject", function() {
       expect(this.dfuObject.progress.completed).to.equal(0.0)
     })
     it('start of transfer', function () {
-      this.dfuObject.onTaskComplete(null, {opCode: undefined, buffer: this.dfuObject.chunks[0]})
+      let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(20)).buffer, this.dfuObject.transfer.packetPoint)
+      this.dfuObject.onTaskComplete(null, dfuTask)
       expect(this.dfuObject.progress.completed).to.equal(20)
     })
     it('in middle of transfering', function () {
       var halfChunkIndex = this.dfuObject.chunks.length/2
       for(var index=0; index < halfChunkIndex ; index++) {
-        this.dfuObject.onTaskComplete(null, {opCode: undefined, buffer: this.dfuObject.chunks[index]})
+        let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(20)).buffer, this.dfuObject.transfer.packetPoint)
+        this.dfuObject.onTaskComplete(null, dfuTask)
       }
       expect(this.dfuObject.progress.completed/this.dfuObject.progress.size).to.equal(0.625)
     })
     it('end of transfer', function () {
       for (var chunk of this.dfuObject.chunks) {
-        this.dfuObject.onTaskComplete(null, {opCode: undefined, buffer: chunk})
+        let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(chunk.length)).buffer, this.dfuObject.transfer.packetPoint)
+        this.dfuObject.onTaskComplete(null, dfuTask)
       }
       expect(this.dfuObject.progress.completed/this.dfuObject.progress.size).to.equal(1.0)
     })

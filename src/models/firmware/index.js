@@ -44,7 +44,7 @@ class Firmware {
 
   /** Create a new instance based on zip file and set inital state **/
   constructor (zipFile) {
-    if (zipFile == null || (zipFile instanceof JSZip) === false) {
+    if (zipFile == null) {
       throw new Error('Firmware zip is invalid')
     }
     this.type = FirmwareType.NotConfigured

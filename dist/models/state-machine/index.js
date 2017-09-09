@@ -30,7 +30,7 @@ var _symbol2 = _interopRequireDefault(_symbol);
 
 var cov_13l45wksw8 = function () {
   var path = '/Users/mdahlstrom/Documents/GitHub/web-bluetooth-dfu/src/models/state-machine/index.js',
-      hash = 'b15b1976ee22c77015602d5907aedff17d7cb206',
+      hash = '4cdbab34d93560511e5365b9c666a7b2a8bfa473',
       global = new Function('return this')(),
       gcv = '__coverage__',
       coverageData = {
@@ -203,7 +203,7 @@ var cov_13l45wksw8 = function () {
         },
         end: {
           line: 61,
-          column: 32
+          column: 24
         }
       },
       '17': {
@@ -2226,22 +2226,12 @@ var StateMachine = function (_EventEmitter) {
 
   (0, _createClass3.default)(StateMachine, [{
     key: 'onTransferError',
-    value: function (_onTransferError) {
-      function onTransferError(_x, _x2) {
-        return _onTransferError.apply(this, arguments);
-      }
-
-      onTransferError.toString = function () {
-        return _onTransferError.toString();
-      };
-
-      return onTransferError;
-    }(function (error, transfer) {
+    value: function onTransferError(error, transfer) {
       cov_13l45wksw8.f[1]++;
       cov_13l45wksw8.s[16]++;
 
-      console.log(onTransferError);
-    })
+      console.error(error);
+    }
   }, {
     key: 'calculateProgress',
     value: function calculateProgress() {
