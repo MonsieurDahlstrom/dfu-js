@@ -40,9 +40,7 @@ class Task {
     }
     try {
       await task.characteristic.writeValue(task.buffer)
-      setTimeout(function () {
-        onCompleition()
-      }, 100)
+      onCompleition()
     } catch (exception) {
       console.log(exception)
       onCompleition('BLE Transfer Failed')

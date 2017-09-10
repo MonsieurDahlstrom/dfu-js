@@ -19,7 +19,7 @@ var _createClass3 = _interopRequireDefault(_createClass2);
 
 var cov_232hcgi1nm = function () {
   var path = '/Users/mdahlstrom/Documents/GitHub/web-bluetooth-dfu/src/models/task/index.js',
-      hash = '87e6156ff0c8998c24afbe70be56ea8da29d5c86',
+      hash = '22bb36e03fe742d9eb6af142e3be39ba559e7e6e',
       global = new Function('return this')(),
       gcv = '__coverage__',
       coverageData = {
@@ -101,7 +101,7 @@ var cov_232hcgi1nm = function () {
           column: 4
         },
         end: {
-          line: 49,
+          line: 47,
           column: 5
         }
       },
@@ -121,98 +121,98 @@ var cov_232hcgi1nm = function () {
           column: 6
         },
         end: {
-          line: 45,
-          column: 13
+          line: 43,
+          column: 21
         }
       },
       '10': {
         start: {
-          line: 44,
-          column: 8
+          line: 45,
+          column: 6
         },
         end: {
-          line: 44,
-          column: 23
+          line: 45,
+          column: 28
         }
       },
       '11': {
         start: {
-          line: 47,
+          line: 46,
           column: 6
         },
         end: {
-          line: 47,
-          column: 28
+          line: 46,
+          column: 42
         }
       },
       '12': {
         start: {
-          line: 48,
-          column: 6
+          line: 51,
+          column: 19
         },
         end: {
-          line: 48,
-          column: 42
+          line: 51,
+          column: 51
         }
       },
       '13': {
         start: {
-          line: 53,
-          column: 19
+          line: 52,
+          column: 4
         },
         end: {
-          line: 53,
-          column: 51
+          line: 52,
+          column: 42
         }
       },
       '14': {
         start: {
-          line: 54,
+          line: 53,
           column: 4
         },
         end: {
-          line: 54,
-          column: 42
+          line: 53,
+          column: 36
         }
       },
       '15': {
         start: {
-          line: 55,
+          line: 54,
           column: 4
         },
         end: {
-          line: 55,
-          column: 36
+          line: 54,
+          column: 70
         }
       },
       '16': {
         start: {
-          line: 56,
-          column: 4
+          line: 58,
+          column: 19
         },
         end: {
-          line: 56,
-          column: 70
+          line: 58,
+          column: 51
         }
       },
       '17': {
         start: {
-          line: 60,
-          column: 19
+          line: 59,
+          column: 4
         },
         end: {
-          line: 60,
-          column: 51
+          line: 59,
+          column: 42
         }
       },
       '18': {
         start: {
-          line: 61,
+          line: 60,
           column: 4
         },
         end: {
-          line: 61,
-          column: 42
+          line: 60,
+          column: 36
         }
       },
       '19': {
@@ -222,37 +222,37 @@ var cov_232hcgi1nm = function () {
         },
         end: {
           line: 62,
-          column: 36
+          column: 39
         }
       },
       '20': {
         start: {
-          line: 64,
+          line: 63,
           column: 4
         },
         end: {
-          line: 64,
-          column: 39
+          line: 63,
+          column: 70
         }
       },
       '21': {
         start: {
-          line: 65,
-          column: 4
+          line: 67,
+          column: 19
         },
         end: {
-          line: 65,
-          column: 70
+          line: 67,
+          column: 51
         }
       },
       '22': {
         start: {
-          line: 69,
-          column: 19
+          line: 68,
+          column: 4
         },
         end: {
-          line: 69,
-          column: 51
+          line: 68,
+          column: 43
         }
       },
       '23': {
@@ -262,126 +262,116 @@ var cov_232hcgi1nm = function () {
         },
         end: {
           line: 70,
-          column: 43
+          column: 45
         }
       },
       '24': {
         start: {
-          line: 72,
+          line: 71,
           column: 4
         },
         end: {
-          line: 72,
-          column: 45
+          line: 71,
+          column: 71
         }
       },
       '25': {
         start: {
-          line: 73,
+          line: 75,
           column: 4
         },
         end: {
-          line: 73,
-          column: 71
+          line: 75,
+          column: 43
         }
       },
       '26': {
         start: {
-          line: 77,
-          column: 4
+          line: 79,
+          column: 19
         },
         end: {
-          line: 77,
-          column: 43
+          line: 79,
+          column: 51
         }
       },
       '27': {
         start: {
-          line: 81,
-          column: 19
+          line: 80,
+          column: 4
         },
         end: {
-          line: 81,
-          column: 51
+          line: 80,
+          column: 54
         }
       },
       '28': {
         start: {
-          line: 82,
+          line: 81,
           column: 4
         },
         end: {
-          line: 82,
-          column: 54
+          line: 81,
+          column: 82
         }
       },
       '29': {
         start: {
-          line: 83,
-          column: 4
+          line: 85,
+          column: 19
         },
         end: {
-          line: 83,
-          column: 82
+          line: 85,
+          column: 51
         }
       },
       '30': {
         start: {
-          line: 87,
-          column: 19
+          line: 86,
+          column: 4
         },
         end: {
-          line: 87,
-          column: 51
+          line: 86,
+          column: 43
         }
       },
       '31': {
         start: {
-          line: 88,
+          line: 87,
           column: 4
         },
         end: {
-          line: 88,
-          column: 43
+          line: 87,
+          column: 71
         }
       },
       '32': {
         start: {
-          line: 89,
-          column: 4
+          line: 91,
+          column: 0
         },
         end: {
-          line: 89,
-          column: 71
+          line: 91,
+          column: 26
         }
       },
       '33': {
         start: {
-          line: 93,
+          line: 92,
           column: 0
         },
         end: {
-          line: 93,
-          column: 26
+          line: 92,
+          column: 36
         }
       },
       '34': {
         start: {
-          line: 94,
+          line: 93,
           column: 0
         },
         end: {
-          line: 94,
-          column: 36
-        }
-      },
-      '35': {
-        start: {
-          line: 95,
-          column: 0
-        },
-        end: {
-          line: 95,
+          line: 93,
           column: 40
         }
       }
@@ -429,7 +419,7 @@ var cov_232hcgi1nm = function () {
             column: 44
           },
           end: {
-            line: 50,
+            line: 48,
             column: 3
           }
         },
@@ -439,169 +429,145 @@ var cov_232hcgi1nm = function () {
         name: '(anonymous_2)',
         decl: {
           start: {
-            line: 43,
-            column: 17
-          },
-          end: {
-            line: 43,
-            column: 18
-          }
-        },
-        loc: {
-          start: {
-            line: 43,
-            column: 29
-          },
-          end: {
-            line: 45,
-            column: 7
-          }
-        },
-        line: 43
-      },
-      '3': {
-        name: '(anonymous_3)',
-        decl: {
-          start: {
-            line: 52,
+            line: 50,
             column: 2
           },
           end: {
-            line: 52,
+            line: 50,
             column: 3
           }
         },
         loc: {
           start: {
-            line: 52,
+            line: 50,
             column: 45
+          },
+          end: {
+            line: 55,
+            column: 3
+          }
+        },
+        line: 50
+      },
+      '3': {
+        name: '(anonymous_3)',
+        decl: {
+          start: {
+            line: 57,
+            column: 2
           },
           end: {
             line: 57,
             column: 3
           }
         },
-        line: 52
+        loc: {
+          start: {
+            line: 57,
+            column: 53
+          },
+          end: {
+            line: 64,
+            column: 3
+          }
+        },
+        line: 57
       },
       '4': {
         name: '(anonymous_4)',
         decl: {
           start: {
-            line: 59,
+            line: 66,
             column: 2
-          },
-          end: {
-            line: 59,
-            column: 3
-          }
-        },
-        loc: {
-          start: {
-            line: 59,
-            column: 53
           },
           end: {
             line: 66,
             column: 3
           }
         },
-        line: 59
+        loc: {
+          start: {
+            line: 66,
+            column: 68
+          },
+          end: {
+            line: 72,
+            column: 3
+          }
+        },
+        line: 66
       },
       '5': {
         name: '(anonymous_5)',
         decl: {
           start: {
-            line: 68,
+            line: 74,
             column: 2
-          },
-          end: {
-            line: 68,
-            column: 3
-          }
-        },
-        loc: {
-          start: {
-            line: 68,
-            column: 68
           },
           end: {
             line: 74,
             column: 3
           }
         },
-        line: 68
-      },
-      '6': {
-        name: '(anonymous_6)',
-        decl: {
+        loc: {
           start: {
-            line: 76,
-            column: 2
+            line: 74,
+            column: 47
           },
           end: {
             line: 76,
             column: 3
           }
         },
-        loc: {
+        line: 74
+      },
+      '6': {
+        name: '(anonymous_6)',
+        decl: {
           start: {
-            line: 76,
-            column: 47
+            line: 78,
+            column: 2
           },
           end: {
             line: 78,
             column: 3
           }
         },
-        line: 76
+        loc: {
+          start: {
+            line: 78,
+            column: 35
+          },
+          end: {
+            line: 82,
+            column: 3
+          }
+        },
+        line: 78
       },
       '7': {
         name: '(anonymous_7)',
         decl: {
           start: {
-            line: 80,
+            line: 84,
             column: 2
-          },
-          end: {
-            line: 80,
-            column: 3
-          }
-        },
-        loc: {
-          start: {
-            line: 80,
-            column: 35
           },
           end: {
             line: 84,
             column: 3
           }
         },
-        line: 80
-      },
-      '8': {
-        name: '(anonymous_8)',
-        decl: {
-          start: {
-            line: 86,
-            column: 2
-          },
-          end: {
-            line: 86,
-            column: 3
-          }
-        },
         loc: {
           start: {
-            line: 86,
+            line: 84,
             column: 34
           },
           end: {
-            line: 90,
+            line: 88,
             column: 3
           }
         },
-        line: 86
+        line: 84
       }
     },
     branchMap: {
@@ -707,8 +673,7 @@ var cov_232hcgi1nm = function () {
       '31': 0,
       '32': 0,
       '33': 0,
-      '34': 0,
-      '35': 0
+      '34': 0
     },
     f: {
       '0': 0,
@@ -718,8 +683,7 @@ var cov_232hcgi1nm = function () {
       '4': 0,
       '5': 0,
       '6': 0,
-      '7': 0,
-      '8': 0
+      '7': 0
     },
     b: {
       '0': [0, 0],
@@ -808,22 +772,17 @@ var Task = function () {
               case 22:
                 cov_232hcgi1nm.s[9]++;
 
-                setTimeout(function () {
-                  cov_232hcgi1nm.f[2]++;
-                  cov_232hcgi1nm.s[10]++;
-
-                  onCompleition();
-                }, 100);
+                onCompleition();
                 _context.next = 32;
                 break;
 
               case 26:
                 _context.prev = 26;
                 _context.t0 = _context['catch'](18);
-                cov_232hcgi1nm.s[11]++;
+                cov_232hcgi1nm.s[10]++;
 
                 console.log(_context.t0);
-                cov_232hcgi1nm.s[12]++;
+                cov_232hcgi1nm.s[11]++;
                 onCompleition('BLE Transfer Failed');
 
               case 32:
@@ -843,86 +802,86 @@ var Task = function () {
   }, {
     key: 'verify',
     value: function verify(objectType, characteristic) {
-      cov_232hcgi1nm.f[3]++;
+      cov_232hcgi1nm.f[2]++;
 
-      var dataView = (cov_232hcgi1nm.s[13]++, new DataView(new ArrayBuffer(2)));
-      cov_232hcgi1nm.s[14]++;
+      var dataView = (cov_232hcgi1nm.s[12]++, new DataView(new ArrayBuffer(2)));
+      cov_232hcgi1nm.s[13]++;
       dataView.setUint8(0, _types2.default.SELECT);
-      cov_232hcgi1nm.s[15]++;
+      cov_232hcgi1nm.s[14]++;
       dataView.setUint8(1, objectType);
-      cov_232hcgi1nm.s[16]++;
+      cov_232hcgi1nm.s[15]++;
       return new Task(characteristic, dataView.buffer, _types2.default.SELECT);
     }
   }, {
     key: 'create',
     value: function create(objectType, length, characteristic) {
-      cov_232hcgi1nm.f[4]++;
+      cov_232hcgi1nm.f[3]++;
 
-      var dataView = (cov_232hcgi1nm.s[17]++, new DataView(new ArrayBuffer(6)));
-      cov_232hcgi1nm.s[18]++;
+      var dataView = (cov_232hcgi1nm.s[16]++, new DataView(new ArrayBuffer(6)));
+      cov_232hcgi1nm.s[17]++;
       dataView.setUint8(0, _types2.default.CREATE);
-      cov_232hcgi1nm.s[19]++;
+      cov_232hcgi1nm.s[18]++;
       dataView.setUint8(1, objectType);
-      cov_232hcgi1nm.s[20]++;
+      cov_232hcgi1nm.s[19]++;
 
       dataView.setUint32(2, length, true);
-      cov_232hcgi1nm.s[21]++;
+      cov_232hcgi1nm.s[20]++;
       return new Task(characteristic, dataView.buffer, _types2.default.CREATE);
     }
   }, {
     key: 'setPacketReturnNotification',
     value: function setPacketReturnNotification(packageCount, characteristic) {
-      cov_232hcgi1nm.f[5]++;
+      cov_232hcgi1nm.f[4]++;
 
-      var dataView = (cov_232hcgi1nm.s[22]++, new DataView(new ArrayBuffer(3)));
-      cov_232hcgi1nm.s[23]++;
+      var dataView = (cov_232hcgi1nm.s[21]++, new DataView(new ArrayBuffer(3)));
+      cov_232hcgi1nm.s[22]++;
       dataView.setUint8(0, _types2.default.SET_PRN);
-      cov_232hcgi1nm.s[24]++;
+      cov_232hcgi1nm.s[23]++;
 
       dataView.setUint16(1, packageCount, true);
-      cov_232hcgi1nm.s[25]++;
+      cov_232hcgi1nm.s[24]++;
       return new Task(characteristic, dataView.buffer, _types2.default.SET_PRN);
     }
   }, {
     key: 'writePackage',
     value: function writePackage(buffer, characteristic) {
-      cov_232hcgi1nm.f[6]++;
-      cov_232hcgi1nm.s[26]++;
+      cov_232hcgi1nm.f[5]++;
+      cov_232hcgi1nm.s[25]++;
 
       return new Task(characteristic, buffer);
     }
   }, {
     key: 'checksum',
     value: function checksum(characteristic) {
-      cov_232hcgi1nm.f[7]++;
+      cov_232hcgi1nm.f[6]++;
 
-      var dataView = (cov_232hcgi1nm.s[27]++, new DataView(new ArrayBuffer(1)));
-      cov_232hcgi1nm.s[28]++;
+      var dataView = (cov_232hcgi1nm.s[26]++, new DataView(new ArrayBuffer(1)));
+      cov_232hcgi1nm.s[27]++;
       dataView.setUint8(0, _types2.default.CALCULATE_CHECKSUM);
-      cov_232hcgi1nm.s[29]++;
+      cov_232hcgi1nm.s[28]++;
       return new Task(characteristic, dataView.buffer, _types2.default.CALCULATE_CHECKSUM);
     }
   }, {
     key: 'execute',
     value: function execute(characteristic) {
-      cov_232hcgi1nm.f[8]++;
+      cov_232hcgi1nm.f[7]++;
 
-      var dataView = (cov_232hcgi1nm.s[30]++, new DataView(new ArrayBuffer(1)));
-      cov_232hcgi1nm.s[31]++;
+      var dataView = (cov_232hcgi1nm.s[29]++, new DataView(new ArrayBuffer(1)));
+      cov_232hcgi1nm.s[30]++;
       dataView.setUint8(0, _types2.default.EXECUTE);
-      cov_232hcgi1nm.s[32]++;
+      cov_232hcgi1nm.s[31]++;
       return new Task(characteristic, dataView.buffer, _types2.default.EXECUTE);
     }
   }]);
   return Task;
 }();
 
-cov_232hcgi1nm.s[33]++;
+cov_232hcgi1nm.s[32]++;
 
 
 module.exports.Task = Task;
-cov_232hcgi1nm.s[34]++;
+cov_232hcgi1nm.s[33]++;
 module.exports.TaskTypes = _types2.default;
-cov_232hcgi1nm.s[35]++;
+cov_232hcgi1nm.s[34]++;
 module.exports.TaskResults = _results2.default;
 //# sourceMappingURL=index.js.map
