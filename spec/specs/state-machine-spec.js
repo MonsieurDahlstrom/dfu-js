@@ -1,96 +1,42 @@
 import {expect} from 'chai'
 import sinon from 'sinon'
 
+import factory from '../factories'
+
 import {DFUStateMachineStates,DFUStateMachine} from '../../src/models/state-machine'
-import {Firmware,FirmwareType} from '../../src/models/firmware'
-import JSZip from 'jszip'
+import {Transfer,TransferStates} from '../../src/models/transfer'
 
-const SharedDFUParseZip = function (testZipPath) {
-  beforeEach(function (done) {
-    var oReq = new XMLHttpRequest();
-    this.sandbox = sinon.sandbox.create()
-    this.stateMachine = new DFUStateMachine()
-    oReq.addEventListener("load", () => {
-      JSZip.loadAsync(oReq.response)
-      .then(zip => {
-        this.firmware = new Firmware(zip)
-        return this.firmware.parseManifest()
-      })
-      .then(() => {
-        done()
-      })
-      .catch(err => {
-        done(err)
-      })
-    })
-    oReq.open('GET',testZipPath)
-    oReq.responseType = "arraybuffer";
-    oReq.send();
-  })
-  afterEach(function () {
-    this.firmware = undefined
-    this.sandbox.restore()
-  })
+import testFirmwareAtPath from '../shared/statemachine-firmware-specs.js'
 
-  it('fails when not configured', function() {
-    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.throw("StateMachine is not configured with bluetooth characteristics");
-  })
-  it('fails when not idle', function() {
-    this.stateMachine.state = DFUStateMachineStates.TRANSFERING
-    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.throw("Can only initate transfer when idle")
-  })
+//import {Firmware,FirmwareType} from '../../src/models/firmware'
 
-  it('fails without firmware', function() {
-    this.stateMachine.state = DFUStateMachineStates.IDLE
-    expect( () => this.stateMachine.sendFirmware(null) ).to.throw("Firmware needs to be of class Firmware");
-  })
-
-  it('succeed when idle and firmware is valid', function() {
-    this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
-    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
-  })
-
-  it("addTransfers called", function() {
-    this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
-    let spyObject = this.sandbox.spy(this.stateMachine, 'addTransfer');
-    expect( () => this.stateMachine.sendFirmware(this.firmware) ).to.not.throw();
-    expect(spyObject.calledTwice).to.be.true
-  })
-
-  it('progress should be incomplete', function() {
-    this.stateMachine.state = DFUStateMachineStates.IDLE
-    this.stateMachine.fileTransfers.pause()
-    this.stateMachine.sendFirmware(this.firmware);
-    expect(this.stateMachine.progress).not.to.equal(1.0);
-  })
-
-}
 
 describe('StateMachine', function() {
-  let stateMachine;
 
+  before(function () {
+    this.sandbox = sinon.sandbox.create()
+  })
+  beforeEach(function () {
+    this.stateMachine = new DFUStateMachine()
+  })
   afterEach(function() {
-    stateMachine = null;
+    this.stateMachine = null;
+    this.sandbox.restore()
   })
 
   describe("#constructor", function() {
     describe("without characteristics", function() {
       it("throws no error", function() {
-        expect(()=> stateMachine = new DFUStateMachine()).to.not.throw()
+        expect(()=> new DFUStateMachine()).to.not.throw()
       })
       it("is an instance of StateMachien", function() {
-        let stateMachine = new DFUStateMachine()
-        expect(stateMachine instanceof DFUStateMachine).to.be.true;
+        expect(this.stateMachine instanceof DFUStateMachine).to.be.true;
       })
       it("is not configured", function() {
-        let stateMachine = new DFUStateMachine()
-        expect(stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
       })
       it('progress shouldnt be started', function () {
-        let stateMachine = new DFUStateMachine()
-        expect(stateMachine.progress()).to.equal(0.0)
+        expect(this.stateMachine.progress.completed).to.equal(0.0)
       })
     })
 
@@ -98,30 +44,131 @@ describe('StateMachine', function() {
       let controlPoint
       let packetPoint
       let stateMachine
-      before(function() {
+      beforeEach(function() {
         controlPoint = {}
         packetPoint = {}
-      })
-      beforeEach(function () {
-        stateMachine = new DFUStateMachine(controlPoint,packetPoint)
+        this.stateMachine = new DFUStateMachine(controlPoint,packetPoint)
       })
       it("throws no error", function() {
-        expect(()=> stateMachine = new DFUStateMachine(controlPoint,packetPoint)).to.not.throw()
+        expect(()=> new DFUStateMachine(controlPoint,packetPoint)).to.not.throw()
       })
       it("is an instance of StateMachien", function() {
-        expect(stateMachine instanceof DFUStateMachine).to.be.true;
+        expect(this.stateMachine instanceof DFUStateMachine).to.be.true;
       })
       it("is not configured", function() {
-        expect(stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
       })
       it("has control point characteristic", function() {
-        expect(stateMachine.controlpointCharacteristic).to.equal(controlPoint)
+        expect(this.stateMachine.controlPoint).to.equal(controlPoint)
       })
       it("has packet point characteristic", function() {
-        expect(stateMachine.packetCharacteristic).to.equal(packetPoint)
+        expect(this.stateMachine.packetPoint).to.equal(packetPoint)
       })
       it('progress shouldnt be started', function () {
-        expect(stateMachine.progress()).to.equal(0.0)
+        expect(this.stateMachine.progress.completed).to.equal(0.0)
+      })
+    })
+  })
+
+  describe("set controlPoint", function () {
+    beforeEach(function (done) {
+      factory.create('webBluetoothCharacteristic')
+      .then(item => {
+        this.characteristic = item
+        this.stateMachine.packetPoint = this.characteristic
+        done()
+      })
+      .catch(err => done(err))
+    })
+    afterEach(function () {
+      this.characteristic = null
+    })
+    describe('IDLE', function () {
+      it("set undefined", function () {
+        this.stateMachine.state = DFUStateMachineStates.IDLE
+        this.stateMachine.controlPoint = undefined
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
+      })
+      it("set null", function () {
+        this.stateMachine.state = DFUStateMachineStates.IDLE
+        this.stateMachine.packetPoint = this.characteristic
+        this.stateMachine.controlPoint = null
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
+      })
+    })
+    describe('NOT_CONFIGURED', function () {
+      it("set object", function () {
+        this.stateMachine.controlPoint = this.characteristic
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
+      })
+    })
+  })
+
+  describe("set packetPoint", function () {
+    beforeEach(function (done) {
+      factory.create('webBluetoothCharacteristic')
+      .then(item => {
+        this.characteristic = item
+        this.stateMachine.controlPoint = this.characteristic
+        done()
+      })
+      .catch(err => done(err))
+    })
+    afterEach(function () {
+      this.characteristic = null
+    })
+    describe('IDLE', function () {
+      it("set undefined", function () {
+        this.stateMachine.state = DFUStateMachineStates.IDLE
+        this.stateMachine.packetPoint = undefined
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
+      })
+      it("set null", function () {
+        this.stateMachine.state = DFUStateMachineStates.IDLE
+        this.stateMachine.packetPoint = null
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.NOT_CONFIGURED)
+      })
+    })
+    describe('NOT_CONFIGURED', function () {
+      it("set object", function () {
+        this.stateMachine.packetPoint = this.characteristic
+        expect(this.stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
+      })
+    })
+  })
+
+  describe("#addTransfer", function () {
+    beforeEach(function(done){
+      this.stateMachine.state = DFUStateMachineStates.IDLE
+      factory.create('transfer')
+      .then(transfer => {
+        this.transfer = transfer
+        done()
+      })
+      .catch(err => done(err))
+    })
+    describe("failing tasks", function () {
+      it("dfu machine eventually fails", function(done) {
+        this.sandbox.stub(this.transfer,'begin').callsFake(() => {
+          this.transfer.state = TransferStates.Failed
+        });
+        this.stateMachine.addTransfer(this.transfer)
+        this.stateMachine.on('stateChanged', () => {
+          expect(this.stateMachine.state).to.equal(DFUStateMachineStates.FAILED)
+          done()
+        })
+      })
+    })
+    describe('succeding tasks', function () {
+      it("dfu machine eventually completes", function(done) {
+        this.sandbox.stub(this.transfer,'begin').callsFake(() => {
+          this.transfer.state = TransferStates.Completed
+        });
+        this.stateMachine.addTransfer(this.transfer)
+        this.stateMachine.on('stateChanged', () => {
+          expect(this.stateMachine.state).to.equal(DFUStateMachineStates.COMPLETE)
+          done()
+        })
       })
     })
   })
@@ -135,39 +182,84 @@ describe('StateMachine', function() {
       packetPoint = {}
     })
     beforeEach(function () {
-      stateMachine = new DFUStateMachine(controlPoint,packetPoint)
+      this.stateMachine = new DFUStateMachine(controlPoint,packetPoint)
     })
     it('when not configured', function () {
-      stateMachine.state = DFUStateMachineStates.NOT_CONFIGURED
-      expect(stateMachine.progress()).to.equal(0.0)
+      this.stateMachine.state = DFUStateMachineStates.NOT_CONFIGURED
+      this.stateMachine.calculateProgress()
+      expect(this.stateMachine.progress.completed).to.equal(0.0)
     })
     it('when idle', function () {
-      stateMachine.state = DFUStateMachineStates.IDLE
-      expect(stateMachine.progress()).to.equal(0.0)
+      this.stateMachine.state = DFUStateMachineStates.IDLE
+      this.stateMachine.calculateProgress()
+      expect(this.stateMachine.progress.completed).to.equal(0.0)
     })
-    it('when transfering', function () {
-      stateMachine.state = DFUStateMachineStates.TRANSFERING
-      expect(stateMachine.progress()).to.equal(0.0)
+    describe('when transfer', function () {
+      beforeEach(function (done) {
+        factory.create('transfer')
+        .then(transfer => {
+          this.transfer = transfer
+          this.stateMachine.queue.pause()
+          this.stateMachine.addTransfer(this.transfer)
+          this.stateMachine.state = DFUStateMachineStates.TRANSFERING
+          this.transfer.state = TransferStates.Transfer
+          done()
+        })
+        .catch(err => done(err))
+      })
+      it('but not started', function () {
+        this.transfer.progress = 0.00
+        this.stateMachine.calculateProgress()
+        expect(this.stateMachine.progress.completed).to.equal(0.0)
+      })
+      it('just started', function () {
+        this.transfer.progress = 0.05
+        this.stateMachine.calculateProgress()
+        expect(this.stateMachine.progress.completed).to.equal(0.05*this.transfer.file.length)
+      })
+      it('just finished', function () {
+        this.transfer.state = TransferStates.Completed
+        this.stateMachine.calculateProgress()
+        expect(this.stateMachine.progress.completed).to.equal(this.transfer.file.length)
+      })
     })
     it('when completed', function () {
-      stateMachine.state = DFUStateMachineStates.COMPLETE
-      expect(stateMachine.progress()).to.equal(1.0)
+      this.stateMachine.state = DFUStateMachineStates.COMPLETE
+      this.stateMachine.calculateProgress()
+      expect(this.stateMachine.progress.completed).to.equal(1.0)
     })
     it('when failed', function () {
-      stateMachine.state = DFUStateMachineStates.FAILED
-      expect(stateMachine.progress()).to.equal(1.0)
+      this.stateMachine.state = DFUStateMachineStates.FAILED
+      this.stateMachine.calculateProgress()
+      expect(this.stateMachine.progress.completed).to.equal(1.0)
     })
   })
 
   describe('#sendFirmware', function() {
-
     describe('softdevice & bootloader', function () {
-      SharedDFUParseZip('/base/spec/data/bl_sd.zip')
+      testFirmwareAtPath('/base/spec/data/bl_sd.zip')
     })
-
     describe('application dfu', function() {
-      SharedDFUParseZip('/base/spec/data/dfu_test_app_hrm_s130.zip')
+      testFirmwareAtPath('/base/spec/data/dfu_test_app_hrm_s130.zip')
     })
+  })
 
+  describe("#reset", function () {
+    beforeEach(function () {
+      this.stateMachine.state = DFUStateMachineStates.TRANSFERING
+      this.stateMachine.queue.pause()
+      this.stateMachine.queue.push({emptyObject: ''})
+    })
+    it('does not throw', function () {
+      expect(() => this.stateMachine.reset()).to.not.throw()
+    })
+    it('sets dfu machine idle', function () {
+      this.stateMachine.reset()
+      expect(this.stateMachine.state).to.equal(DFUStateMachineStates.IDLE)
+    })
+    it('empties the dfu machine transfer queue', function () {
+      this.stateMachine.reset()
+      expect(this.stateMachine.queue.length()).to.equal(0)
+    })
   })
 })

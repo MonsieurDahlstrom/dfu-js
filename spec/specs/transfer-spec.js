@@ -2,8 +2,8 @@ import {expect} from 'chai'
 import sinon from 'sinon'
 
 import {Transfer,TransferStates,TransferTypes} from '../../src/models/transfer'
+import {DFUObject, DFUObjectStates} from '../../src/models/dfu-object'
 import {Task,TaskTypes,TaskResults} from '../../src/models/task'
-import {DFUObject} from '../../src/models/dfu-object'
 
 import factory from '../factories';
 
@@ -26,12 +26,15 @@ describe('Transfer', function() {
       beforeEach(function(done) {
         dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
         transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
-        factory.buildMany("WebBluetoothCharacteristic",2)
+        factory.buildMany("webBluetoothCharacteristic",2)
         .then(result => {
           packetPoint = result[0]
           controlPoint = result[1]
           transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
           done()
+        })
+        .catch(err => {
+          done(err)
         })
       })
       it("no exceptions", function() {
@@ -47,97 +50,102 @@ describe('Transfer', function() {
         expect(transfer.controlPoint).to.equal(controlPoint)
       })
       it('should have object type', function() {
-        expect(transfer.objectType).to.equal(transferObjectType)
+        expect(transfer.type).to.equal(transferObjectType)
       })
     })
   })
 
   describe("#progress", function () {
-    let dataset
-    let packetPoint
-    let controlPoint
-    let transferObjectType
-    let transfer
     beforeEach(function(done) {
-      dataset = Array.from({length: 254}, () => Math.floor(Math.random() * 9));
-      transferObjectType = (Math.random() <= 0.5) === true ? 1 : 2;
-      factory.buildMany("WebBluetoothCharacteristic",2)
-      .then(result => {
-        packetPoint = result[0]
-        controlPoint = result[1]
-        transfer = new Transfer(dataset,controlPoint,packetPoint,transferObjectType)
+      factory.create("transfer")
+      .then(transfer => {
+        this.transfer = transfer
         done()
       })
     })
     it('0.0 when preparing', function () {
-      transfer.state = TransferStates.Prepare
-      expect(transfer.progress()).to.equal(0.0)
+      this.transfer.state = TransferStates.Prepare
+      this.transfer.checkProgress()
+      expect(this.transfer.progress).to.equal(0.0)
     })
     it('1.0 when completed', function () {
-      transfer.state = TransferStates.Completed
-      expect(transfer.progress()).to.equal(1.0)
+      this.transfer.state = TransferStates.Completed
+      this.transfer.checkProgress()
+      expect(this.transfer.progress).to.equal(1.0)
     })
     it('1.0 when failed', function () {
-      transfer.state = TransferStates.Failed
-      expect(transfer.progress()).to.equal(1.0)
+      this.transfer.state = TransferStates.Failed
+      this.transfer.checkProgress()
+      expect(this.transfer.progress).to.equal(1.0)
     })
-    it('in middle of transfering', function () {
-      transfer.state = TransferStates.Transfer
-      transfer.currentObjectIndex = 4
-      transfer.objects = [5,2,3,4,{progress: function() { return 0.0}},7,8,9,10,10]
-      expect(transfer.progress()).to.equal(0.5)
-    })
-    it('start of transfer', function () {
-      transfer.state = TransferStates.Transfer
-      transfer.currentObjectIndex = 0
-      transfer.objects = [{progress: function() { return 0.0}},2,3,4,5,7,8,9,10,10]
-      expect(transfer.progress()).to.equal(0.10)
-    })
-    it('end of transfer', function () {
-      transfer.state = TransferStates.Transfer
-      transfer.currentObjectIndex = 9
-      transfer.objects = [5,2,3,4,5,7,8,9,10,{progress: function() { return 0.0}}]
-      expect(transfer.progress()).to.equal(0.98)
-    })
-  })
-
-  describe("#addTask", function() {
-
-    it("error when task is not of type Task", function() {
-      let transfer = new Transfer()
-      expect( function() {
-        transfer.addTask(null);
-      }).to.throw("task is not of type Task");
-    })
-
-    it("task addded to queue", function() {
-      let transfer = new Transfer()
-      transfer.bleTasks.pause()
-      let task = new Task()
-      expect( function() {
-        transfer.addTask(task);
-      }).to.not.throw();
-      expect(transfer.bleTasks.length()).to.equal(1)
-    })
-
-    it("task is executed", function(done) {
-      let transfer = new Transfer()
-      let task = new Task()
-      factory.build('WebBluetoothCharacteristic').then(characteristic => {
-        task.characteristic = characteristic
-        transfer.bleTasks.empty = function() {
-          done();
-        }
-        transfer.addTask(task);
+    it('in middle of transfering', function (done) {
+      factory.buildMany('dfuObject',4)
+      .then(objectList => {
+        this.transfer.state = TransferStates.Transfer
+        this.transfer.objects = objectList
+        this.transfer.objects[0].state = DFUObjectStates.Completed
+        this.transfer.objects[1].state = DFUObjectStates.Transfering
+        this.transfer.objects[2].state = DFUObjectStates.NotStarted
+        this.transfer.objects[3].state = DFUObjectStates.NotStarted
+        this.transfer.objects[1].progress.completed = 64
+        this.transfer.checkProgress()
+        expect(this.transfer.progress).to.equal(0.375)
+        done()
       })
+      .catch(err => done(err))
     })
-
+    it('start transfering', function (done) {
+      factory.buildMany('dfuObject',4)
+      .then(objectList => {
+        this.transfer.state = TransferStates.Transfer
+        this.transfer.objects = objectList
+        this.transfer.objects[0].progress.completed = 40
+        this.transfer.objects[0].state = DFUObjectStates.Transfering
+        this.transfer.objects[1].state = DFUObjectStates.NotStarted
+        this.transfer.objects[2].state = DFUObjectStates.NotStarted
+        this.transfer.objects[3].state = DFUObjectStates.NotStarted
+        this.transfer.checkProgress()
+        expect(this.transfer.progress).to.equal(0.078125)
+        done()
+      })
+      .catch(err => done(err))
+    })
+    it('just finished transfering', function (done) {
+      factory.buildMany('dfuObject',4)
+      .then(objectList => {
+        this.transfer.state = TransferStates.Transfer
+        this.transfer.objects = objectList
+        this.transfer.objects[0].state = DFUObjectStates.Completed
+        this.transfer.objects[1].state = DFUObjectStates.Completed
+        this.transfer.objects[2].state = DFUObjectStates.Completed
+        this.transfer.objects[3].state = DFUObjectStates.Completed
+        this.transfer.checkProgress()
+        expect(this.transfer.progress).to.equal(1.0)
+        done()
+      })
+      .catch(err => done(err))
+    })
+    it('just finished with an error', function (done) {
+      factory.buildMany('dfuObject',4)
+      .then(objectList => {
+        this.transfer.state = TransferStates.Transfer
+        this.transfer.objects = objectList
+        this.transfer.objects[0].state = DFUObjectStates.Completed
+        this.transfer.objects[1].state = DFUObjectStates.Completed
+        this.transfer.objects[2].state = DFUObjectStates.Completed
+        this.transfer.objects[3].state = DFUObjectStates.Failed
+        this.transfer.checkProgress()
+        expect(this.transfer.progress).to.equal(1.0)
+        done()
+      })
+      .catch(err => done(err))
+    })
   })
 
   describe("#begin", function() {
 
     it("does not throw", function(done) {
-      factory.build("WebBluetoothCharacteristic")
+      factory.build("webBluetoothCharacteristic")
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
@@ -150,7 +158,7 @@ describe('Transfer', function() {
 
   describe("#end", function() {
     it("does not throw", function(done) {
-      factory.build("WebBluetoothCharacteristic")
+      factory.build("webBluetoothCharacteristic")
       .then(characteristic => {
         let transfer = new Transfer()
         transfer.controlPoint = characteristic
@@ -167,7 +175,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 29}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
@@ -189,7 +197,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 255}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
@@ -211,7 +219,7 @@ describe('Transfer', function() {
       let transfer
       beforeEach(function(done) {
         fileData = Array.from({length: 512}, () => Math.floor(Math.random() * 9));
-        factory.buildMany('WebBluetoothCharacteristic',2)
+        factory.buildMany('webBluetoothCharacteristic',2)
         .then(characteristics => {
           transfer = new Transfer(fileData, characteristics[0], characteristics[1], TransferTypes.Command)
           done()
@@ -261,7 +269,7 @@ describe('Transfer', function() {
     describe('when state is Prepare', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = sandbox.spy(console,'log')
+        let logSpy = sandbox.spy(console,'warn')
         transfer.onEvent(event)
         sandbox.restore
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
@@ -278,7 +286,7 @@ describe('Transfer', function() {
     describe('when state is Transfer', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = sandbox.spy(console,'log');
+        let logSpy = sandbox.spy(console,'warn');
         transfer.state = TransferStates.Transfer
         transfer.onEvent(event);
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
@@ -302,7 +310,7 @@ describe('Transfer', function() {
     describe('when state is Completed', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = sandbox.spy(console,'log');
+        let logSpy = sandbox.spy(console,'warn');
         transfer.state = TransferStates.Completed
         transfer.onEvent(event);
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])
@@ -325,7 +333,7 @@ describe('Transfer', function() {
     describe('when state is Failed', function() {
       it('logs and handles none response codes', function() {
         let event = {target: {value: nonResponseResult}}
-        let logSpy = sandbox.spy(console,'log');
+        let logSpy = sandbox.spy(console,'warn');
         transfer.state = TransferStates.Failed
         transfer.onEvent(event);
         expect(logSpy.firstCall.args).to.deep.equal(['Transfer.onEvent() opcode was not a response code'])

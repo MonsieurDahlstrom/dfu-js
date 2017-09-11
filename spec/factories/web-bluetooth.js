@@ -1,20 +1,8 @@
-
-class WebBluetoothCharacteristic {
-
-  addEventListener() {
-  }
-
-  removeEventListener() {
-  }
-
-  writeValue(data) {
-  }
-
-}
+import WebBluetoothCharacteristicMock from './web-bluetooth-characteristic-mock.js'
 
 export default {
   factories: function(factory) {
-    factory.define('WebBluetoothCharacteristic', WebBluetoothCharacteristic, {
+    factory.define('webBluetoothCharacteristic', WebBluetoothCharacteristicMock, {
     });
   }
 }

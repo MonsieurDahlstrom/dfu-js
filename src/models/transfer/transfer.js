@@ -1,70 +1,149 @@
 /** Library imports */
-import queue from 'async/queue'
+import EventEmitter from 'events'
 /** internal imports */
 import TransferStates from './states'
 import {Task, TaskTypes, TaskResults} from '../task'
-import {DFUObject} from '../dfu-object'
+import {DFUObject, DFUObjectStates} from '../dfu-object'
 
-class Transfer {
+var fileSymbol = Symbol();
+var stateSymbol = Symbol();
+var packetPointSymbol = Symbol();
+var controlPointSymbol = Symbol();
+var objectsSymbol = Symbol();
+var maximumObjectLengthSymbol = Symbol()
+var typeSymbol = Symbol()
+var progressSymbol = Symbol()
+
+class Transfer extends EventEmitter {
+  /** Get/Set pair **/
+  get file() {
+    return this[fileSymbol]
+  }
+
+  set file(value) {
+    this[fileSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get state() {
+    return this[stateSymbol]
+  }
+
+  set state(value) {
+    if(this[stateSymbol] !== value) {
+      this[stateSymbol] = value
+      this.emit('stateChanged', {transfer:this, state:this[stateSymbol]})
+    }
+  }
+
+  /** Get/Set pair **/
+  get packetPoint() {
+    return this[packetPointSymbol]
+  }
+
+  set packetPoint(value) {
+    this[packetPointSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get controlPoint() {
+    return this[controlPointSymbol]
+  }
+
+  set controlPoint(value) {
+    this[controlPointSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get objects() {
+    return this[objectsSymbol]
+  }
+
+  set objects(value) {
+    this[objectsSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get maximumObjectLength() {
+    return this[maximumObjectLengthSymbol]
+  }
+
+  set maximumObjectLength(value) {
+    this[maximumObjectLengthSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get type() {
+    return this[typeSymbol]
+  }
+
+  set type(value) {
+    this[typeSymbol] = value
+  }
+
+  /** Get/Set pair **/
+  get progress() {
+    return this[progressSymbol]
+  }
+
+  set progress(value) {
+    if(value !== this[progressSymbol]) {
+      this[progressSymbol] = value
+      this.emit('progressChanged', {transfer: this, progress: value})
+    }
+  }
 
   constructor (fileData, controlPoint, packetPoint, objectType) {
-    this.state = TransferStates.Prepare
+    super()
+    this[stateSymbol] = TransferStates.Prepare
     /** The WebBluetooth Characteristics needed to transfer a file **/
-    this.packetPoint = packetPoint
-    this.controlPoint = controlPoint
+    this[packetPointSymbol] = packetPoint
+    this[controlPointSymbol] = controlPoint
     /** Data array representing the actual file to transfer **/
-    this.file = fileData
+    this[fileSymbol] = fileData
     /** The DFUObjectType this file represents */
-    this.objectType = objectType
-    /** Create a queue to process the DFUObject's for this file in order */
-    this.bleTasks = queue(Task.Worker, 1)
-    this.bleTasks.error = (error, task) => {
-      console.error(error)
-      console.error(task)
-    }
+    this[typeSymbol] = objectType
+    /** empty list of DFUObject */
+    this[objectsSymbol] = []
+    this[progressSymbol] = 0.0
   }
 
-  progress () {
+  checkProgress () {
     switch (this.state) {
-      case TransferStates.Prepare:
-      {
-        return 0.0
-      }
+      case TransferStates.Completed:
+        this.progress = 1.0
+        break
+      case TransferStates.Failed:
+        this.progress = 1.0
+        break
       case TransferStates.Transfer:
-      {
-        var difference = (this.currentObjectIndex+1) / this.objects.length
-        if (difference < 1.0) {
-          return difference - this.objects[this.currentObjectIndex].progress()
-        } else {
-          return difference - 0.02
-        }
-      }
+        let percentagePerObject = 1.0/this.objects.length
+        this.progress = this.objects.reduce((sum,dfuObject) => {
+          switch (dfuObject.state) {
+            case DFUObjectStates.Completed:
+              return sum + percentagePerObject
+            case DFUObjectStates.Failed:
+              return sum + percentagePerObject
+            case DFUObjectStates.Storing:
+              return sum + percentagePerObject
+            case DFUObjectStates.Transfering:
+              let percentageCompleted = dfuObject.progress.completed / dfuObject.progress.size
+              return sum + (percentagePerObject * percentageCompleted)
+            default:
+              return sum
+          }
+        }, 0.0)
+        break;
       default:
-      {
-        return 1.0
-      }
+        this.progress = 0.0
     }
-  }
-
-  /** Schedules a BLE Action for execution and ensure the file transfer fail if an action cant be completed **/
-  addTask (dfuTask) {
-    if ((dfuTask instanceof Task) === false) {
-      throw new Error('task is not of type Task')
-    }
-    this.bleTasks.push(dfuTask, (error) => {
-      if (error) {
-        this.bleTasks.kill()
-        this.state = TransferStates.Failed
-        console.error(error)
-      }
-    })
   }
 
   /** Begin the tranfer of a file by asking the NRF51/52 for meta data and verify if the file has been transfered already **/
   begin () {
     this.controlPoint.addEventListener('characteristicvaluechanged', this.onEvent.bind(this))
-    let operation = Task.verify(this.objectType, this.controlPoint)
-    this.addTask(operation)
+    let operation = Task.verify(this.type, this.controlPoint)
+    Task.Worker(operation,() => {})
   }
 
   /** Clean up event registrations when transfer is completed **/
@@ -81,8 +160,7 @@ class Transfer {
   so far is. This method skips object that has already been completed
   **/
   prepareDFUObjects (maxiumSize, currentOffset, currentCRC) {
-    this.maxObjectLength = maxiumSize
-    this.objects = []
+    this.maximumObjectLength = maxiumSize
     this.currentObjectIndex = 0
     this.generateObjects()
     /** Skip to object for the offset **/
@@ -103,10 +181,18 @@ class Transfer {
     let index = fileBegin
     while (index < fileEnd) {
       let objectBegin = index
-      let objectEnd = objectBegin + this.maxObjectLength < fileEnd ? this.maxObjectLength : (fileEnd - index)
-      let object = new DFUObject(objectBegin, objectEnd, this, this.objectType, this.nextObject.bind(this))
+      let objectEnd = objectBegin + this.maximumObjectLength < fileEnd ? this.maximumObjectLength : (fileEnd - index)
+      let object = new DFUObject(objectBegin, objectEnd, this, this.type)
+      object.on('stateChanged', (event) => {
+        if(event.state === DFUObjectStates.Failed) {
+          this.state = TransferStates.Failed
+        } else if ( event.state === DFUObjectStates.Completed) {
+          this.nextObject()
+        }
+      })
+      object.on('progressChanged', (event) => this.checkProgress())
       this.objects.push(object)
-      index += this.maxObjectLength
+      index += this.maximumObjectLength
     }
   }
 
@@ -115,7 +201,7 @@ class Transfer {
     /** guard to filter events that are not response codes  */
     let dataView = event.target.value
     if (dataView && dataView.getInt8(0) !== TaskTypes.RESPONSE_CODE) {
-      console.log('Transfer.onEvent() opcode was not a response code')
+      console.warn('Transfer.onEvent() opcode was not a response code')
       return
     }
     switch (this.state) {
@@ -133,8 +219,11 @@ class Transfer {
       default: {
         if (this.objects !== undefined && this.objects[this.currentObjectIndex] !== undefined) {
           this.objects[this.currentObjectIndex].eventHandler(dataView)
+          if (this.objects[this.currentObjectIndex].state === DFUObjectStates.Failed) {
+            this.state == TransferStates.Failed
+          }
         } else {
-          console.error('Transfer.onEvent called with no objects or no current object')
+          this.state = TransferStates.Failed
         }
         break
       }
@@ -144,7 +233,6 @@ class Transfer {
   /** Checks if Transfer is complete or starts transferring the next DFUObject **/
   nextObject () {
     if (this.currentObjectIndex < this.objects.length - 1) {
-      this.bleTasks.kill()
       this.currentObjectIndex++
       this.objects[this.currentObjectIndex].begin()
     } else {

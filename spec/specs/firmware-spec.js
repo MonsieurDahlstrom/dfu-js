@@ -45,20 +45,21 @@ describe('Firmware', function() {
     firmware = null;
   })
 
-  it("is not configured when created", function() {
-    firmware = new Firmware();
-    expect(firmware instanceof Firmware).to.be.true;
-    expect(firmware.type).to.equal(FirmwareType.NotConfigured);
+  describe("#constructor", function () {
+    it('empty should be invalid', function () {
+      expect(() => new Firmware()).to.throw();
+    })
+    it('with jszip archive it should be valid', function () {
+      var zip = new JSZip()
+      var firmware
+      expect(() => firmware = new Firmware(zip)).to.not.throw();
+      expect(firmware.type).to.equal(FirmwareType.NotConfigured);
+    })
   })
 
-  it('is invalid without data', function(done) {
-    firmware = new Firmware();
-    firmware.parseManifest()
-    .then(() => {
-      expect(firmware.type).to.equal(FirmwareType.Invalid);
-      done()
-    })
-  });
+  describe('#parseManifest', function () {
+
+  })
 
   describe('with application zip', function () {
     SharedDFUParseZip(this, '/base/spec/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1) // < The /base/ is to indicate its been loaded and served with karma
@@ -66,6 +67,10 @@ describe('Firmware', function() {
 
   describe('with softdevice and bootloader zip', function () {
     SharedDFUParseZip(this, '/base/spec/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
+  })
+
+  describe('with bootloader zip', function () {
+    SharedDFUParseZip(this, '/base/spec/data/bl.zip',FirmwareType.Bootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
   })
 
 })

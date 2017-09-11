@@ -18,6 +18,7 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
+"use strict";
 
 import TaskTypes from './types'
 import TaskResults from './results'
@@ -39,9 +40,7 @@ class Task {
     }
     try {
       await task.characteristic.writeValue(task.buffer)
-      setTimeout(function () {
-        onCompleition()
-      }, 100)
+      onCompleition()
     } catch (exception) {
       console.log(exception)
       onCompleition('BLE Transfer Failed')

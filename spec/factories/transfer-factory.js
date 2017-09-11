@@ -5,14 +5,14 @@ import queue from 'async/queue'
 
 export default {
   factories: function(factory) {
-    factory.define('Transfer', Transfer, {
+    factory.define('transfer', Transfer, {
       state:TransferStates.Prepare,
-      packetPoint: factory.assocAttrs('WebBluetoothCharacteristic'),
-      controlPoint: factory.assocAttrs('WebBluetoothCharacteristic'),
-      stateMachine: undefined,
+      packetPoint: factory.assoc('webBluetoothCharacteristic'),
+      controlPoint: factory.assoc('webBluetoothCharacteristic'),
       file: Array.from({length: 255}, () => Math.floor(Math.random() * 9)),
-      objectType: TransferTypes.Command,
-      bleTasks: queue(Task.Worker, 1)
+      type: TransferTypes.Command,
+      progress: 0.0
+      //tasks: queue(Task.Worker, 1)
     });
   }
 }

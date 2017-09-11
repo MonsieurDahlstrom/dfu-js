@@ -1,6 +1,7 @@
 import {expect} from 'chai'
 import sinon from 'sinon'
-
+//
+import factory from '../factories'
 //
 import {DFUObject, DFUObjectStates} from '../../src/models/dfu-object'
 import {Task, TaskTypes, TaskResults} from '../../src/models/task'
@@ -28,37 +29,32 @@ describe("DFUObject", function() {
       let length = 20
       let transfer = new Transfer()
       let transferType
-      let onCompletition = function() {}
       beforeEach(function() {
         transfer.file = Array.from({length: 25}, () => Math.floor(Math.random() * 9));
         transferType = (Math.random() <= 0.5) === true ? 1 : 2;
       })
       it('no errors', function() {
-        expect( ()=> new DFUObject(offset,length,transfer,transferType,onCompletition)).to.not.throw();
+        expect( ()=> new DFUObject(offset,length,transfer,transferType)).to.not.throw();
       })
       it('has offset', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.parentOffset).to.equal(offset)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
+        expect(dfuObject.offset).to.equal(offset)
       })
       it('has a length', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.objectLength).to.equal(length)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
+        expect(dfuObject.length).to.equal(length)
       })
       it('belongs to a Transfer', function(){
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.parentTransfer).to.equal(transfer)
-      })
-      it('has completition callback', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
-        expect(dfuObject.onCompletition).to.equal(onCompletition)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
+        expect(dfuObject.transfer).to.equal(transfer)
       })
       it('has chuncked dataset', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
         dfuObject.toPackets(0)
         expect(dfuObject.chunks).to.be.an('array')
       })
       it('chunks equal dataset', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
         dfuObject.toPackets(0)
         let calculation = []
         for(var chunk of dfuObject.chunks) {
@@ -67,7 +63,7 @@ describe("DFUObject", function() {
         expect(calculation).to.deep.equal(transfer.file.slice(offset,length))
       })
       it('chunks and dataset share CRC32', function() {
-        let dfuObject = new DFUObject(offset,length,transfer,transferType,onCompletition)
+        let dfuObject = new DFUObject(offset,length,transfer,transferType)
         dfuObject.toPackets(0)
         let calculation = []
         for(var chunk of dfuObject.chunks) {
@@ -79,66 +75,89 @@ describe("DFUObject", function() {
   })
 
   describe("#progress", function () {
-    let dfuObject
-    beforeEach(function() {
-      dfuObject = new DFUObject()
+    beforeEach(function(done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        done()
+      })
     })
-    it('0.0 when not started', function () {
-      dfuObject.state = DFUObjectStates.NotStarted
-      expect(dfuObject.progress()).to.equal(0.0)
+    afterEach(function () {
+      this.dfuObject = undefined
     })
-    it('0.01 when creating', function () {
-      dfuObject.state = DFUObjectStates.Creating
-      expect(dfuObject.progress()).to.equal(0.01)
-    })
-    it('0.99 when storing', function () {
-      dfuObject.state = DFUObjectStates.Storing
-      expect(dfuObject.progress()).to.equal(0.99)
-    })
-    it('1.0 when completed', function () {
-      dfuObject.state = DFUObjectStates.Completed
-      expect(dfuObject.progress()).to.equal(1.0)
-    })
-    it('1.0 when failed', function () {
-      dfuObject.state = DFUObjectStates.Failed
-      expect(dfuObject.progress()).to.equal(1.0)
-    })
-    it('in middle of transfering', function () {
-      dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 2}}
-      dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
-      expect(dfuObject.progress()).to.equal(0.78)
+    it('when not started', function () {
+      expect(this.dfuObject.progress.completed).to.equal(0.0)
     })
     it('start of transfer', function () {
-      dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 10}}
-      dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
-      expect(dfuObject.progress()).to.equal(0.02)
+      let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(20)).buffer, this.dfuObject.transfer.packetPoint)
+      this.dfuObject.onTaskComplete(null, dfuTask)
+      expect(this.dfuObject.progress.completed).to.equal(20)
+    })
+    it('in middle of transfering', function () {
+      var halfChunkIndex = this.dfuObject.chunks.length/2
+      for(var index=0; index < halfChunkIndex ; index++) {
+        let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(20)).buffer, this.dfuObject.transfer.packetPoint)
+        this.dfuObject.onTaskComplete(null, dfuTask)
+      }
+      expect(this.dfuObject.progress.completed/this.dfuObject.progress.size).to.equal(0.625)
     })
     it('end of transfer', function () {
-      dfuObject.state = DFUObjectStates.Transfering
-      dfuObject.parentTransfer = {bleTasks: {length: 0}}
-      dfuObject.chunks = [5,2,3,4,5,7,8,9,10,10]
-      expect(dfuObject.progress()).to.equal(0.98)
+      for (var chunk of this.dfuObject.chunks) {
+        let dfuTask = Task.writePackage(new DataView(new ArrayBuffer(chunk.length)).buffer, this.dfuObject.transfer.packetPoint)
+        this.dfuObject.onTaskComplete(null, dfuTask)
+      }
+      expect(this.dfuObject.progress.completed/this.dfuObject.progress.size).to.equal(1.0)
+    })
+  })
+
+  describe("#addTask", function() {
+    beforeEach(function(done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        done()
+      })
+    })
+    it("with null task", function() { expect(() => this.dfuObject.addTask(null) ).to.throw("task is not of type Task") })
+    it("task addded to queue", function() {
+      this.dfuObject.taskQueue.pause()
+      let task = new Task()
+      expect(() => this.dfuObject.addTask(task) ).to.not.throw();
+      expect(this.dfuObject.taskQueue.length()).to.equal(1)
+    })
+
+    it("task is executed", function(done) {
+      let task = new Task()
+      factory.build('webBluetoothCharacteristic').then(characteristic => {
+        task.characteristic = characteristic
+        this.dfuObject.taskQueue.empty = function() {
+          done();
+        }
+        this.dfuObject.addTask(task);
+      })
     })
   })
 
   describe("#begin", function() {
-    let dfuObject
-    let transferMock
-    beforeEach(function() {
-      dfuObject = new DFUObject()
-      let transfer = new Transfer()
-      transferMock = this.sandbox.stub(transfer)
-      dfuObject.parentTransfer = transferMock
-      dfuObject.begin()
+    beforeEach(function(done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        this.addTaskMock = this.sandbox.spy(this.dfuObject,'addTask')
+        this.dfuObject.begin()
+        done()
+      })
+      .catch(err => done(err))
     })
-    it('sets state', function() {
-      expect(dfuObject.state).to.equal(DFUObjectStates.Creating)
+    afterEach(function () {
+      this.dfuObject = undefined
+      this.addTaskMock = undefined
     })
-    it('initiate first task', function() {
-      expect(transferMock.addTask.callCount).to.equal(1)
-    })
+    it('sets state', function() { expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating) })
+    it('initiate first task', function() { expect(this.addTaskMock.callCount).to.equal(1) })
   })
 
   describe("#verify", function() {
@@ -165,122 +184,121 @@ describe("DFUObject", function() {
   })
 
   describe("#validate", function() {
-
+    beforeEach(function (done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.addTaskMock = this.sandbox.spy(this.dfuObject,'addTask')
+        done()
+      })
+      .catch(err => done(err))
+    })
     describe('with valid crc', function() {
       beforeEach(function() {
-        this.transfer = new Transfer()
-        this.transferMock = this.sandbox.stub(this.transfer)
-        this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-        this.dfuObject = new DFUObject(0,20,this.transferMock,1, function() {})
-        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'transfer')
+        this.sendChuncksSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
+        this.dfuObjectCRC = crc.crc32(this.dfuObject.transfer.file.slice(0,this.dfuObject.length))
       })
       it('offset larger then content', function() {
-        let dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,20))
-        this.dfuObject.validate(35,dfuObjectCRC)
+        this.dfuObject.validate(this.dfuObject.length+1,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transferMock.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset is zero', function() {
-        let dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,20))
-        this.dfuObject.validate(0,dfuObjectCRC)
+        this.dfuObject.validate(0,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset set to content length', function() {
-        let dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,20))
-        this.dfuObject.validate(20,dfuObjectCRC)
+        this.dfuObject.validate(this.dfuObject.length,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Storing)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset > 0 && offset < content length', function() {
-        let dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,1))
-        this.dfuObject.validate(1,dfuObjectCRC)
+        this.dfuObjectCRC = crc.crc32(this.dfuObject.transfer.file.slice(0,1))
+        this.dfuObject.validate(1,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Transfering)
-        expect(this.transfer.addTask.callCount).to.equal(2)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(1)
+        expect(this.addTaskMock.callCount).to.equal(8)
+        expect(this.sendChuncksSpy.callCount).to.equal(1)
       })
     })
 
     describe('invalid src', function() {
       beforeEach(function() {
-        this.transfer = new Transfer()
-        this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-        this.transferMock = this.sandbox.stub(this.transfer)
-        this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
-        this.dfuObjectCRC = crc.crc32(this.transfer.file.slice(0,85))
-        this.dfuObjectTransferSpy = this.sandbox.spy(this.dfuObject,'transfer')
+        this.sendChuncksSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
+        this.dfuObjectCRC = crc.crc32(this.dfuObject.transfer.file)
       })
       it('offset larger then content', function() {
         this.dfuObject.validate(35,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset is zero', function() {
         this.dfuObject.validate(0,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset set to content length', function() {
         this.dfuObject.validate(20,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
       it('offset > 0 && offset < content length', function() {
         this.dfuObject.validate(1,this.dfuObjectCRC)
         expect(this.dfuObject.state).to.equal(DFUObjectStates.Creating)
-        expect(this.transfer.addTask.callCount).to.equal(1)
-        expect(this.dfuObjectTransferSpy.callCount).to.equal(0)
+        expect(this.addTaskMock.callCount).to.equal(1)
+        expect(this.sendChuncksSpy.callCount).to.equal(0)
       })
     })
   })
 
-  describe("#transfer", function() {
-    beforeEach(function() {
-      this.transfer = new Transfer()
-      this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-      this.transferMock = this.sandbox.stub(this.transfer)
-      this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
-      this.dfuObject.toPackets()
+  describe("#sendChuncks", function() {
+    beforeEach(function (done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        this.addTaskMock = this.sandbox.spy(this.dfuObject,'addTask')
+        done()
+      })
+      .catch(err => done(err))
     })
     it('slots a task for each data chunck in the transfer', function() {
-      expect( () => this.dfuObject.transfer(0)).to.not.throw()
+      expect( () => this.dfuObject.sendChuncks()).to.not.throw()
       //maximum ble transmission size is 20. 25 fits in two chunks.
-      expect(this.transferMock.addTask.callCount).to.equal(this.dfuObject.chunks.length)
+      expect(this.addTaskMock.callCount).to.equal(this.dfuObject.chunks.length)
     })
   })
 
   describe("#setPacketReturnNotification", function() {
-    let transfer
-    let dfuObject
-    beforeEach(function() {
-      this.transfer = new Transfer()
-      this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-      this.transferMock = this.sandbox.stub(this.transfer)
-      this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
-      this.dfuObject.toPackets()
+    beforeEach(function (done) {
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        done()
+      })
+      .catch(err => done(err))
     })
-    it('slots a task for each data chunck in the transfer', function() {
-      expect( () => this.dfuObject.setPacketReturnNotification()).to.not.throw()
-    })
-    it('slots a task for each data chunck in the transfer', function() {
-      expect( this.dfuObject.setPacketReturnNotification() instanceof Task).to.be.true
-    })
+    it('completes', function() { expect( () => this.dfuObject.setPacketReturnNotification()).to.not.throw() })
+    it('returns task', function() { expect( this.dfuObject.setPacketReturnNotification() instanceof Task).to.be.true })
   })
 
   describe("#eventHandler", function() {
-    beforeEach(function() {
+    beforeEach(function (done) {
       this.dataView = new DataView(new ArrayBuffer(15))
-      this.transfer = new Transfer()
-      this.transfer.file = Array.from({length: 144}, () => Math.floor(Math.random() * 9));
-      this.transferMock = this.sandbox.stub(this.transfer)
-      this.dfuObject = new DFUObject(0,20,this.transfer,1, function() {})
-      this.dfuObject.toPackets()
+      factory.create('dfuObject')
+      .then(dfuObject => {
+        this.dfuObject = dfuObject
+        this.dfuObject.toPackets(0)
+        done()
+      })
+      .catch(err => done(err))
     })
     describe('when in Creating state', function() {
       beforeEach(function(){
