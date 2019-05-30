@@ -1,9 +1,9 @@
 import {expect} from 'chai'
 import sinon from 'sinon'
 
-import {Transfer,TransferStates,TransferTypes} from '../../src/models/transfer'
-import {DFUObject, DFUObjectStates} from '../../src/models/dfu-object'
-import {Task,TaskTypes,TaskResults} from '../../src/models/task'
+import {Transfer,TransferStates,TransferTypes} from '../../../src/models/transfer'
+import {DFUObject, DFUObjectStates} from '../../../src/models/dfu-object'
+import {Task,TaskTypes,TaskResults} from '../../../src/models/task'
 
 import factory from '../factories';
 
@@ -245,7 +245,7 @@ describe('Transfer', function() {
     let transfer
     let sandbox
     before(function() {
-      sandbox = sinon.sandbox.create()
+      sandbox = sinon.createSandbox()
       nonResponseResult = new DataView(new ArrayBuffer(2));
       nonResponseResult.setUint8(0, TaskTypes.SET_PRN);
       nonResponseResult.setUint8(1, TaskResults.INVALID_OBJECT);
@@ -359,7 +359,7 @@ describe('Transfer', function() {
     let transfer
     let sandbox
     beforeEach(function() {
-      sandbox = sinon.sandbox.create()
+      sandbox = sinon.createSandbox()
       transfer = new Transfer()
     })
     it('startsx next transfer object', function() {

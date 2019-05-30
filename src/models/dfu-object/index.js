@@ -144,7 +144,7 @@ class DFUObject extends EventEmitter {
   onTaskComplete (error, dfuTask) {
     if (error) {
       this.taskQueue.kill()
-      this.state = TransferStates.Failed
+      this.state = DFUObjectStates.Failed
     } else if (dfuTask.opcode == undefined) {
       let newCompleted = this.progress.completed + dfuTask.buffer.byteLength
       this.progress = {completed: newCompleted, size: this.length}

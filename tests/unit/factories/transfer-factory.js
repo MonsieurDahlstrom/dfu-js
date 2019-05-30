@@ -1,6 +1,6 @@
 
-import {Transfer, TransferStates, TransferTypes} from '../../src/models/transfer'
-import {Task, TaskTypes, TaskResults} from '../../src/models/task'
+import {Transfer, TransferStates, TransferTypes} from '../../../src/models/transfer'
+import {Task, TaskTypes, TaskResults} from '../../../src/models/task'
 import queue from 'async/queue'
 
 export default {

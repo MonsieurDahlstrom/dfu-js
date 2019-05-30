@@ -1,7 +1,20 @@
 import JSZip from 'jszip'
-import {Firmware} from '../../src/models/firmware'
+import fs from 'fs'
+import path from 'path'
 
-const readFirmwareFromFS = async function (done,testContext,zipFileURL) {
+import {Firmware} from '../../../src/models/firmware'
+
+const readFirmwareFromFS = async function (testContext,zipFileURL) {
+
+  let filePathResolved = path.resolve(zipFileURL)
+  let data = fs.readFileSync(filePathResolved);
+  return JSZip.loadAsync(data)
+  .then( zip => {
+    testContext.firmware = new Firmware(zip)
+    return testContext.firmware.parseManifest()
+  })
+
+  /**
   var oReq = new XMLHttpRequest();
   oReq.addEventListener("load", () => {
     JSZip.loadAsync(oReq.response)
@@ -15,6 +28,7 @@ const readFirmwareFromFS = async function (done,testContext,zipFileURL) {
   oReq.open('GET',zipFileURL)
   oReq.responseType = "arraybuffer";
   oReq.send();
+  **/
 }
 
 export default readFirmwareFromFS

@@ -1,5 +1,3 @@
 {
-  "presets": [ ["env", { "targets": { "uglify": false } }] ],
-  "plugins": ["istanbul", "transform-regenerator", "transform-runtime"],
-  "comments": false
+  "presets": ["env"]
 }

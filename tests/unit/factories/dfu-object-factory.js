@@ -1,6 +1,6 @@
 
-import {DFUObject, DFUObjectStates} from '../../src/models/dfu-object'
-import {TransferTypes} from '../../src/models/transfer'
+import {DFUObject, DFUObjectStates} from '../../../src/models/dfu-object'
+import {TransferTypes} from '../../../src/models/transfer'
 
 export default {
   factories: function(factory) {

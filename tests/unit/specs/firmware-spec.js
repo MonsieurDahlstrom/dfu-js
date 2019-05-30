@@ -1,24 +1,16 @@
 import {expect} from 'chai'
 
-import {Firmware,FirmwareType} from '../../src/models/firmware'
+import {Firmware,FirmwareType} from '../../../src/models/firmware'
 import JSZip from 'jszip'
+import fs from 'fs'
+import path from 'path'
 
 const SharedDFUParseZip = function (context, testZipPath, expectedType, numberOfSections) {
-  beforeEach(function (done) {
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener("load", function() {
-      JSZip.loadAsync(oReq.response)
-      .then(function(zip) {
-        context.firmware = new Firmware(zip)
-        done()
-      })
-      .catch(err => {
-        done(err)
-      })
-    })
-    oReq.open('GET',testZipPath)
-    oReq.responseType = "arraybuffer";
-    oReq.send();
+  beforeEach(async function () {
+    let filePathResolved = path.resolve(testZipPath)
+    let data = fs.readFileSync(filePathResolved);
+    return JSZip.loadAsync(data)
+    .then( zip => context.firmware = new Firmware(zip))
   })
 
   afterEach(function () {
@@ -62,15 +54,15 @@ describe('Firmware', function() {
   })
 
   describe('with application zip', function () {
-    SharedDFUParseZip(this, '/base/spec/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1) // < The /base/ is to indicate its been loaded and served with karma
+    SharedDFUParseZip(this, 'tests/unit/data/dfu_test_app_hrm_s130.zip',FirmwareType.Application, 1) // < The /base/ is to indicate its been loaded and served with karma
   })
 
   describe('with softdevice and bootloader zip', function () {
-    SharedDFUParseZip(this, '/base/spec/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
+    SharedDFUParseZip(this, 'tests/unit/data/bl_sd.zip',FirmwareType.SoftdeviceBootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
   })
 
   describe('with bootloader zip', function () {
-    SharedDFUParseZip(this, '/base/spec/data/bl.zip',FirmwareType.Bootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
+    SharedDFUParseZip(this, 'tests/unit/data/bl.zip',FirmwareType.Bootloader, 1) // < The /base/ is to indicate its been loaded and served with karma
   })
 
 })

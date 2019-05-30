@@ -3,15 +3,15 @@ import sinon from 'sinon'
 //
 import factory from '../factories'
 //
-import {DFUObject, DFUObjectStates} from '../../src/models/dfu-object'
-import {Task, TaskTypes, TaskResults} from '../../src/models/task'
-import {Transfer} from '../../src/models/transfer'
+import {DFUObject, DFUObjectStates} from '../../../src/models/dfu-object'
+import {Task, TaskTypes, TaskResults} from '../../../src/models/task'
+import {Transfer} from '../../../src/models/transfer'
 import crc from 'crc'
 
 describe("DFUObject", function() {
 
   before(function () {
-    this.sandbox = sinon.sandbox.create()
+    this.sandbox = sinon.createSandbox()
   })
   afterEach(function () {
     this.sandbox.restore()
@@ -119,6 +119,7 @@ describe("DFUObject", function() {
         this.dfuObject.toPackets(0)
         done()
       })
+      .catch( err => done(err))
     })
     it("with null task", function() { expect(() => this.dfuObject.addTask(null) ).to.throw("task is not of type Task") })
     it("task addded to queue", function() {
@@ -129,14 +130,14 @@ describe("DFUObject", function() {
     })
 
     it("task is executed", function(done) {
-      let task = new Task()
-      factory.build('webBluetoothCharacteristic').then(characteristic => {
-        task.characteristic = characteristic
-        this.dfuObject.taskQueue.empty = function() {
-          done();
-        }
-        this.dfuObject.addTask(task);
+      factory.build('webBluetoothCharacteristic')
+      .then(characteristic => {
+        this.dfuObject.taskQueue.pause()
+        this.dfuObject.taskQueue.drain( () => done() )
+        this.dfuObject.addTask( Task.setPacketReturnNotification(1,characteristic) );
+        this.dfuObject.taskQueue.resume()
       })
+      .catch(err => done(err))
     })
   })
 
@@ -197,6 +198,7 @@ describe("DFUObject", function() {
       beforeEach(function() {
         this.sendChuncksSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
         this.dfuObjectCRC = crc.crc32(this.dfuObject.transfer.file.slice(0,this.dfuObject.length))
+        this.dfuObject.taskQueue.pause()
       })
       it('offset larger then content', function() {
         this.dfuObject.validate(this.dfuObject.length+1,this.dfuObjectCRC)
@@ -229,6 +231,7 @@ describe("DFUObject", function() {
       beforeEach(function() {
         this.sendChuncksSpy = this.sandbox.spy(this.dfuObject,'sendChuncks')
         this.dfuObjectCRC = crc.crc32(this.dfuObject.transfer.file)
+        this.dfuObject.taskQueue.pause()
       })
       it('offset larger then content', function() {
         this.dfuObject.validate(35,this.dfuObjectCRC)
@@ -264,6 +267,7 @@ describe("DFUObject", function() {
         this.dfuObject = dfuObject
         this.dfuObject.toPackets(0)
         this.addTaskMock = this.sandbox.spy(this.dfuObject,'addTask')
+        this.dfuObject.taskQueue.pause()
         done()
       })
       .catch(err => done(err))
@@ -296,6 +300,7 @@ describe("DFUObject", function() {
       .then(dfuObject => {
         this.dfuObject = dfuObject
         this.dfuObject.toPackets(0)
+        this.dfuObject.taskQueue.pause()
         done()
       })
       .catch(err => done(err))

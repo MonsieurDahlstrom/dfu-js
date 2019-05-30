@@ -4,34 +4,22 @@
   "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SoCs.",
   "main": "dist/index.js",
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-plugin-istanbul": "^4.1.4",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-polyfill": "^6.26.0",
-    "babel-preset-env": "^1.6.0",
-    "babel-watch": "^2.0.7",
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^10.0.1",
+    "babel-preset-env": "^1.7.0",
     "chai": "^4.1.1",
     "chance": "^1.0.10",
-    "factory-girl": "^4.3.0",
-    "karma": "^1.7.0",
-    "karma-babel-preprocessor": "^6.0.1",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-cli": "^1.0.1",
-    "karma-coverage": "^1.1.1",
-    "karma-mocha": "^1.3.0",
-    "karma-sinon": "^1.0.5",
-    "karma-sourcemap-loader": "^0.3.7",
-    "karma-webpack": "^2.0.4",
-    "mocha": "^3.5.0",
-    "sinon": "^3.2.1",
-    "webpack": "^3.5.5"
+    "eslint": "^5.16.0",
+    "factory-girl": "^5.0.4",
+    "mocha": "^6.1.4",
+    "sinon": "^7.3.2"
   },
   "scripts": {
-    "build": "babel src --out-dir dist --source-maps true",
-    "unit-test": "karma start karma.config.js --single-run",
-    "unit-test-watch": "karma start karma.config.js"
+    "lint": "eslint src spec/specs",
+    "build": "babel src --out-dir dist",
+    "prepublish": "yarn run build",
+    "test": "yarn run lint && yarn run test:unit",
+    "test:unit": "mocha --require babel-core/register --require babel-polyfill tests/unit/**/*spec.js --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -54,8 +42,7 @@
   },
   "homepage": "https://github.com/MonsieurDahlstrom/web-bluetooth-dfu#readme",
   "dependencies": {
-    "async": "^2.5.0",
-    "babel-runtime": "^6.26.0",
+    "async": "^3.0.1",
     "crc": "^3.4.4",
     "jszip": "^3.1.4"
   },

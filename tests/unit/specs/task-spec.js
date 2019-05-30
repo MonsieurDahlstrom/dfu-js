@@ -2,7 +2,7 @@ import {expect} from 'chai'
 import sinon from 'sinon'
 //
 import factory from "factory-girl"
-import {Task} from "../../src/models/task"
+import {Task} from "../../../src/models/task"
 
 describe("Task", function() {
 
@@ -29,7 +29,7 @@ describe("Task", function() {
       })
     })
 
-    it("error with task not set to Task instance", function() {
+    it("error with task not set to Task instance", function(done) {
       let callback = sinon.mock('testCB')
       let task = {}
       Task.Worker(task,callback)
@@ -41,7 +41,7 @@ describe("Task", function() {
       })
     })
 
-    it("error without onCompleition", function() {
+    it("error without onCompleition", function(done) {
       var task = new Task()
       Task.Worker(task,null)
       .then(() => {

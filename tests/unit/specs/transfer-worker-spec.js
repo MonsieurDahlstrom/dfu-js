@@ -1,7 +1,7 @@
 import {expect} from 'chai'
 import sinon from 'sinon'
 
-import {Transfer, TransferWorker} from '../../src/models/transfer'
+import {Transfer, TransferWorker} from '../../../src/models/transfer'
 
 describe('#TransferWorker', function () {
 

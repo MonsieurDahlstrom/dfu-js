@@ -3,8 +3,8 @@ import sinon from 'sinon'
 
 import factory from '../factories'
 
-import {DFUStateMachineStates,DFUStateMachine} from '../../src/models/state-machine'
-import {Transfer,TransferStates} from '../../src/models/transfer'
+import {DFUStateMachineStates,DFUStateMachine} from '../../../src/models/state-machine'
+import {Transfer,TransferStates} from '../../../src/models/transfer'
 
 import testFirmwareAtPath from '../shared/statemachine-firmware-specs.js'
 
@@ -14,7 +14,7 @@ import testFirmwareAtPath from '../shared/statemachine-firmware-specs.js'
 describe('StateMachine', function() {
 
   before(function () {
-    this.sandbox = sinon.sandbox.create()
+    this.sandbox = sinon.createSandbox()
   })
   beforeEach(function () {
     this.stateMachine = new DFUStateMachine()
@@ -237,10 +237,10 @@ describe('StateMachine', function() {
 
   describe('#sendFirmware', function() {
     describe('softdevice & bootloader', function () {
-      testFirmwareAtPath('/base/spec/data/bl_sd.zip')
+      testFirmwareAtPath('tests/unit/data/bl_sd.zip')
     })
     describe('application dfu', function() {
-      testFirmwareAtPath('/base/spec/data/dfu_test_app_hrm_s130.zip')
+      testFirmwareAtPath('tests/unit/data/dfu_test_app_hrm_s130.zip')
     })
   })
 

@@ -1,12 +1,13 @@
 import readFirmwareFromFS from './prepared-firmware.js'
-import {DFUStateMachineStates,DFUStateMachine} from '../../src/models/state-machine'
+import {DFUStateMachineStates,DFUStateMachine} from '../../../src/models/state-machine'
+import {expect} from 'chai'
 
 /**
 Expecting the testContext to have created a sinon sandbox and created the statemachine
 **/
 const testFirmwareAtPath = function (testZipPath) {
-  beforeEach(function (done) {
-    readFirmwareFromFS(done,this,testZipPath)
+  beforeEach(async function() {
+    await readFirmwareFromFS(this,testZipPath)
   })
   afterEach(function () {
     this.firmware = undefined
