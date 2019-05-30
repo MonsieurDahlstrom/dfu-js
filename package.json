@@ -1,5 +1,5 @@
 {
-  "name": "web-bluetooth-dfu",
+  "name": "dfu-beamer",
   "version": "0.1.3",
   "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SOCs. Includes Vue.js Mixin for simplifed use.",
   "main": "dist/index.js",
