@@ -113,7 +113,7 @@ var DFUObject = function (_EventEmitter) {
     value: function onTaskComplete(error, dfuTask) {
       if (error) {
         this.taskQueue.kill();
-        this.state = TransferStates.Failed;
+        this.state = _states2.default.Failed;
       } else if (dfuTask.opcode == undefined) {
         var newCompleted = this.progress.completed + dfuTask.buffer.byteLength;
         this.progress = { completed: newCompleted, size: this.length };

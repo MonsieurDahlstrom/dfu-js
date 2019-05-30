@@ -8,10 +8,12 @@ var _webBluetoothDfu = require('./vue-mixins/web-bluetooth-dfu.js');
 
 var _webBluetoothDfu2 = _interopRequireDefault(_webBluetoothDfu);
 
+var _nordicSemiconductorDfu = require('./models/uuid/nordic-semiconductor-dfu');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 //
-module.exports.StateMachineStates = _stateMachine.DFUStateMachineStates; // Copyright (c) 2017 Monsieur Dahlström Ltd
+// Copyright (c) 2017 Monsieur Dahlström Ltd
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the
@@ -32,9 +34,12 @@ module.exports.StateMachineStates = _stateMachine.DFUStateMachineStates; // Copy
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+module.exports.StateMachineStates = _stateMachine.DFUStateMachineStates;
 module.exports.StateMachine = _stateMachine.DFUStateMachine;
 //
 module.exports.Firmware = _firmware.Firmware;
 module.exports.FirmwareTypes = _firmware.FirmwareType;
 //
 module.exports.DFUMixin = _webBluetoothDfu2.default;
+module.exports.DFUServiceUUID = _nordicSemiconductorDfu.NordicSemiconductorServices;
+module.exports.DFUCharacteristicUUID = _nordicSemiconductorDfu.NordicSemiconductorCharacteristics;

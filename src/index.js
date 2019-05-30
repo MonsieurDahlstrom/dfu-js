@@ -22,6 +22,7 @@
 import {DFUStateMachine,DFUStateMachineStates} from './models/state-machine'
 import {Firmware, FirmwareType} from './models/firmware'
 import WebBluetoothDFU from './vue-mixins/web-bluetooth-dfu.js'
+import {NordicSemiconductorServices,NordicSemiconductorCharacteristics} from './models/uuid/nordic-semiconductor-dfu'
 //
 module.exports.StateMachineStates = DFUStateMachineStates
 module.exports.StateMachine = DFUStateMachine
@@ -30,3 +31,5 @@ module.exports.Firmware = Firmware
 module.exports.FirmwareTypes = FirmwareType
 //
 module.exports.DFUMixin = WebBluetoothDFU
+module.exports.DFUServiceUUID = NordicSemiconductorServices
+module.exports.DFUCharacteristicUUID = NordicSemiconductorCharacteristics
