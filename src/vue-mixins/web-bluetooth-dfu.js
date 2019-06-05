@@ -66,6 +66,14 @@ const WebBluetoothDFU = {
 			var num = new Number(this.dfuStateMachine.progress.completed / this.dfuStateMachine.progress.size);
 			this.dfuProgress = num.toFixed(2)
     }
+  },
+	watch: {
+    webBluetoothPacketPoint(val) {
+      this.dfuStateMachine.packetPoint = val
+    },
+    webBluetoothControlPoint(val) {
+      this.dfuStateMachine.controlPoint = val
+    }
   }
 }
 
