@@ -88,6 +88,4 @@ class Task {
   }
 }
 
-module.exports.Task = Task
-module.exports.TaskTypes = TaskTypes
-module.exports.TaskResults = TaskResults
+export { Task, TaskTypes, TaskResults }

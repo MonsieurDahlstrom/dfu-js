@@ -3,7 +3,7 @@ import sinon from 'sinon'
 
 import factory from '../factories'
 
-import {DFUStateMachineStates,DFUStateMachine} from '../../../src/models/state-machine'
+import {StateMachineStates as DFUStateMachineStates,StateMachine as DFUStateMachine} from '../../../src/models/state-machine'
 import {Transfer,TransferStates} from '../../../src/models/transfer'
 
 import testFirmwareAtPath from '../shared/statemachine-firmware-specs.js'

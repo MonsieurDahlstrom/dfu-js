@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import JSZip from 'jszip'
-import {Section} from './Section'
+import Section from './Section'
 
 /**
   The different types of firmware updates a zip file can represent
@@ -44,7 +44,7 @@ class Firmware {
 
   /** Create a new instance based on zip file and set inital state **/
   constructor (zipFile) {
-    if (zipFile == null) {
+    if (zipFile == null || (zipFile instanceof JSZip) === false) {
       throw new Error('Firmware zip is invalid')
     }
     this.type = FirmwareType.NotConfigured
@@ -104,6 +104,4 @@ class Firmware {
   }
 }
 
-module.exports.Firmware = Firmware
-module.exports.FirmwareType = FirmwareType
-module.exports.FirmwareSection = Section
+export { Firmware, FirmwareType, Section }

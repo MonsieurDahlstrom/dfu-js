@@ -2,26 +2,36 @@
   "name": "dfu-js",
   "version": "0.1.2",
   "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SOCs. Includes Vue.js Mixin for simplifed use.",
-  "main": "dist/index.js",
+  "main": "./dist/cjs.bundle.js",
+  "module": "./dist/esm.bundle.js",
+  "files": [
+    "/dist"
+  ],
   "private": false,
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/register": "^7.4.4",
     "babel-eslint": "^10.0.1",
-    "babel-preset-env": "^1.7.0",
     "chai": "^4.1.1",
     "chance": "^1.0.10",
     "eslint": "^5.16.0",
     "factory-girl": "^5.0.4",
     "mocha": "^6.1.4",
+    "rollup": "^1.14.3",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-node-resolve": "^5.0.1",
     "sinon": "^7.3.2"
   },
   "scripts": {
     "lint": "eslint src tests/unit",
-    "build": "babel src --out-dir dist",
-    "prepublish": "yarn run build",
-    "test": "yarn run lint && yarn run test:unit",
-    "test:unit": "mocha --require babel-core/register --require babel-polyfill tests/unit/**/*spec.js --reporter spec"
+    "build": "rollup -c rollup.config.js",
+    "prepublish": "npm run build",
+    "test": "npm run lint && npm run test:unit",
+    "test:unit": "mocha --require mocha-babel-register.js tests/unit/**/*spec.js --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -38,20 +48,16 @@
     "nrf52"
   ],
   "author": "Mathias Dahlstrom",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/MonsieurDahlstrom/dfu-js/issues"
   },
   "homepage": "https://github.com/MonsieurDahlstrom/dfu-js#readme",
   "dependencies": {
+    "@babel/runtime": "^7.4.5",
     "async": "^3.0.1",
-    "crc": "^3.4.4",
-    "jszip": "^3.1.4"
-  },
-  "babel": {
-    "presets": [
-      "env"
-    ],
-    "sourceMaps": "inline"
+    "buffer": "^5.2.1",
+    "crc": "^3.8.0",
+    "events": "^3.0.0",
+    "jszip": "^3.2.1"
   }
 }

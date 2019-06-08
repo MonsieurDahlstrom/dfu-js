@@ -34,4 +34,4 @@ class Section {
 
 }
 
-module.exports.Section = Section
+export default Section;

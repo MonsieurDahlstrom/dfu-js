@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 import crc from 'crc'
-import queue from 'async/queue'
+import {queue} from 'async'
 import EventEmitter from 'events'
 //
 import {Task, TaskTypes, TaskResults} from '../task'
@@ -300,5 +300,4 @@ class DFUObject extends EventEmitter {
   }
 }
 
-module.exports.DFUObject = DFUObject
-module.exports.DFUObjectStates = DFUObjectStates
+export { DFUObject, DFUObjectStates }

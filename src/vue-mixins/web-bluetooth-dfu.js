@@ -20,10 +20,10 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import {Firmware, FirmwareType} from '../models/firmware'
-import {DFUStateMachine, DFUStateMachineStates} from '../models/state-machine'
+import {StateMachine, StateMachineStates} from '../models/state-machine'
 
 const WebBluetoothDFU = {
-	data: function() { return { dfuFirmware: undefined, dfuStateMachine: new DFUStateMachine(), dfuState: DFUStateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0} },
+	data: function() { return { dfuFirmware: undefined, dfuStateMachine: new StateMachine(), dfuState: StateMachineStates.NOT_CONFIGURED, dfuProgress: 0.0} },
   created: function () {
     this.dfuStateMachine.on('progressChanged', this.updateDFUProgress)
     this.dfuStateMachine.on('stateChanged', this.updateDFUState)
@@ -39,13 +39,13 @@ const WebBluetoothDFU = {
       throw new Error('DFUMixin expects component to provide computed property webBluetoothPacketPoint')
     },
     dfuIdle: function () {
-      return this.dfuState === DFUStateMachineStates.IDLE
+      return this.dfuState === StateMachineStates.IDLE
     },
     dfuInProgress: function () {
-      return this.dfuState === DFUStateMachineStates.TRANSFERING
+      return this.dfuState === StateMachineStates.TRANSFERING
     },
     dfuCompleted: function () {
-      return (this.dfuState === DFUStateMachineStates.COMPLETE || this.dfuState === DFUStateMachineStates.FAILED)
+      return (this.dfuState === StateMachineStates.COMPLETE || this.dfuState === StateMachineStates.FAILED)
     }
   },
   methods: {

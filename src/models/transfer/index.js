@@ -24,7 +24,4 @@ import TransferStates from './states'
 import TransferTypes from './types'
 import Transfer from './transfer'
 
-module.exports.Transfer = Transfer
-module.exports.TransferStates = TransferStates
-module.exports.TransferTypes = TransferTypes
-module.exports.TransferWorker = TransferWorker
+export { Transfer, TransferStates, TransferTypes, TransferWorker }

@@ -2,8 +2,6 @@ import {expect} from 'chai'
 
 import {DFUServiceUUID, DFUCharacteristicUUID} from '../../../src'
 
-console.log(DFUServiceUUID)
-
 describe('Nordic Semiconductor UUID', function() {
 
   describe("Buttonless DFU", function () {

@@ -19,7 +19,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import queue from 'async/queue'
+import {queue} from 'async'
 import EventEmitter from 'events'
 
 import {Firmware, FirmwareType} from '../firmware'
@@ -206,5 +206,4 @@ class StateMachine extends EventEmitter {
   }
 }
 
-module.exports.DFUStateMachineStates = StateMachineStates
-module.exports.DFUStateMachine = StateMachine
+export { StateMachineStates, StateMachine }

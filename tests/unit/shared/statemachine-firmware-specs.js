@@ -1,5 +1,5 @@
 import readFirmwareFromFS from './prepared-firmware.js'
-import {DFUStateMachineStates,DFUStateMachine} from '../../../src/models/state-machine'
+import {StateMachineStates as DFUStateMachineStates, StateMachine as DFUStateMachine} from '../../../src/models/state-machine'
 import {expect} from 'chai'
 
 /**

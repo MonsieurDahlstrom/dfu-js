@@ -49,5 +49,4 @@ const TransferWorker = function (task, onCompleition) {
   task.begin()
 }
 
-module.exports.TransferWorker = TransferWorker
 export default TransferWorker
