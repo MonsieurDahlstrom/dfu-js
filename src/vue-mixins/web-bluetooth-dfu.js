@@ -45,7 +45,10 @@ const WebBluetoothDFU = {
       return this.dfuState === StateMachineStates.TRANSFERING
     },
     dfuCompleted: function () {
-      return (this.dfuState === StateMachineStates.COMPLETE || this.dfuState === StateMachineStates.FAILED)
+      return this.dfuState === StateMachineStates.COMPLETE
+    },
+		dfuFailed: function () {
+      return this.dfuState === StateMachineStates.FAILED
     }
   },
   methods: {

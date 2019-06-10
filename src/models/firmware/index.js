@@ -18,7 +18,6 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
-import JSZip from 'jszip'
 import Section from './Section'
 
 /**
@@ -44,7 +43,7 @@ class Firmware {
 
   /** Create a new instance based on zip file and set inital state **/
   constructor (zipFile) {
-    if (zipFile == null || (zipFile instanceof JSZip) === false) {
+    if (zipFile == null || zipFile.constructor.name === 'JSZip') {
       throw new Error('Firmware zip is invalid')
     }
     this.type = FirmwareType.NotConfigured

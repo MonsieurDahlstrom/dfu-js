@@ -1,6 +1,7 @@
 // rollup.config.js
 import resolve from 'rollup-plugin-node-resolve';
 import babel from 'rollup-plugin-babel';
+import builtins from 'rollup-plugin-node-builtins';
 
 export default {
   input: 'src/index.js',
@@ -17,10 +18,10 @@ export default {
       }
   ],
   plugins: [
-    resolve(),
     babel({
       exclude: 'node_modules/**' // only transpile our source code
-    })
-  ],
-  external: ['jszip', 'buffer', 'crc', 'async', 'events'],
+    }),
+    resolve(),
+    builtins()
+  ]
 };
