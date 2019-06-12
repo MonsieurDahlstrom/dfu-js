@@ -3,6 +3,8 @@ This JS library was build against [Nordic Semiconductors nRF SDK 12.3](https://i
 
 The package also includes a Vue.js Mixin that sets up few useful computed properties. See this [gist](https://gist.github.com/mdahlstrom/08dacdb82ebe1e881b11e91a312dd6ac) of a vue component.
 
+A demo web applicatiion using this library and [web-bluetooth-vuex](https://github.com/MonsieurDahlstrom/web-bluetooth-vuex.git) is available [here](https://monsieurdahlstrom.github.io/dfu-js/), Chrome only.
+
 ## Installation
 ```console
 $ yarn add dfu-js
