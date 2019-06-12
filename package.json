@@ -1,6 +1,6 @@
 {
   "name": "dfu-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "a web bluetooth library for performing DFU of Nordic Semiconductor SOCs. Includes Vue.js Mixin for simplifed use.",
   "main": "./dist/cjs.bundle.js",
   "module": "./dist/esm.bundle.js",
